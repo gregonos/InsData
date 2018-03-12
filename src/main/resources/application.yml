@@ -1,0 +1,21 @@
+server.port: 9006
+
+spring:
+  profiles:
+    active: dev
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+      use-new-id-generator-mappings: false
+  datasource:
+    driverClassName: com.mysql.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/insdata?useSSL=false&autoReconnect=true
+    username: root
+    password: Windia#2018
+
+insdata:
+  facebook:
+    graph-api-base-url: https://graph.facebook.com/v2.12/
+  app-id: 167897860677236
+  app-secret: 0718e99539f6bec7435b2e42d327e39c
