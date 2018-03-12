@@ -1,0 +1,1 @@
+INSERT INTO insdata.profile (id, user_id, type, token, created_at, last_updated_at) VALUES (1, 1, 'instagram', 'EAACYs8RYHnQBAMrdbdcGtQ662lmLm1bzg6909TEqbpMt5hd3ZA0WIXL930dnVG9svPNjhkCIYlqfWjQyZATDaA7sq8EZCynGJMKXR6e9f0fgTPnqfu1HgS8BhTY5PgDcVgKRj2EmYZAQVEEGdsMIZBsnbrmWRt8lTZBZB8tA2T2bAZDZD', '2018-03-10 14:58:39', '2018-03-10 14:58:45');

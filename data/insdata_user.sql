@@ -1,0 +1,1 @@
+INSERT INTO insdata.user (id, email, first_name, last_name, time_zone, password) VALUES (1, 'gregorysong@gmail.com', 'Gregory', 'Song', 'GMT+8:00', '123');
