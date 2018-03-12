@@ -9,9 +9,7 @@ import net.windia.insdata.model.client.IgAPIClientIgProfile;
 import net.windia.insdata.model.client.IgAPIClientInsight;
 import net.windia.insdata.model.client.IgAPIClientProfileAudience;
 import net.windia.insdata.model.internal.*;
-import net.windia.insdata.repository.IgProfileRepository;
-import net.windia.insdata.repository.IgProfileSnapshotDailyRepository;
-import net.windia.insdata.repository.IgProfileSnapshotHourlyRepository;
+import net.windia.insdata.repository.*;
 import net.windia.insdata.util.DateTimeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -35,10 +33,22 @@ public class IgProfileStatService {
     private IgProfileSnapshotDailyRepository igProfileSnapshotDailyRepo;
 
     @Autowired
+    private IgProfileProfileAudienceDailyRepository igProfileProfileAudienceRepo;
+
+    @Autowired
+    private IgOnlineFollowersRepository igOnlineFollowersRepo;
+
+    @Autowired
     private IgProfileDiffHourlyService igProfileDiffHourlyService;
 
     @Autowired
     private IgProfileDiffDailyService igProfileDiffDailyService;
+
+    @Autowired
+    private IgProfileDiffAudienceService igProfileDiffAudienceService;
+
+    @Autowired
+    private IgOnlineFollowersService igOnlineFollowersService;
 
     private ConvertMeta convertToInternal(IgAPIClientIgProfile raw, IgProfileBasicStat internal, Date now) {
 
@@ -127,12 +137,61 @@ public class IgProfileStatService {
     public void saveAudience(IgProfile myProfile, IgAPIClientProfileAudience igProfileAudienceRaw) {
 
         List<IgProfileAudienceDaily> audienceRecords = new ArrayList<>(32);
+        Date now = new Date();
 
         for (IgAPIClientInsight<Map<String, Integer>> insightRaw : igProfileAudienceRaw.getData()) {
             String type = insightRaw.getName().substring(9);
 
             Map<String, Integer> valueKeyPairs = insightRaw.getValues().get(0).getValue();
+
+            for (String section : valueKeyPairs.keySet()) {
+
+                // Create new instance of IgProfileAudienceDaily
+                IgProfileAudienceDaily audienceDaily = new IgProfileAudienceDaily();
+                audienceDaily.setIgProfile(myProfile);
+                audienceDaily.setCapturedAt(now);
+                audienceDaily.setType(type);
+
+                audienceDaily.setSection(section);
+                audienceDaily.setCount(valueKeyPairs.get(section));
+
+                audienceRecords.add(audienceDaily);
+            }
         }
+
+        igProfileDiffAudienceService.enrichWithDiff(audienceRecords);
+        igProfileProfileAudienceRepo.saveAll(audienceRecords);
+    }
+
+    public void saveOnlineFollowers(IgProfile myProfile, IgAPIClientProfileAudience igOnlineFollowersRaw) {
+        IgAPIClientDataEntry<Map<String, Integer>> dataEntry = igOnlineFollowersRaw.getData().get(0).getValues().get(0);
+
+        Calendar baseTime = Calendar.getInstance(TimeZone.getTimeZone(myProfile.getUser().getTimeZone()));
+        baseTime.setTime(dataEntry.getEndTime());
+        baseTime.add(Calendar.DATE, -1);
+
+        List<IgOnlineFollowers> onlineFollowersRecords = new ArrayList<>(24);
+
+        Map<String, Integer> keyValuePairs = dataEntry.getValue();
+        for (String hourStr : keyValuePairs.keySet()) {
+            Integer hour = Integer.parseInt(hourStr);
+
+            Calendar recordTime = (Calendar) baseTime.clone();
+            recordTime.add(Calendar.HOUR, hour);
+
+            IgOnlineFollowers onlineFollowers = new IgOnlineFollowers();
+            onlineFollowers.setIgProfile(myProfile);
+            onlineFollowers.setDate(recordTime.getTime());
+            onlineFollowers.setHour((byte) recordTime.get(Calendar.HOUR_OF_DAY));
+            onlineFollowers.setWeekday((byte) recordTime.get(Calendar.DAY_OF_WEEK));
+
+            onlineFollowers.setCount(keyValuePairs.get(hourStr));
+
+            onlineFollowersRecords.add(onlineFollowers);
+        }
+
+        igOnlineFollowersService.enrichPercentage(myProfile, onlineFollowersRecords, baseTime.getTime());
+        igOnlineFollowersRepo.saveAll(onlineFollowersRecords);
     }
 }
 

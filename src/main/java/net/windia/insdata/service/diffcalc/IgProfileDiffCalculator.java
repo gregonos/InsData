@@ -1,7 +1,9 @@
 package net.windia.insdata.service.diffcalc;
 
 import net.windia.insdata.model.internal.IgProfileBasicStat;
+import net.windia.insdata.model.internal.IgProfileSnapshotDaily;
 import net.windia.insdata.model.internal.IgProfileSnapshotHourly;
+import net.windia.insdata.model.internal.IgSnapshot;
 import net.windia.insdata.util.DateTimeUtils;
 import org.springframework.stereotype.Service;
 
@@ -25,7 +27,8 @@ public class IgProfileDiffCalculator<StatType extends IgProfileBasicStat> implem
             diff.setPhoneCallClicks(0);
             diff.setGetDirectionsClicks(0);
             diff.setWebsiteClicks(0);
-        } else if (DateTimeUtils.passedWithinOneHour(sinceTime, ((IgProfileSnapshotHourly)lastSnapshot).getCapturedAt())) {
+        } else if (newSnapshot instanceof IgProfileSnapshotHourly &&
+                DateTimeUtils.passedWithinOneHour(sinceTime, ((IgSnapshot)lastSnapshot).getCapturedAt())) {
             diff.setNewFollowers(newSnapshot.getNewFollowers());
             diff.setImpressions(newSnapshot.getImpressions());
             diff.setReach(newSnapshot.getReach());

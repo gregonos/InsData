@@ -27,6 +27,9 @@ public class ScheduledTaskService {
     private static final String PARAM_FIELDS_PROFILE_AUDIENCE =
             "audience_gender_age,audience_country,audience_city,audience_locale";
 
+    private static final String PARAM_FIELDS_PROFILE_ONLINE_FOLLOWERS =
+            "online_followers";
+
     @Value("${insdata.facebook.graph-api-base-url}")
     private String graphAPIBaseUrl;
 
@@ -62,7 +65,12 @@ public class ScheduledTaskService {
 
         log.debug("Profile basic snapshot hourly data parsed and stored successfully!");
 
+//        boolean newDay = true;
+
         if (newDay) {
+
+            log.debug("A new reporting day detected. Start to process daily stat...");
+
             igProfileStatService.saveDailyStat(myProfile, igProfileRaw);
 
             log.debug("Profile basic snapshot daily data parsed and stored successfully!");
@@ -76,6 +84,30 @@ public class ScheduledTaskService {
             log.debug("Response payload of audience retrieved successfully from Facebook");
 
             igProfileStatService.saveAudience(myProfile, igProfileAudienceRaw);
+
+            log.debug("Profile audience data parsed and stored successfully!");
+
+            // Online Followers
+            log.debug("Fetching profile online followers data... ");
+
+            long since = ((new Date()).getTime() - 86400000 * 2) / 1000;
+            long until = since + 86400;
+//
+//            since = 1520665261;
+//            until = 1520751661;
+//
+//            log.debug("since = " + since + " until = " + until);
+
+            IgAPIClientProfileAudience igOnlineFollowersRaw = restTemplate.getForObject(
+                    graphAPIBaseUrl + myProfile.getBusinessAccountId() + "/insights?metric={metric}&period=lifetime&since={since}&until={until}&access_token={access_token}",
+                    IgAPIClientProfileAudience.class, PARAM_FIELDS_PROFILE_ONLINE_FOLLOWERS, since, until, myProfile.getToken());
+
+            log.debug("Response payload of online followers retrieved successfully from Facebook");
+
+            igProfileStatService.saveOnlineFollowers(myProfile, igOnlineFollowersRaw);
+
+            log.debug("Profile online followers data parsed and stored successfully!");
+
         }
     }
 
