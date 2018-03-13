@@ -11,6 +11,7 @@ public class IgAPIClientMedia implements Serializable {
 
     private String id;
 
+    @JsonProperty("ig_id")
     private String igId;
 
     private String caption;
@@ -18,7 +19,11 @@ public class IgAPIClientMedia implements Serializable {
     @JsonProperty("media_type")
     private String mediaType;
 
+    @JsonProperty("media_url")
     private String mediaUrl;
+
+    @JsonProperty("thumbnail_url")
+    private String thumbnailUrl;
 
     private String permalink;
 

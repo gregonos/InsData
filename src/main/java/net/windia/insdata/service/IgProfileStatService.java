@@ -1,23 +1,34 @@
 package net.windia.insdata.service;
 
 import com.google.common.base.CaseFormat;
-import com.google.common.collect.Iterables;
 import lombok.extern.slf4j.Slf4j;
-import net.windia.insdata.constants.ProfileInsightsMetric;
 import net.windia.insdata.model.client.IgAPIClientDataEntry;
 import net.windia.insdata.model.client.IgAPIClientIgProfile;
 import net.windia.insdata.model.client.IgAPIClientInsight;
 import net.windia.insdata.model.client.IgAPIClientProfileAudience;
-import net.windia.insdata.model.internal.*;
-import net.windia.insdata.repository.*;
+import net.windia.insdata.model.internal.IgOnlineFollowers;
+import net.windia.insdata.model.internal.IgProfile;
+import net.windia.insdata.model.internal.IgProfileAudienceDaily;
+import net.windia.insdata.model.internal.IgProfileBasicStat;
+import net.windia.insdata.model.internal.IgProfileSnapshotDaily;
+import net.windia.insdata.model.internal.IgProfileSnapshotHourly;
+import net.windia.insdata.repository.IgOnlineFollowersRepository;
+import net.windia.insdata.repository.IgProfileProfileAudienceDailyRepository;
+import net.windia.insdata.repository.IgProfileRepository;
+import net.windia.insdata.repository.IgProfileSnapshotDailyRepository;
+import net.windia.insdata.repository.IgProfileSnapshotHourlyRepository;
 import net.windia.insdata.util.DateTimeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.persistence.Convert;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.TimeZone;
 
 @Slf4j
 @Service
@@ -96,6 +107,10 @@ public class IgProfileStatService {
     }
 
     public boolean saveHourlyStat(IgProfile owningProfile, IgAPIClientIgProfile statRaw) {
+        if (null == statRaw) {
+            return false;
+        }
+
         IgProfileSnapshotHourly snapshotHourly = new IgProfileSnapshotHourly();
 
         snapshotHourly.setIgProfile(owningProfile);
@@ -136,6 +151,10 @@ public class IgProfileStatService {
 
     public void saveAudience(IgProfile myProfile, IgAPIClientProfileAudience igProfileAudienceRaw) {
 
+        if (null == igProfileAudienceRaw) {
+            return;
+        }
+
         List<IgProfileAudienceDaily> audienceRecords = new ArrayList<>(32);
         Date now = new Date();
 
@@ -164,6 +183,11 @@ public class IgProfileStatService {
     }
 
     public void saveOnlineFollowers(IgProfile myProfile, IgAPIClientProfileAudience igOnlineFollowersRaw) {
+
+        if (null == igOnlineFollowersRaw) {
+            return;
+        }
+
         IgAPIClientDataEntry<Map<String, Integer>> dataEntry = igOnlineFollowersRaw.getData().get(0).getValues().get(0);
 
         Calendar baseTime = Calendar.getInstance(TimeZone.getTimeZone(myProfile.getUser().getTimeZone()));
