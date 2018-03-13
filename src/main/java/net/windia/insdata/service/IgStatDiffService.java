@@ -52,6 +52,8 @@ public abstract class IgStatDiffService<Diff extends IgDiff, Snapshot extends Ig
 
         Diff diff = calculateDiff(lastSnapshot, newSnapshot, sinceTime);
 
+        log.debug("Daily Diff generated. " + diff);
+
         getDiffRepository().save(diff);
 
         replace(newSnapshot);

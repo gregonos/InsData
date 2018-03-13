@@ -54,7 +54,7 @@ public class ScheduledTaskService {
     private IgRawMediaStatHandler rawMediaStatHandler = new IgRawMediaStatHandler();
 
 //    @Scheduled(initialDelay = 2000, fixedRate = 3600000)
-//    @Scheduled(cron = "1 0 * * * *")
+    @Scheduled(cron = "0 5 * * * *")
     public void retrieveProfile() {
 
         IgProfile myProfile = igProfileRepo.findById(1L).get();
