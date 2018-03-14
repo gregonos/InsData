@@ -42,7 +42,7 @@ public class IgProfileDiffHourlyService extends IgStatDiffService<IgProfileDiffH
         IgProfileDiffHourly diff = new IgProfileDiffHourly();
         diff.setIgProfile(newSnapshot.getIgProfile());
         diff.setComparedTo(last.getCapturedAt());
-        diff.setHour(newSnapshot.getHour());
+        diff.setHour(last.getHour());
 
         diffHourlyCalculator.calculate(diff, last, newSnapshot, sinceTime);
 

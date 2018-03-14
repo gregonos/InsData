@@ -2,10 +2,7 @@ package net.windia.insdata.service.restclient;
 
 import com.google.common.io.CharStreams;
 import lombok.extern.slf4j.Slf4j;
-import net.windia.insdata.model.client.IgAPIClientIgProfile;
-import net.windia.insdata.model.client.IgAPIClientMedia;
-import net.windia.insdata.model.client.IgAPIClientMediaSet;
-import net.windia.insdata.model.client.IgAPIClientProfileAudience;
+import net.windia.insdata.model.client.*;
 import net.windia.insdata.model.internal.IgProfile;
 import net.windia.insdata.service.IgRawMediaHandler;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,7 +17,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import javax.annotation.PostConstruct;
 
 @Slf4j
@@ -41,6 +40,9 @@ public class IgRestClientService {
 
     public static final String PARAM_FIELDS_MEDIA_STAT =
             "media_type,like_count,comments_count,insights.metric(engagement,impressions,reach,saved)";
+
+    public static final String PARAM_FIELDS_MEDIA_STAT_BASIC =
+            "media_type,like_count,comments_count";
 
     @Value("${insdata.facebook.graph-api-base-url}")
     private String graphAPIBaseUrl;
@@ -138,7 +140,7 @@ public class IgRestClientService {
         }
     }
 
-    public int retrieveAllMedia(IgProfile profile, String fields, IgRawMediaHandler rawMediaHandler) {
+    public int retrieveAllMedia(IgProfile profile, String fields, IgRawMediaHandler rawMediaHandler, int batchesLimit) {
 
         int mediaCountRetrieved = 0;
 
@@ -152,10 +154,11 @@ public class IgRestClientService {
         }
 
         IgAPIClientMediaSet mediasRaw = response.getBody();
-        int batchCount = mediasRaw.getData().size();
-        mediaCountRetrieved += batchCount;
+        int mediaCountInThisBatch = mediasRaw.getData().size();
+        mediaCountRetrieved += mediaCountInThisBatch;
+        int batchesDone = 1;
 
-        log.debug(batchCount + " entries of media received from Facebook response payload.");
+        log.debug(mediaCountInThisBatch + " entries of media received from Facebook response payload.");
 
         Date now = new Date();
 
@@ -165,20 +168,33 @@ public class IgRestClientService {
 
         try {
             while (null != mediasRaw.getPaging().getNext()) {
+                if (batchesDone == batchesLimit) {
+                    break;
+                }
                 log.debug("Continue to retrieve next page at: " + mediasRaw.getPaging().getNext());
 
                 response = restTemplate.getForEntity(URLDecoder.decode(mediasRaw.getPaging().getNext(), "UTF-8"),
                         IgAPIClientMediaSet.class);
 
-                if (!response.getStatusCode().is2xxSuccessful()) {
-                    break;
+
+                if (response.getStatusCode().is2xxSuccessful()) {
+                    mediasRaw = response.getBody();
+                } else {
+                    if (400 == response.getStatusCodeValue()) {
+                        // These batch includes media which are not eligible to insights
+                        // start to evaluate one by one
+                        log.debug("This batch includes media which are ineligible to insights, start to evaluate one by one");
+                        mediasRaw = handleMixedMediaBatch(profile, mediasRaw.getPaging());
+                    } else {
+                        break;
+                    }
                 }
 
-                mediasRaw = response.getBody();
-                batchCount = mediasRaw.getData().size();
-                mediaCountRetrieved += batchCount;
+                mediaCountInThisBatch = mediasRaw.getData().size();
+                mediaCountRetrieved += mediaCountInThisBatch;
+                batchesDone++;
 
-                log.debug(batchCount + " entries of media received from Facebook response payload.");
+                log.debug(mediaCountInThisBatch + " entries of media received from Facebook response payload.");
 
                 rawMediaHandler.processRawMedia(profile, mediasRaw.getData(), now);
             }
@@ -187,5 +203,48 @@ public class IgRestClientService {
         }
 
         return mediaCountRetrieved;
+    }
+
+    private IgAPIClientMediaSet handleMixedMediaBatch(IgProfile profile, IgAPIClientPaging startPaging) {
+
+        List<IgAPIClientMedia> mediaList = new ArrayList<>(25);
+
+        String targetUrl = graphAPIBaseUrl + profile.getBusinessAccountId() +
+                "/media?fields={fields}&after={after}&limit={limit}&access_token={access_token}";
+
+        int businessMediaCount = 0;
+        IgAPIClientMediaSet mediasRaw = null;
+        ResponseEntity<IgAPIClientMediaSet> response;
+        IgAPIClientPaging paging = startPaging;
+
+        do {
+            response = restTemplate.getForEntity(targetUrl, IgAPIClientMediaSet.class,
+                    PARAM_FIELDS_MEDIA_STAT, paging.getCursors().getAfter(), 1, profile.getToken());
+
+            if (response.getStatusCode().is2xxSuccessful()) {
+                mediasRaw = response.getBody();
+                mediaList.addAll(mediasRaw.getData());
+                paging = mediasRaw.getPaging();
+                businessMediaCount++;
+            } else if (400 == response.getStatusCodeValue()) {
+
+                log.debug("The first ineligible media found. " + businessMediaCount + " business media have been found. Start to retrieve basic stat only for the rest.");
+
+                response = restTemplate.getForEntity(targetUrl, IgAPIClientMediaSet.class,
+                        PARAM_FIELDS_MEDIA_STAT_BASIC, paging.getCursors().getAfter(), 25 - businessMediaCount, profile.getToken());
+                mediasRaw = response.getBody();
+                mediaList.addAll(mediasRaw.getData());
+                mediasRaw.setData(mediaList);
+                mediasRaw.getPaging().setNext(graphAPIBaseUrl + profile.getBusinessAccountId()
+                        + "/media?fields=" + PARAM_FIELDS_MEDIA_STAT_BASIC + "&after=" + mediasRaw.getPaging().getCursors().getAfter()
+                        + "&limit=25&access_token=" + profile.getToken());
+
+                break;
+            } else {
+                break;
+            }
+        } while (null != mediasRaw.getPaging().getNext());
+
+        return mediasRaw;
     }
 }

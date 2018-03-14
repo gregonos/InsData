@@ -33,6 +33,16 @@ public abstract class IgMediaSnapshotMapper<T extends IgMediaSnapshot> extends R
         mediaStat.setLikes(source.getLikeCount());
         mediaStat.setComments(source.getCommentsCount());
 
+        if (null == source.getInsights()) {
+            mediaStat.setEngagement(0);
+            mediaStat.setImpressions(0);
+            mediaStat.setReach(0);
+            mediaStat.setSaved(0);
+            mediaStat.setVideoViews(0);
+
+            return mediaStat;
+        }
+
         for (IgAPIClientInsight<Integer> insightEntry : source.getInsights().getData()) {
             String name = insightEntry.getName();
 

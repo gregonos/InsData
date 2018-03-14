@@ -47,6 +47,9 @@ public class ScheduledTaskService {
     @Value("${insdata.facebook.server-timezone-name}")
     private String facebookServerTimeZone;
 
+    @Value("${insdata.facebook.batches-of-posts}")
+    private int instagramPostBatchesLimit;
+
     private class IgRawMediaMetaHandler implements IgRawMediaHandler {
 
         @Override
@@ -76,7 +79,7 @@ public class ScheduledTaskService {
     private IgRawMediaStatHandler rawMediaStatHandler = new IgRawMediaStatHandler();
 
 //    @Scheduled(initialDelay = 2000, fixedRate = 3600000)
-//    @Scheduled(cron = "0 5 * * * *")
+    @Scheduled(cron = "0 5 * * * *")
     public void retrieveProfile() {
 
         IgProfile myProfile = igProfileRepo.findById(1L).get();
@@ -126,18 +129,19 @@ public class ScheduledTaskService {
 
         log.info("Starting to download media for account [" + myProfile.getBusinessAccountId() + "/" + myProfile.getUsername() + "]...");
 
-        int count = igRestClientService.retrieveAllMedia(myProfile, IgRestClientService.PARAM_FIELDS_MEDIA_META, rawMediaMetaHandler);
+        int count = igRestClientService.retrieveAllMedia(myProfile, IgRestClientService.PARAM_FIELDS_MEDIA_META, rawMediaMetaHandler, 0);
 
         log.info(count + " media meta entries are parsed and stored.");
     }
 
-    @Scheduled(initialDelay = 5000, fixedRate = 3600000)
+    @Scheduled(cron = "0 6 * * * *")
+//    @Scheduled(initialDelay = 2000, fixedRate = 3600000)
     public void retrieveMediaStat() {
         IgProfile myProfile = igProfileRepo.findById(1L).get();
 
         log.info("Starting to download hourly media stat for account [" + myProfile.getBusinessAccountId() + "/" + myProfile.getUsername() + "]...");
 
-        int count = igRestClientService.retrieveAllMedia(myProfile, IgRestClientService.PARAM_FIELDS_MEDIA_STAT, rawMediaStatHandler);
+        int count = igRestClientService.retrieveAllMedia(myProfile, IgRestClientService.PARAM_FIELDS_MEDIA_STAT, rawMediaStatHandler, instagramPostBatchesLimit);
 
         log.info(count + " media stat entries are parsed and stored.");
     }

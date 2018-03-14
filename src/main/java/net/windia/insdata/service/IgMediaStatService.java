@@ -76,6 +76,7 @@ public abstract class IgMediaStatService<Snapshot extends IgMediaSnapshot> {
             if (mediaIdSet.contains(mediaRaw.getId())) {
                 media = mediaMap.get(mediaRaw.getId());
             } else {
+                log.debug("New media [" + mediaRaw.getId() + "] found, retrieving from facebook...");
                 IgAPIClientMedia mediaMeta = restClientService.retrieveMediaMeta(mediaRaw.getId(), profile);
                 if (null == mediaMeta) {
                     continue;
