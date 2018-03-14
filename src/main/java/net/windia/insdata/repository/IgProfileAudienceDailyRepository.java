@@ -7,7 +7,7 @@ import org.springframework.data.repository.CrudRepository;
 import java.util.Date;
 import java.util.List;
 
-public interface IgProfileProfileAudienceDailyRepository extends CrudRepository<IgProfileAudienceDaily, Long> {
+public interface IgProfileAudienceDailyRepository extends CrudRepository<IgProfileAudienceDaily, Long> {
 
     IgProfileAudienceDaily findFirstByIgProfileOrderByCapturedAtDesc(IgProfile igProfile);
 

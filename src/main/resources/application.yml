@@ -17,5 +17,6 @@ spring:
 insdata:
   facebook:
     graph-api-base-url: https://graph.facebook.com/v2.12/
-  app-id: 167897860677236
-  app-secret: 0718e99539f6bec7435b2e42d327e39c
+    app-id: 167897860677236
+    app-secret: 0718e99539f6bec7435b2e42d327e39c
+    server-timezone-name: America/Los_Angeles

@@ -40,14 +40,13 @@ public class IgRestClientService {
             "ig_id,caption,media_type,media_url,permalink,shortcode,thumbnail_url,timestamp";
 
     public static final String PARAM_FIELDS_MEDIA_STAT =
-            "like_count,comments_count,insights.metric(engagement,impressions,reach,saved)";
+            "media_type,like_count,comments_count,insights.metric(engagement,impressions,reach,saved)";
 
     @Value("${insdata.facebook.graph-api-base-url}")
     private String graphAPIBaseUrl;
 
     private RestTemplate restTemplate;
 
-    @Slf4j
     class RestCallResponseErrorHandler implements ResponseErrorHandler {
 
         @Override
@@ -75,7 +74,9 @@ public class IgRestClientService {
 
     public IgAPIClientIgProfile retrieveProfileStat(IgProfile profile) {
         String targetUrl = graphAPIBaseUrl + profile.getBusinessAccountId() +
-                "/insights?metric={metric}&period=lifetime&access_token={access_token}";
+                "?fields={fields}&period=day&access_token={access_token}";
+
+        log.debug(targetUrl);
 
         ResponseEntity<IgAPIClientIgProfile> response = restTemplate.getForEntity(targetUrl,
                 IgAPIClientIgProfile.class, PARAM_FIELDS_PROFILE_STAT, profile.getToken());
@@ -156,7 +157,9 @@ public class IgRestClientService {
 
         log.debug(batchCount + " entries of media received from Facebook response payload.");
 
-        rawMediaHandler.processRawMedia(profile, mediasRaw.getData());
+        Date now = new Date();
+
+        rawMediaHandler.processRawMedia(profile, mediasRaw.getData(), now);
 
         log.debug("Media meta data parsed and stored.");
 
@@ -177,7 +180,7 @@ public class IgRestClientService {
 
                 log.debug(batchCount + " entries of media received from Facebook response payload.");
 
-                rawMediaHandler.processRawMedia(profile, mediasRaw.getData());
+                rawMediaHandler.processRawMedia(profile, mediasRaw.getData(), now);
             }
         } catch (UnsupportedEncodingException e) {
             log.error("failed to decode with UTF-8", e);

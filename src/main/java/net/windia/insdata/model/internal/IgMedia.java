@@ -1,7 +1,11 @@
 package net.windia.insdata.model.internal;
 
-import javax.persistence.*;
 import java.util.Date;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 
 @Entity
 @Table
@@ -36,6 +40,12 @@ public class IgMedia {
 
     @Column(nullable = false)
     private Date createdAt;
+
+    public IgMedia() {}
+
+    public IgMedia(String id) {
+        this.id = id;
+    }
 
     public String getId() {
         return id;

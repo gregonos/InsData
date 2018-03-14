@@ -8,9 +8,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
-public class IgMediaSnapshotHourlyMapper extends IgMediaStatMapper<IgMediaSnapshotHourly> {
-
-    public static final String FIELD_CAPTURED_AT = "capturedAt";
+public class IgMediaSnapshotHourlyMapper extends IgMediaSnapshotMapper<IgMediaSnapshotHourly> {
 
     @Override
     public IgMediaSnapshotHourly getInstance() {

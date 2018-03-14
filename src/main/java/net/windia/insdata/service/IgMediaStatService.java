@@ -3,15 +3,14 @@ package net.windia.insdata.service;
 import lombok.extern.slf4j.Slf4j;
 import net.windia.insdata.model.client.IgAPIClientMedia;
 import net.windia.insdata.model.internal.IgMedia;
-import net.windia.insdata.model.internal.IgMediaSnapshotHourly;
+import net.windia.insdata.model.internal.IgMediaDiff;
+import net.windia.insdata.model.internal.IgMediaSnapshot;
 import net.windia.insdata.model.internal.IgProfile;
-import net.windia.insdata.model.mapper.IgMediaMapper;
-import net.windia.insdata.model.mapper.IgMediaSnapshotHourlyMapper;
+import net.windia.insdata.model.mapper.IgMediaSnapshotMapper;
 import net.windia.insdata.repository.IgMediaRepository;
-import net.windia.insdata.repository.IgMediaSnapshotHourlyRepository;
 import net.windia.insdata.service.restclient.IgRestClientService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.data.repository.CrudRepository;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -20,18 +19,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 
 @Slf4j
-@Service
-public class IgMediaStatService {
+public abstract class IgMediaStatService<Snapshot extends IgMediaSnapshot> {
 
     @Autowired
     private IgMediaRepository mediaRepo;
 
     @Autowired
-    private IgMediaSnapshotHourlyRepository mediaSnapshotHourlyRepo;
+    private IgMediaService mediaService;
 
     @Autowired
     private IgRestClientService restClientService;
@@ -46,24 +43,7 @@ public class IgMediaStatService {
         mediaCache = new HashMap<>(4);
     }
 
-    public void saveMediaMeta(IgProfile profile, List<IgAPIClientMedia> mediaListRaw) {
-
-        IgMediaMapper mapper = new IgMediaMapper();
-        mapper.addExtraField(IgMediaMapper.FIELD_IG_PROFILE, profile);
-
-        List<IgMedia> mediaList = mapper.map(mediaListRaw);
-
-        mediaRepo.saveAll(mediaList);
-    }
-
-    public IgMedia saveMediaMeta(IgProfile profile, IgAPIClientMedia mediaRaw) {
-        IgMediaMapper mapper = new IgMediaMapper();
-        mapper.addExtraField(IgMediaMapper.FIELD_IG_PROFILE, profile);
-
-        return mediaRepo.save(mapper.map(mediaRaw));
-    }
-
-    public void saveMediaHourlyStat(IgProfile profile, List<IgAPIClientMedia> mediaListRaw) {
+    public void saveMediaStat(IgProfile profile, List<IgAPIClientMedia> mediaListRaw, Date capturedAt) {
 
         // Prepare media id collection
         Set<String> mediaIdSet = mediaIdCache.get(profile.getId());
@@ -71,7 +51,9 @@ public class IgMediaStatService {
         if (null == mediaIdSet) {
             List<IgMedia> allMediaIds = mediaRepo.findIdByIgProfile(profile);
             mediaIdSet = new HashSet<>(allMediaIds.size());
-            mediaIdSet.addAll(allMediaIds.stream().map(IgMedia::getId).collect(Collectors.toList()));
+            for (IgMedia idHolder : allMediaIds) {
+                mediaIdSet.add(idHolder.getId());
+            }
             mediaIdCache.put(profile.getId(), mediaIdSet);
 
             mediaMap = new HashMap<>(allMediaIds.size());
@@ -81,12 +63,10 @@ public class IgMediaStatService {
             mediaCache.put(profile.getId(), mediaMap);
         }
 
-        List<IgMediaSnapshotHourly> mediaSnapshotHourlyList = new ArrayList<>(mediaListRaw.size());
-        IgMediaSnapshotHourlyMapper mapper = new IgMediaSnapshotHourlyMapper();
-        mapper.addExtraField(IgMediaSnapshotHourlyMapper.FIELD_IG_PROFILE, profile);
-
-        Date now = new Date();
-        mapper.addExtraField(IgMediaSnapshotHourlyMapper.FIELD_CAPTURED_AT, now);
+        List<Snapshot> mediaSnapshotList = new ArrayList<>(mediaListRaw.size());
+        IgMediaSnapshotMapper<Snapshot> mapper = getMapper();
+        mapper.addExtraField(IgMediaSnapshotMapper.FIELD_IG_PROFILE, profile);
+        mapper.addExtraField(IgMediaSnapshotMapper.FIELD_CAPTURED_AT, capturedAt);
 
         for (IgAPIClientMedia mediaRaw : mediaListRaw) {
 
@@ -100,16 +80,22 @@ public class IgMediaStatService {
                 if (null == mediaMeta) {
                     continue;
                 }
-                media = saveMediaMeta(profile, mediaMeta);
+                media = mediaService.saveMediaMeta(profile, mediaMeta);
                 mediaIdSet.add(mediaMeta.getId());
                 mediaMap.put(media.getId(), media);
             }
 
-            mapper.addExtraField(IgMediaSnapshotHourlyMapper.FIELD_MEDIA, media);
-            mediaSnapshotHourlyList.add(mapper.map(mediaRaw));
+            mapper.addExtraField(IgMediaSnapshotMapper.FIELD_MEDIA, media);
+            mediaSnapshotList.add(mapper.map(mediaRaw));
         }
 
-        // TODO: Prepare for diffs
-        mediaSnapshotHourlyRepo.saveAll(mediaSnapshotHourlyList);
+        getMediaDiffService().calculateAndSaveDiff(profile, mediaSnapshotList);
+        getMediaSnapshotRepo().saveAll(mediaSnapshotList);
     }
+
+    protected abstract <M extends IgMediaDiffService<Snapshot, IgMediaDiff>> M getMediaDiffService();
+
+    protected abstract IgMediaSnapshotMapper<Snapshot> getMapper();
+
+    protected abstract CrudRepository getMediaSnapshotRepo();
 }

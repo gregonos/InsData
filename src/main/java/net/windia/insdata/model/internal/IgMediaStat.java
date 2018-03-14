@@ -1,106 +1,44 @@
 package net.windia.insdata.model.internal;
 
-import javax.persistence.*;
+public interface IgMediaStat {
 
-@MappedSuperclass
-public abstract class IgMediaStat extends IgProfileStat {
+    IgProfile getIgProfile();
 
-    @ManyToOne
-    private IgMedia media;
+    void setIgProfile(IgProfile igProfile);
 
-    @Column(nullable = false)
-    private Integer impressions;
+    IgMedia getMedia();
 
-    @Column(nullable = false)
-    private Integer reach;
+    void setMedia(IgMedia media);
 
-    @Column(nullable = false)
-    private Integer engagement;
+    Integer getImpressions();
 
-    @Column(nullable = false)
-    private Integer saved;
+    void setImpressions(Integer impressions);
 
-    @Column(nullable = false)
-    private Integer videoViews;
+    Integer getReach();
 
-    @Column(nullable = false)
-    private Integer likes;
+    void setReach(Integer reach);
 
-    @Column(nullable = false)
-    private Integer comments;
+    Integer getEngagement();
 
-    @Column(nullable = false)
-    private String mediaType;
+    void setEngagement(Integer engagement);
 
-    public IgMedia getMedia() {
-        return media;
-    }
+    Integer getSaved();
 
-    public void setMedia(IgMedia media) {
-        this.media = media;
-    }
+    void setSaved(Integer saved);
 
-    public Integer getImpressions() {
-        return impressions;
-    }
+    Integer getVideoViews();
 
-    public void setImpressions(Integer impressions) {
-        this.impressions = impressions;
-    }
+    void setVideoViews(Integer videoViews);
 
-    public Integer getReach() {
-        return reach;
-    }
+    Integer getLikes();
 
-    public void setReach(Integer reach) {
-        this.reach = reach;
-    }
+    void setLikes(Integer likes);
 
-    public Integer getEngagement() {
-        return engagement;
-    }
+    Integer getComments();
 
-    public void setEngagement(Integer engagement) {
-        this.engagement = engagement;
-    }
+    void setComments(Integer comments);
 
-    public Integer getSaved() {
-        return saved;
-    }
+    String getMediaType();
 
-    public void setSaved(Integer saved) {
-        this.saved = saved;
-    }
-
-    public Integer getVideoViews() {
-        return videoViews;
-    }
-
-    public void setVideoViews(Integer videoViews) {
-        this.videoViews = videoViews;
-    }
-
-    public Integer getLikes() {
-        return likes;
-    }
-
-    public void setLikes(Integer likes) {
-        this.likes = likes;
-    }
-
-    public Integer getComments() {
-        return comments;
-    }
-
-    public void setComments(Integer comments) {
-        this.comments = comments;
-    }
-
-    public String getMediaType() {
-        return mediaType;
-    }
-
-    public void setMediaType(String mediaType) {
-        this.mediaType = mediaType;
-    }
+    void setMediaType(String mediaType);
 }

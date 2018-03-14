@@ -5,17 +5,19 @@ import lombok.extern.slf4j.Slf4j;
 import net.windia.insdata.model.client.IgAPIClientInsight;
 import net.windia.insdata.model.client.IgAPIClientMedia;
 import net.windia.insdata.model.internal.IgMedia;
-import net.windia.insdata.model.internal.IgMediaStat;
+import net.windia.insdata.model.internal.IgMediaSnapshot;
 import net.windia.insdata.model.internal.IgProfile;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 @Slf4j
-public abstract class IgMediaStatMapper<T extends IgMediaStat> extends ResourceMapper<IgAPIClientMedia, IgMediaStat> {
+public abstract class IgMediaSnapshotMapper<T extends IgMediaSnapshot> extends ResourceMapper<IgAPIClientMedia, T> {
 
     public static final String FIELD_MEDIA = "media";
     public static final String FIELD_IG_PROFILE = "igProfile";
+
+    public static final String FIELD_CAPTURED_AT = "capturedAt";
 
     public abstract T getInstance();
 
@@ -43,6 +45,10 @@ public abstract class IgMediaStatMapper<T extends IgMediaStat> extends ResourceM
             } catch (InvocationTargetException | IllegalAccessException e) {
                 log.error("Failed to invoke setter method", e);
             }
+        }
+
+        if (null == mediaStat.getVideoViews()) {
+            mediaStat.setVideoViews(0);
         }
 
         return mediaStat;

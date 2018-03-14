@@ -1,13 +1,13 @@
 package net.windia.insdata.model.internal;
 
+import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
-import java.util.Date;
 
 @Entity
 @Table
-public class IgMediaDiffDaily extends IgMediaStat implements IgDiff {
+public class IgMediaDiffDaily extends IgMediaStatImpl implements IgMediaDiff {
 
     @Column(nullable = false)
     private Date comparedTo;

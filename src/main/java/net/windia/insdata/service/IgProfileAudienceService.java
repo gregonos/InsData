@@ -1,25 +1,29 @@
 package net.windia.insdata.service;
 
 import lombok.extern.slf4j.Slf4j;
+import net.windia.insdata.model.client.IgAPIClientInsight;
+import net.windia.insdata.model.client.IgAPIClientProfileAudience;
 import net.windia.insdata.model.internal.IgProfile;
 import net.windia.insdata.model.internal.IgProfileAudienceDaily;
-import net.windia.insdata.repository.IgProfileProfileAudienceDailyRepository;
+import net.windia.insdata.repository.IgProfileAudienceDailyRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.PostConstruct;
 
 @Slf4j
 @Service
-public class IgProfileDiffAudienceService {
+public class IgProfileAudienceService {
 
     private Map<Long, Map<String, Map<String, Integer>>> cache;
 
     @Autowired
-    private IgProfileProfileAudienceDailyRepository audienceRepo;
+    private IgProfileAudienceDailyRepository audienceRepo;
 
     @PostConstruct
     public void init() {
@@ -98,5 +102,38 @@ public class IgProfileDiffAudienceService {
         }
 
         return lastSnapshot;
+    }
+
+    public void saveAudience(IgProfile myProfile, IgAPIClientProfileAudience igProfileAudienceRaw, IgProfileStatService igProfileStatService) {
+
+        if (null == igProfileAudienceRaw) {
+            return;
+        }
+
+        List<IgProfileAudienceDaily> audienceRecords = new ArrayList<>(32);
+        Date now = new Date();
+
+        for (IgAPIClientInsight<Map<String, Integer>> insightRaw : igProfileAudienceRaw.getData()) {
+            String type = insightRaw.getName().substring(9);
+
+            Map<String, Integer> valueKeyPairs = insightRaw.getValues().get(0).getValue();
+
+            for (String section : valueKeyPairs.keySet()) {
+
+                // Create new instance of IgProfileAudienceDaily
+                IgProfileAudienceDaily audienceDaily = new IgProfileAudienceDaily();
+                audienceDaily.setIgProfile(myProfile);
+                audienceDaily.setCapturedAt(now);
+                audienceDaily.setType(type);
+
+                audienceDaily.setSection(section);
+                audienceDaily.setCount(valueKeyPairs.get(section));
+
+                audienceRecords.add(audienceDaily);
+            }
+        }
+
+        enrichWithDiff(audienceRecords);
+        audienceRepo.saveAll(audienceRecords);
     }
 }

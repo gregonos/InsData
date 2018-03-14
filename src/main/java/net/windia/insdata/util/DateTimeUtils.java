@@ -34,4 +34,8 @@ public class DateTimeUtils {
 
         return instance.getTime();
     }
+
+    public static int hourInTimeZone(String timeZoneId) {
+        return Calendar.getInstance(TimeZone.getTimeZone(timeZoneId)).get(Calendar.HOUR_OF_DAY);
+    }
 }

@@ -7,10 +7,13 @@ import net.windia.insdata.model.client.IgAPIClientProfileAudience;
 import net.windia.insdata.model.internal.IgProfile;
 import net.windia.insdata.repository.IgProfileRepository;
 import net.windia.insdata.service.restclient.IgRestClientService;
+import net.windia.insdata.util.DateTimeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 
 @Slf4j
@@ -27,14 +30,29 @@ public class ScheduledTaskService {
     private IgProfileStatService igProfileStatService;
 
     @Autowired
-    private IgMediaStatService igMediaStatService;
+    private IgProfileAudienceService igProfileAudienceService;
+
+    @Autowired
+    private IgOnlineFollowersService igOnlineFollowersService;
+
+    @Autowired
+    private IgMediaService mediaService;
+
+    @Autowired
+    private IgMediaSnapshotHourlyService igMediaSnapshotHourlyService;
+
+    @Autowired
+    private IgMediaSnapshotDailyService igMediaSnapshotDailyService;
+
+    @Value("${insdata.facebook.server-timezone-name}")
+    private String facebookServerTimeZone;
 
     private class IgRawMediaMetaHandler implements IgRawMediaHandler {
 
         @Override
-        public boolean processRawMedia(IgProfile profile, List<IgAPIClientMedia> rawMediaList) {
+        public boolean processRawMedia(IgProfile profile, List<IgAPIClientMedia> rawMediaList, Date capturedAt) {
 
-            igMediaStatService.saveMediaMeta(profile, rawMediaList);
+            mediaService.saveMediaMeta(profile, rawMediaList);
             return true;
         }
     }
@@ -42,9 +60,13 @@ public class ScheduledTaskService {
     private class IgRawMediaStatHandler implements IgRawMediaHandler {
 
         @Override
-        public boolean processRawMedia(IgProfile profile, List<IgAPIClientMedia> rawMediaList) {
+        public boolean processRawMedia(IgProfile profile, List<IgAPIClientMedia> rawMediaList, Date capturedAt) {
 
-            igMediaStatService.saveMediaHourlyStat(profile, rawMediaList);
+            igMediaSnapshotHourlyService.saveMediaStat(profile, rawMediaList, capturedAt);
+
+            if (0 == DateTimeUtils.hourInTimeZone(facebookServerTimeZone)) {
+                igMediaSnapshotDailyService.saveMediaStat(profile, rawMediaList, capturedAt);
+            }
             return true;
         }
     }
@@ -54,7 +76,7 @@ public class ScheduledTaskService {
     private IgRawMediaStatHandler rawMediaStatHandler = new IgRawMediaStatHandler();
 
 //    @Scheduled(initialDelay = 2000, fixedRate = 3600000)
-    @Scheduled(cron = "0 5 * * * *")
+//    @Scheduled(cron = "0 5 * * * *")
     public void retrieveProfile() {
 
         IgProfile myProfile = igProfileRepo.findById(1L).get();
@@ -64,14 +86,14 @@ public class ScheduledTaskService {
         log.debug("Fetching profile basic snapshot...");
 
         IgAPIClientIgProfile igProfileRaw = igRestClientService.retrieveProfileStat(myProfile);
-        log.debug("Response payload retrieved successfully from Facebook");
+        if (null != igProfileRaw) {
+            log.debug("Response payload retrieved successfully from Facebook");
 
-        boolean newDay = igProfileStatService.saveHourlyStat(myProfile, igProfileRaw);
-        log.debug("Profile basic snapshot hourly data parsed and stored successfully!");
+            igProfileStatService.saveHourlyStat(myProfile, igProfileRaw);
+            log.debug("Profile basic snapshot hourly data parsed and stored successfully!");
+        }
 
-//        boolean newDay = true;
-
-        if (newDay) {
+        if (0 == DateTimeUtils.hourInTimeZone(facebookServerTimeZone)) {
 
             log.debug("A new reporting day detected. Start to process daily stat...");
 
@@ -85,7 +107,7 @@ public class ScheduledTaskService {
             IgAPIClientProfileAudience igProfileAudienceRaw = igRestClientService.retrieveProfileAudienceStat(myProfile);
             log.debug("Response payload of audience retrieved successfully from Facebook");
 
-            igProfileStatService.saveAudience(myProfile, igProfileAudienceRaw);
+            igProfileAudienceService.saveAudience(myProfile, igProfileAudienceRaw, igProfileStatService);
             log.debug("Profile audience data parsed and stored successfully!");
 
             // Online Followers
@@ -94,7 +116,7 @@ public class ScheduledTaskService {
             IgAPIClientProfileAudience igOnlineFollowersRaw = igRestClientService.retrieveProfileOnlineFollowers(myProfile);
             log.debug("Response payload of online followers retrieved successfully from Facebook");
 
-            igProfileStatService.saveOnlineFollowers(myProfile, igOnlineFollowersRaw);
+            igOnlineFollowersService.saveOnlineFollowers(myProfile, igOnlineFollowersRaw, igProfileStatService);
             log.debug("Profile online followers data parsed and stored successfully!");
         }
     }
@@ -109,7 +131,7 @@ public class ScheduledTaskService {
         log.info(count + " media meta entries are parsed and stored.");
     }
 
-    @Scheduled(initialDelay = 2000, fixedRate = 3600000)
+    @Scheduled(initialDelay = 5000, fixedRate = 3600000)
     public void retrieveMediaStat() {
         IgProfile myProfile = igProfileRepo.findById(1L).get();
 
