@@ -50,12 +50,12 @@ public abstract class IgMediaDiffService<Snapshot extends IgMediaSnapshot, Diff 
             }
         }
 
-        List<Diff> diffList = calculateDiff(lastSnapshot, snapshotList);
+        List<Diff> diffList = calculateDiff(profile, lastSnapshot, snapshotList);
 
         getDiffRepository().saveAll(diffList);
 
         Map<String, Snapshot> newSnapshotMap = convertToMap(snapshotList);
-        lastSnapshotCache.put(profile.getId(), newSnapshotMap);
+        lastSnapshot.putAll(newSnapshotMap);
     }
 
     protected abstract CrudRepository getDiffRepository();
@@ -70,7 +70,7 @@ public abstract class IgMediaDiffService<Snapshot extends IgMediaSnapshot, Diff 
         return map;
     }
 
-    protected List<Diff> calculateDiff(Map<String, Snapshot> lastSnapshotMap, List<Snapshot> snapshotList) {
+    protected List<Diff> calculateDiff(IgProfile profile, Map<String, Snapshot> lastSnapshotMap, List<Snapshot> snapshotList) {
 
         List<Diff> diffList = new ArrayList<>(snapshotList.size());
 
@@ -82,6 +82,7 @@ public abstract class IgMediaDiffService<Snapshot extends IgMediaSnapshot, Diff 
             }
 
             Diff diff = newDiffInstance();
+            diff.setIgProfile(profile);
             diff.setMediaType(newSnapshot.getMediaType());
             diff.setMedia(newSnapshot.getMedia());
             diff.setComparedTo(lastSnapshot.getCapturedAt());
