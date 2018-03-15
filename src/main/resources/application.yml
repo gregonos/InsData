@@ -1,4 +1,4 @@
-server.port: 9006
+#server.port: 9006
 
 spring:
   profiles:
@@ -21,3 +21,11 @@ insdata:
     app-secret: 0718e99539f6bec7435b2e42d327e39c
     server-timezone-name: America/Los_Angeles
     batches-of-posts: 4
+
+---
+spring:
+  profiles: prod
+  datasource:
+    url: jdbc:mysql://aa1andv158dcwx8.ckct3aj2pjwu.ap-southeast-1.rds.amazonaws.com:3306/insdata?useSSL=false&autoReconnect=true
+    username: gregonos
+    password: Amazon#2018
