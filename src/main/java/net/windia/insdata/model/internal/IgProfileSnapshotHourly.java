@@ -1,13 +1,13 @@
 package net.windia.insdata.model.internal;
 
+import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
-import java.util.Date;
 
 @Entity
 @Table
-public class IgProfileSnapshotHourly extends IgProfileBasicStat implements IgSnapshot {
+public class IgProfileSnapshotHourly extends IgProfileStatImpl implements IgProfileSnapshot, IgStatHourly {
 
     @Column(nullable = false)
     private Date capturedAt;
@@ -29,5 +29,11 @@ public class IgProfileSnapshotHourly extends IgProfileBasicStat implements IgSna
 
     public void setHour(Byte hour) {
         this.hour = hour;
+    }
+
+    @Override
+    public void realizeCapturedAt(Date capturedAt, String timeZone) {
+        this.setCapturedAt(capturedAt);
+        calcHourly(timeZone, this, capturedAt);
     }
 }

@@ -7,13 +7,19 @@ import javax.persistence.Table;
 
 @Entity
 @Table
-public class IgMediaDiffHourly extends IgMediaStatImpl implements IgMediaDiff {
+public class IgMediaDiffHourly extends IgMediaStatImpl implements IgMediaDiff, IgStatHourly {
 
     @Column(nullable = false)
     private Date comparedTo;
 
     @Column(nullable = false)
     private Byte hour;
+
+    @Override
+    public void realizeComparedTo(Date comparedTo, String timeZone) {
+        this.setComparedTo(comparedTo);
+        calcHourly(timeZone, this, comparedTo);
+    }
 
     public Date getComparedTo() {
         return comparedTo;
@@ -29,5 +35,15 @@ public class IgMediaDiffHourly extends IgMediaStatImpl implements IgMediaDiff {
 
     public void setHour(Byte hour) {
         this.hour = hour;
+    }
+
+    public boolean isChanged() {
+        return 0 != getLikes() ||
+                0 != getComments() ||
+                0 != getImpressions() ||
+                0 != getReach() ||
+                0 != getEngagement() ||
+                0 != getSaved() ||
+                0 != getVideoViews();
     }
 }

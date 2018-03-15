@@ -39,10 +39,10 @@ public class IgRestClientService {
             "ig_id,caption,media_type,media_url,permalink,shortcode,thumbnail_url,timestamp";
 
     public static final String PARAM_FIELDS_MEDIA_STAT =
-            "media_type,like_count,comments_count,insights.metric(engagement,impressions,reach,saved)";
+            "timestamp,media_type,like_count,comments_count,insights.metric(engagement,impressions,reach,saved)";
 
     public static final String PARAM_FIELDS_MEDIA_STAT_BASIC =
-            "media_type,like_count,comments_count";
+            "timestamp,media_type,like_count,comments_count";
 
     @Value("${insdata.facebook.graph-api-base-url}")
     private String graphAPIBaseUrl;
@@ -164,7 +164,7 @@ public class IgRestClientService {
 
         rawMediaHandler.processRawMedia(profile, mediasRaw.getData(), now);
 
-        log.debug("Media meta data parsed and stored.");
+        log.debug("Media data parsed and stored.");
 
         try {
             while (null != mediasRaw.getPaging().getNext()) {
@@ -197,6 +197,8 @@ public class IgRestClientService {
                 log.debug(mediaCountInThisBatch + " entries of media received from Facebook response payload.");
 
                 rawMediaHandler.processRawMedia(profile, mediasRaw.getData(), now);
+
+                log.debug("Media data parsed and stored.");
             }
         } catch (UnsupportedEncodingException e) {
             log.error("failed to decode with UTF-8", e);

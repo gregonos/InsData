@@ -7,4 +7,6 @@ public interface IgDiff {
     void setComparedTo(Date comparedTo);
 
     Date getComparedTo();
+
+    void realizeComparedTo(Date comparedTo, String timeZone);
 }

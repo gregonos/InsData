@@ -7,7 +7,7 @@ import javax.persistence.Table;
 
 @Entity
 @Table
-public class IgMediaSnapshotHourly extends IgMediaStatImpl implements IgMediaSnapshot {
+public class IgMediaSnapshotHourly extends IgMediaStatImpl implements IgMediaSnapshot, IgStatHourly {
 
     @Column(nullable = false)
     private Date capturedAt;
@@ -29,5 +29,11 @@ public class IgMediaSnapshotHourly extends IgMediaStatImpl implements IgMediaSna
 
     public void setHour(Byte hour) {
         this.hour = hour;
+    }
+
+    @Override
+    public void realizeCapturedAt(Date capturedAt, String timeZone) {
+        this.setCapturedAt(capturedAt);
+        calcHourly(timeZone, this, capturedAt);
     }
 }

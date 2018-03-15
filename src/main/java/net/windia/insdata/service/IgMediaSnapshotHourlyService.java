@@ -6,7 +6,6 @@ import net.windia.insdata.model.mapper.IgMediaSnapshotHourlyMapper;
 import net.windia.insdata.model.mapper.IgMediaSnapshotMapper;
 import net.windia.insdata.repository.IgMediaSnapshotHourlyRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Service;
 
@@ -15,7 +14,6 @@ import org.springframework.stereotype.Service;
 public class IgMediaSnapshotHourlyService extends IgMediaStatService<IgMediaSnapshotHourly> {
 
     @Autowired
-    @Qualifier("igMediaDiffHourlyService")
     private IgMediaDiffHourlyService igMediaDiffHourlyService;
 
     @Autowired

@@ -30,32 +30,32 @@ public abstract class IgMediaDiffService<Snapshot extends IgMediaSnapshot, Diff 
         }
 
         Map<String, Snapshot> lastSnapshot = lastSnapshotCache.get(profile.getId());
+        if (null == lastSnapshot) {
+            log.debug("No media stat cache pool found for profile [" + profile.getId() + "], loading from db...");
+            lastSnapshot = loadLastSnapshotFromPersistence(profile);
+            lastSnapshotCache.put(profile.getId(), lastSnapshot);
+        } else {
+            log.debug("Existing media stat cache pool found for profile [" + profile.getId() + "], cache size: " + lastSnapshot.size());
+        }
 
-        return null == lastSnapshot ? loadLastSnapshotFromPersistence(profile) : lastSnapshot;
+        return lastSnapshot;
     }
 
     public void calculateAndSaveDiff(IgProfile profile, List<Snapshot> snapshotList) {
-        Map<String, Snapshot> lastSnapshot = lastSnapshot(profile);
+        Map<String, Snapshot> lastSnapshotMap = lastSnapshot(profile);
 
-        if (null == lastSnapshot) {
-            log.info("Last snapshot not found, diff calculation cancelled. ");
-            return;
-        } else {
-            Snapshot sampleSnapshot = snapshotList.get(0);
-            Snapshot sampleCache = lastSnapshot.values().iterator().next();
-
-            if (sampleCache.getCapturedAt().after(sampleSnapshot.getCapturedAt())) {
-                log.info("A newer snapshot has been found, diff calculation cancelled. ");
-                return;
-            }
+        if (null == lastSnapshotMap) {
+            lastSnapshotMap = new HashMap<>(snapshotList.size());
+            lastSnapshotCache.put(profile.getId(), lastSnapshotMap);
         }
 
-        List<Diff> diffList = calculateDiff(profile, lastSnapshot, snapshotList);
+        List<Diff> diffList = calculateDiff(profile, lastSnapshotMap, snapshotList);
 
         getDiffRepository().saveAll(diffList);
 
         Map<String, Snapshot> newSnapshotMap = convertToMap(snapshotList);
-        lastSnapshot.putAll(newSnapshotMap);
+        lastSnapshotMap.putAll(newSnapshotMap);
+        log.debug(newSnapshotMap.size() + " snapshot entries are updated in cache. Cache size: " + lastSnapshotMap.size());
     }
 
     protected abstract CrudRepository getDiffRepository();
@@ -77,15 +77,28 @@ public abstract class IgMediaDiffService<Snapshot extends IgMediaSnapshot, Diff 
         for (Snapshot newSnapshot : snapshotList) {
             Snapshot lastSnapshot = lastSnapshotMap.get(newSnapshot.getMedia().getId());
             if (null == lastSnapshot) {
-                log.debug("No previous hourly snapshot found for media ID [" + newSnapshot.getMedia().getId() + "]. Diff calculation cancelled. ");
-                continue;
+                if (isEligibleToCreateDiff(newSnapshot)) {
+                    // New post
+                    lastSnapshot = newSnapshotInstance(newSnapshot);
+                    lastSnapshot.setLikes(0);
+                    lastSnapshot.setComments(0);
+                    lastSnapshot.setEngagement(0);
+                    lastSnapshot.setSaved(0);
+                    lastSnapshot.setImpressions(0);
+                    lastSnapshot.setReach(0);
+                    lastSnapshot.setVideoViews(0);
+                    log.debug("No previous hourly snapshot found for media ID [" + newSnapshot.getMedia().getId() + "]. Diff will be calculated based on new snapshot. ");
+                } else {
+                    log.debug("No previous hourly snapshot found for media ID [" + newSnapshot.getMedia().getId() + "]. Diff calculation cancelled. ");
+                    continue;
+                }
             }
 
             Diff diff = newDiffInstance();
             diff.setIgProfile(profile);
             diff.setMediaType(newSnapshot.getMediaType());
             diff.setMedia(newSnapshot.getMedia());
-            diff.setComparedTo(lastSnapshot.getCapturedAt());
+            diff.realizeComparedTo(lastSnapshot.getCapturedAt(), profile.getUser().getTimeZone());
 
             diff.setLikes(newSnapshot.getLikes() - lastSnapshot.getLikes());
             diff.setComments(newSnapshot.getComments() - lastSnapshot.getComments());
@@ -95,7 +108,17 @@ public abstract class IgMediaDiffService<Snapshot extends IgMediaSnapshot, Diff 
             diff.setReach(newSnapshot.getReach() - lastSnapshot.getReach());
             diff.setVideoViews(newSnapshot.getVideoViews() - lastSnapshot.getVideoViews());
 
-            calculateDiffExtra(diff, lastSnapshot, newSnapshot);
+            if (!diff.isChanged()) {
+                // Media snapshot shows no change
+                // replace the last snapshot time. Diff won't be generated
+                lastSnapshot.realizeCapturedAt(newSnapshot.getCapturedAt(), profile.getUser().getTimeZone());
+
+                // Put the updated lastSnapshot in new snapshot list so that it'll be updated when saving
+                snapshotList.set(snapshotList.indexOf(newSnapshot), lastSnapshot);
+
+                log.debug("No change found in the new snapshot of media [" + newSnapshot.getMedia().getId() + "]. Snapshot is refreshed to " + newSnapshot.getCapturedAt());
+                continue;
+            }
 
             diffList.add(diff);
         }
@@ -103,9 +126,11 @@ public abstract class IgMediaDiffService<Snapshot extends IgMediaSnapshot, Diff 
         return diffList;
     }
 
-    protected abstract Diff newDiffInstance();
+    protected abstract boolean isEligibleToCreateDiff(Snapshot newSnapshot);
 
-    protected abstract void calculateDiffExtra(Diff diff, Snapshot lastSnapshot, Snapshot newSnapshot);
+    protected abstract Snapshot newSnapshotInstance(Snapshot reference);
+
+    protected abstract Diff newDiffInstance();
 
     protected abstract Map<String, Snapshot> loadLastSnapshotFromPersistence(IgProfile profile);
 }

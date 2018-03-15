@@ -1,7 +1,6 @@
 package net.windia.insdata.service.diffcalc;
 
-import net.windia.insdata.model.internal.IgProfileBasicStat;
-import net.windia.insdata.model.internal.IgProfileSnapshotDaily;
+import net.windia.insdata.model.internal.IgProfileStatImpl;
 import net.windia.insdata.model.internal.IgProfileSnapshotHourly;
 import net.windia.insdata.model.internal.IgSnapshot;
 import net.windia.insdata.util.DateTimeUtils;
@@ -10,10 +9,10 @@ import org.springframework.stereotype.Service;
 import java.util.Date;
 
 @Service(value = "igProfileDiffCalculator")
-public class IgProfileDiffCalculator<StatType extends IgProfileBasicStat> implements IgDiffCalculator<StatType> {
+public class IgProfileDiffCalculator<StatType extends IgProfileStatImpl> implements IgDiffCalculator<StatType> {
 
     @Override
-    public void calculate(IgProfileBasicStat diff, IgProfileBasicStat lastSnapshot, IgProfileBasicStat newSnapshot, Date sinceTime) {
+    public void calculate(IgProfileStatImpl diff, IgProfileStatImpl lastSnapshot, IgProfileStatImpl newSnapshot, Date sinceTime) {
         diff.setMediaCount(newSnapshot.getMediaCount() - lastSnapshot.getMediaCount());
         diff.setFollowers(newSnapshot.getFollowers() - lastSnapshot.getFollowers());
         diff.setFollows(newSnapshot.getFollows() - lastSnapshot.getFollows());

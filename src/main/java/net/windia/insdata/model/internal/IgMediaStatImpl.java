@@ -1,9 +1,13 @@
 package net.windia.insdata.model.internal;
 
-import javax.persistence.*;
+import java.util.Date;
+import javax.persistence.Column;
+import javax.persistence.ManyToOne;
+import javax.persistence.MappedSuperclass;
+import javax.persistence.Transient;
 
 @MappedSuperclass
-public abstract class IgMediaStatImpl extends IgProfileStat implements IgMediaStat {
+public abstract class IgMediaStatImpl extends IgStat implements IgMediaStat {
 
     @ManyToOne
     private IgMedia media;
@@ -31,6 +35,9 @@ public abstract class IgMediaStatImpl extends IgProfileStat implements IgMediaSt
 
     @Column(nullable = false)
     private String mediaType;
+
+    @Transient
+    private Date createdAt;
 
     public IgMedia getMedia() {
         return media;
@@ -102,5 +109,14 @@ public abstract class IgMediaStatImpl extends IgProfileStat implements IgMediaSt
 
     public void setMediaType(String mediaType) {
         this.mediaType = mediaType;
+    }
+
+    @Transient
+    public Date getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Date createdAt) {
+        this.createdAt = createdAt;
     }
 }

@@ -104,7 +104,7 @@ public class IgProfileAudienceService {
         return lastSnapshot;
     }
 
-    public void saveAudience(IgProfile myProfile, IgAPIClientProfileAudience igProfileAudienceRaw, IgProfileStatService igProfileStatService) {
+    public void saveAudience(IgProfile myProfile, IgAPIClientProfileAudience igProfileAudienceRaw) {
 
         if (null == igProfileAudienceRaw) {
             return;

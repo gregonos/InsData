@@ -48,7 +48,7 @@ public class IgOnlineFollowersService {
         }
     }
 
-    public void saveOnlineFollowers(IgProfile myProfile, IgAPIClientProfileAudience igOnlineFollowersRaw, IgProfileStatService igProfileStatService) {
+    public void saveOnlineFollowers(IgProfile myProfile, IgAPIClientProfileAudience igOnlineFollowersRaw) {
 
         if (null == igOnlineFollowersRaw) {
             return;

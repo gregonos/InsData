@@ -1,11 +1,11 @@
 package net.windia.insdata.model.internal;
 
+import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
-import java.util.Date;
 
 @MappedSuperclass
-public abstract class IgProfileDailyStat extends IgProfileBasicStat {
+public abstract class IgProfileDailyStat extends IgProfileStatImpl implements IgStatDaily {
 
     @Column(nullable = false)
     private Date week;

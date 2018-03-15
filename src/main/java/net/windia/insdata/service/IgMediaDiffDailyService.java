@@ -1,5 +1,6 @@
 package net.windia.insdata.service;
 
+import lombok.extern.slf4j.Slf4j;
 import net.windia.insdata.model.internal.IgMediaDiffDaily;
 import net.windia.insdata.model.internal.IgMediaSnapshotDaily;
 import net.windia.insdata.model.internal.IgProfile;
@@ -9,9 +10,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Service("igMediaDiffDailyService")
 public class IgMediaDiffDailyService extends IgMediaDiffService<IgMediaSnapshotDaily, IgMediaDiffDaily> {
 
@@ -27,15 +30,21 @@ public class IgMediaDiffDailyService extends IgMediaDiffService<IgMediaSnapshotD
     }
 
     @Override
+    protected boolean isEligibleToCreateDiff(IgMediaSnapshotDaily newSnapshot) {
+        return (new Date()).getTime() - newSnapshot.getCreatedAt().getTime() <= 3600000 * 25;
+    }
+
+    @Override
     protected IgMediaDiffDaily newDiffInstance() {
         return new IgMediaDiffDaily();
     }
 
     @Override
-    protected void calculateDiffExtra(IgMediaDiffDaily diff, IgMediaSnapshotDaily lastSnapshot, IgMediaSnapshotDaily newSnapshot) {
-        diff.setWeek(lastSnapshot.getWeek());
-        diff.setMonth(lastSnapshot.getMonth());
-        diff.setWeekday(lastSnapshot.getWeekday());
+    protected IgMediaSnapshotDaily newSnapshotInstance(IgMediaSnapshotDaily reference) {
+        IgMediaSnapshotDaily instance = new IgMediaSnapshotDaily();
+        instance.realizeCapturedAt(reference.getCapturedAt(), reference.getIgProfile().getUser().getTimeZone());
+
+        return instance;
     }
 
     @Override
@@ -50,6 +59,8 @@ public class IgMediaDiffDailyService extends IgMediaDiffService<IgMediaSnapshotD
         if (null == snapshotList || 0 == snapshotList.size()) {
             return null;
         }
+
+        log.debug(snapshotList.size() + " media snapshot entries loaded from db.");
 
         return convertToMap(snapshotList);
     }

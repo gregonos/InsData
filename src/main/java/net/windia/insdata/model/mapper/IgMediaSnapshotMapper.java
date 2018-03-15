@@ -19,15 +19,16 @@ public abstract class IgMediaSnapshotMapper<T extends IgMediaSnapshot> extends R
 
     public static final String FIELD_CAPTURED_AT = "capturedAt";
 
-    public abstract T getInstance();
+    protected abstract T newInstance();
 
     @Override
     public T map(IgAPIClientMedia source) {
 
-        T mediaStat = getInstance();
+        T mediaStat = newInstance();
 
         mediaStat.setMedia((IgMedia) getExtraField(FIELD_MEDIA));
         mediaStat.setIgProfile((IgProfile) getExtraField(FIELD_IG_PROFILE));
+        mediaStat.setCreatedAt(source.getTimestamp());
 
         mediaStat.setMediaType(source.getMediaType());
         mediaStat.setLikes(source.getLikeCount());

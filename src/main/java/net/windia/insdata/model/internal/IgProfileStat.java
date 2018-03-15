@@ -1,30 +1,52 @@
 package net.windia.insdata.model.internal;
 
-import javax.persistence.*;
+public interface IgProfileStat {
 
-@MappedSuperclass
-public abstract class IgProfileStat {
+    IgProfile getIgProfile();
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long id;
+    void setIgProfile(IgProfile igProfile);
 
-    @ManyToOne
-    private IgProfile igProfile;
+    Integer getMediaCount();
 
-    public Long getId() {
-        return id;
-    }
+    void setMediaCount(Integer mediaCount);
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    Integer getFollowers();
 
-    public IgProfile getIgProfile() {
-        return igProfile;
-    }
+    void setFollowers(Integer followers);
 
-    public void setIgProfile(IgProfile igProfile) {
-        this.igProfile = igProfile;
-    }
+    Integer getFollows();
+
+    void setFollows(Integer follows);
+
+    Integer getNewFollowers();
+
+    void setNewFollowers(Integer newFollowers);
+
+    Integer getImpressions();
+
+    void setImpressions(Integer impressions);
+
+    Integer getReach();
+
+    void setReach(Integer reach);
+
+    Integer getProfileViews();
+
+    void setProfileViews(Integer profileViews);
+
+    Integer getEmailContacts();
+
+    void setEmailContacts(Integer emailContacts);
+
+    Integer getPhoneCallClicks();
+
+    void setPhoneCallClicks(Integer phoneCallClicks);
+
+    Integer getGetDirectionsClicks();
+
+    void setGetDirectionsClicks(Integer getDirectionsClicks);
+
+    Integer getWebsiteClicks();
+
+    void setWebsiteClicks(Integer websiteClicks);
 }

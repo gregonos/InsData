@@ -4,14 +4,12 @@ import net.windia.insdata.model.client.IgAPIClientMedia;
 import net.windia.insdata.model.internal.IgMediaSnapshotHourly;
 import net.windia.insdata.model.internal.IgProfile;
 
-import java.util.Calendar;
 import java.util.Date;
-import java.util.TimeZone;
 
 public class IgMediaSnapshotHourlyMapper extends IgMediaSnapshotMapper<IgMediaSnapshotHourly> {
 
     @Override
-    public IgMediaSnapshotHourly getInstance() {
+    public IgMediaSnapshotHourly newInstance() {
         return new IgMediaSnapshotHourly();
     }
 
@@ -23,11 +21,7 @@ public class IgMediaSnapshotHourlyMapper extends IgMediaSnapshotMapper<IgMediaSn
         Date capturedAt = (Date) getExtraField(FIELD_CAPTURED_AT);
         IgProfile profile = (IgProfile) getExtraField(FIELD_IG_PROFILE);
 
-        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone(profile.getUser().getTimeZone()));
-        cal.setTime(capturedAt);
-
-        target.setCapturedAt(capturedAt);
-        target.setHour((byte) cal.get(Calendar.HOUR_OF_DAY));
+        target.realizeCapturedAt(capturedAt, profile.getUser().getTimeZone());
 
         return target;
     }

@@ -7,7 +7,7 @@ import javax.persistence.Table;
 
 @Entity
 @Table
-public class IgMediaSnapshotDaily extends IgMediaStatImpl implements IgMediaSnapshot {
+public class IgMediaSnapshotDaily extends IgMediaStatImpl implements IgMediaSnapshot, IgStatDaily {
 
     @Column(nullable = false)
     private Date capturedAt;
@@ -23,6 +23,12 @@ public class IgMediaSnapshotDaily extends IgMediaStatImpl implements IgMediaSnap
 
     public Date getCapturedAt() {
         return capturedAt;
+    }
+
+    @Override
+    public void realizeCapturedAt(Date capturedAt, String timeZone) {
+        this.setCapturedAt(capturedAt);
+        calcDaily(timeZone, this, capturedAt);
     }
 
     public void setCapturedAt(Date capturedAt) {

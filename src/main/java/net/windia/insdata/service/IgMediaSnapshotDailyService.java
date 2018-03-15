@@ -5,7 +5,6 @@ import net.windia.insdata.model.internal.IgMediaSnapshotDaily;
 import net.windia.insdata.model.mapper.IgMediaSnapshotDailyMapper;
 import net.windia.insdata.repository.IgMediaSnapshotDailyRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Service;
 
@@ -14,7 +13,6 @@ import org.springframework.stereotype.Service;
 public class IgMediaSnapshotDailyService extends IgMediaStatService<IgMediaSnapshotDaily> {
 
     @Autowired
-    @Qualifier("igMediaDiffDailyService")
     private IgMediaDiffDailyService igMediaDiffDailyService;
 
     @Autowired

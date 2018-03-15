@@ -1,13 +1,13 @@
 package net.windia.insdata.model.internal;
 
+import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
-import java.util.Date;
 
 @Entity
 @Table
-public class IgProfileDiffHourly extends IgProfileBasicStat implements IgDiff {
+public class IgProfileDiffHourly extends IgProfileStatImpl implements IgProfileDiff, IgStatHourly {
 
     @Column(nullable = false)
     private Date comparedTo;
@@ -21,6 +21,12 @@ public class IgProfileDiffHourly extends IgProfileBasicStat implements IgDiff {
 
     public void setComparedTo(Date comparedTo) {
         this.comparedTo = comparedTo;
+    }
+
+    @Override
+    public void realizeComparedTo(Date comparedTo, String timeZone) {
+        this.setComparedTo(comparedTo);
+        calcHourly(timeZone, this, comparedTo);
     }
 
     public Byte getHour() {

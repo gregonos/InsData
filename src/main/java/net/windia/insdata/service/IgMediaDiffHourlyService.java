@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -29,13 +30,21 @@ public class IgMediaDiffHourlyService extends IgMediaDiffService<IgMediaSnapshot
     }
 
     @Override
+    protected boolean isEligibleToCreateDiff(IgMediaSnapshotHourly newSnapshot) {
+        return (new Date()).getTime() - newSnapshot.getCreatedAt().getTime() <= 3600000 * 2;
+    }
+
+    @Override
     protected IgMediaDiffHourly newDiffInstance() {
         return new IgMediaDiffHourly();
     }
 
     @Override
-    protected void calculateDiffExtra(IgMediaDiffHourly diff, IgMediaSnapshotHourly lastSnapshot, IgMediaSnapshotHourly newSnapshot) {
-        diff.setHour(lastSnapshot.getHour());
+    protected IgMediaSnapshotHourly newSnapshotInstance(IgMediaSnapshotHourly reference) {
+        IgMediaSnapshotHourly snapshot = new IgMediaSnapshotHourly();
+        snapshot.realizeCapturedAt(reference.getCapturedAt(), reference.getIgProfile().getUser().getTimeZone());
+
+        return snapshot;
     }
 
     @Override
@@ -50,6 +59,8 @@ public class IgMediaDiffHourlyService extends IgMediaDiffService<IgMediaSnapshot
         if (null == snapshotList || 0 == snapshotList.size()) {
             return null;
         }
+
+        log.debug(snapshotList.size() + " media snapshot entries loaded from db.");
 
         return convertToMap(snapshotList);
     }

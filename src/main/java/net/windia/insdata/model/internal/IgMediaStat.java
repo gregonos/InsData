@@ -1,5 +1,7 @@
 package net.windia.insdata.model.internal;
 
+import java.util.Date;
+
 public interface IgMediaStat {
 
     IgProfile getIgProfile();
@@ -41,4 +43,8 @@ public interface IgMediaStat {
     String getMediaType();
 
     void setMediaType(String mediaType);
+
+    Date getCreatedAt();
+
+    void setCreatedAt(Date createdAt);
 }

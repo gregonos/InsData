@@ -7,7 +7,7 @@ import javax.persistence.Table;
 
 @Entity
 @Table
-public class IgMediaDiffDaily extends IgMediaStatImpl implements IgMediaDiff {
+public class IgMediaDiffDaily extends IgMediaStatImpl implements IgMediaDiff, IgStatDaily {
 
     @Column(nullable = false)
     private Date comparedTo;
@@ -27,6 +27,12 @@ public class IgMediaDiffDaily extends IgMediaStatImpl implements IgMediaDiff {
 
     public void setComparedTo(Date comparedTo) {
         this.comparedTo = comparedTo;
+    }
+
+    @Override
+    public void realizeComparedTo(Date comparedTo, String timeZone) {
+        this.setComparedTo(comparedTo);
+        calcDaily(timeZone, this, comparedTo);
     }
 
     public Date getWeek() {
@@ -51,5 +57,15 @@ public class IgMediaDiffDaily extends IgMediaStatImpl implements IgMediaDiff {
 
     public void setWeekday(Byte weekday) {
         this.weekday = weekday;
+    }
+
+    public boolean isChanged() {
+        return 0 != getLikes() ||
+                0 != getComments() ||
+                0 != getImpressions() ||
+                0 != getReach() ||
+                0 != getEngagement() ||
+                0 != getSaved() ||
+                0 != getVideoViews();
     }
 }
