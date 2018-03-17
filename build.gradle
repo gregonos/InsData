@@ -1,5 +1,5 @@
 group 'net.windia.app'
-version '1.0-RELEASE'
+version '1.0.1-RELEASE'
 
 buildscript {
     repositories {
@@ -26,8 +26,8 @@ repositories {
 }
 
 bootRun {
-    jvmArgs = ["-Dhttp.proxyHost=192.168.1.116", "-Dhttp.proxyPort=1080", "-Dhttps.proxyHost=192.168.1.116", "-Dhttps.proxyPort=1080"]
-//    jvmArgs = ["-Dhttp.proxyHost=127.0.0.1", "-Dhttp.proxyPort=1087", "-Dhttps.proxyHost=127.0.0.1", "-Dhttps.proxyPort=1087"]
+//    jvmArgs = ["-Dhttp.proxyHost=192.168.1.116", "-Dhttp.proxyPort=1080", "-Dhttps.proxyHost=192.168.1.116", "-Dhttps.proxyPort=1080"]
+    jvmArgs = ["-Dhttp.proxyHost=127.0.0.1", "-Dhttp.proxyPort=1087", "-Dhttps.proxyHost=127.0.0.1", "-Dhttps.proxyPort=1087"]
 }
 
 dependencies {

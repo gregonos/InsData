@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -42,7 +43,11 @@ public class IgMediaDiffHourlyService extends IgMediaDiffService<IgMediaSnapshot
     @Override
     protected IgMediaSnapshotHourly newSnapshotInstance(IgMediaSnapshotHourly reference) {
         IgMediaSnapshotHourly snapshot = new IgMediaSnapshotHourly();
-        snapshot.realizeCapturedAt(reference.getCapturedAt(), reference.getIgProfile().getUser().getTimeZone());
+        Date capturedAt = reference.getCapturedAt();
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(capturedAt);
+        cal.add(Calendar.HOUR, -1);
+        snapshot.realizeCapturedAt(cal.getTime(), reference.getIgProfile().getUser().getTimeZone());
 
         return snapshot;
     }
