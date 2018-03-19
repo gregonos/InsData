@@ -138,12 +138,12 @@ public class ScheduledTaskService {
         log.info(count + " media meta entries are parsed and stored.");
     }
 
-    @Scheduled(initialDelay = 2000, fixedRate = 3600000)
+//    @Scheduled(initialDelay = 2000, fixedRate = 3600000)
     public void retrieveInsightsHistory() {
         IgProfile myProfile = igProfileRepo.findById(1L).get();
 
-        long since = 1518220800;
-        long until = 1520726400;
+        long since = 1518307200 - 86400 * 2;
+        long until = 1520812800 - 86400 * 2;
 
         log.info("Starting to download insights history for account ");
 

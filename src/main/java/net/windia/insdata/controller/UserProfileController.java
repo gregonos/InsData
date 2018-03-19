@@ -36,18 +36,8 @@ public class UserProfileController {
             // TODO: Get user from session
             userId = "gregorysong@gmail.com";
             List<Profile> profiles = profileService.getProfiles(userId);
-            log.debug("profiles.size = " + profiles.size());
-            if (profiles.size() > 0) {
-                log.debug("profile = " + profiles.get(0));
-            }
 
-            List<ProfileDTO> profileDTOs = profileDTOMapper.map(profiles);
-            log.debug("profileDTOs.size = " + profileDTOs.size());
-            if (profileDTOs.size() > 0) {
-                log.debug("profileDTO = " + profileDTOs.get(0));
-            }
-
-            return new ProfilesDTO(profileDTOs);
+            return new ProfilesDTO(profileDTOMapper.map(profiles));
         }
 
         return null;

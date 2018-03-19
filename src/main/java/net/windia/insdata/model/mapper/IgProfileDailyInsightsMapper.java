@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 @Slf4j
@@ -32,7 +34,11 @@ public class IgProfileDailyInsightsMapper extends ResourceMapper<IgAPIClientIgPr
 
             IgProfileSnapshotDaily snapshot = new IgProfileSnapshotDaily();
             IgProfile profile = (IgProfile) getExtraField(IgProfileSnapshotMapper.FIELD_IG_PROFILE);
-            snapshot.realizeCapturedAt(insightEntrySample.getEndTime(), profile.getUser().getTimeZone());
+            Date endTime = insightEntrySample.getEndTime();
+            Calendar endTimeCal = Calendar.getInstance();
+            endTimeCal.setTime(endTime);
+            endTimeCal.add(Calendar.DATE, 1);
+            snapshot.realizeCapturedAt(endTimeCal.getTime(), profile.getUser().getTimeZone());
             snapshot.setIgProfile(profile);
             snapshot.setFollowers(0);
             snapshot.setFollows(0);
