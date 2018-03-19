@@ -19,4 +19,6 @@ public interface IgProfileSnapshotHourlyRepository extends CrudRepository<IgProf
     List<IgProfileSnapshotHourly> findFollowersByDay(@Param("igProfile") IgProfile igProfile,
                                                      @Param("from") Date from,
                                                      @Param("to") Date to);
+
+    List<IgProfileSnapshotHourly> findByIgProfileIdAndCapturedAtBetweenOrderByCapturedAtAsc(Long igProfileId, Date since, Date until);
 }

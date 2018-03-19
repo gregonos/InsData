@@ -1,5 +1,7 @@
 package net.windia.insdata.model.mapper;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -7,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 public abstract class ResourceMapper<S, T> {
 
     private Map<String, Object> extraFields;

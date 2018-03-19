@@ -79,7 +79,7 @@ public class ScheduledTaskService {
     private IgRawMediaStatHandler rawMediaStatHandler = new IgRawMediaStatHandler();
 
 //    @Scheduled(initialDelay = 2000, fixedRate = 3600000)
-    @Scheduled(cron = "0 5 * * * *")
+    @Scheduled(cron = "0 10 * * * *")
     public void retrieveProfile() {
 
         IgProfile myProfile = igProfileRepo.findById(1L).get();
@@ -97,6 +97,7 @@ public class ScheduledTaskService {
         }
 
         if (0 == DateTimeUtils.hourOfFacebookServer()) {
+//        if (true) {
 
             log.debug("A new reporting day detected. Start to process daily stat...");
 
@@ -137,7 +138,23 @@ public class ScheduledTaskService {
         log.info(count + " media meta entries are parsed and stored.");
     }
 
-    @Scheduled(cron = "0 6 * * * *")
+    @Scheduled(initialDelay = 2000, fixedRate = 3600000)
+    public void retrieveInsightsHistory() {
+        IgProfile myProfile = igProfileRepo.findById(1L).get();
+
+        long since = 1518220800;
+        long until = 1520726400;
+
+        log.info("Starting to download insights history for account ");
+
+        IgAPIClientIgProfile profileRaw = igRestClientService.retrieveProfileInsightHistory(myProfile, since, until);
+        log.debug("Insight history data received successfully!");
+
+        igProfileProfileDailyService.saveStatSeries(myProfile, profileRaw);
+        log.info("Insight history saved successfully! ");
+    }
+
+    @Scheduled(cron = "0 11 * * * *")
 //    @Scheduled(initialDelay = 12000, fixedRate = 3600000)
     public void retrieveMediaStat() {
         IgProfile myProfile = igProfileRepo.findById(1L).get();

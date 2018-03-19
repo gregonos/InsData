@@ -74,6 +74,22 @@ public class IgRestClientService {
         log.info("Facebook Graph API baseUrl = " + graphAPIBaseUrl);
     }
 
+    public IgAPIClientIgProfile retrieveProfileInsightHistory(IgProfile profile, Long since, Long until) {
+        String targetUrl = graphAPIBaseUrl + profile.getBusinessAccountId() +
+                "?fields={fields}.since({since}).until({until})&period=day&access_token={access_token}";
+
+        log.debug(targetUrl);
+
+        ResponseEntity<IgAPIClientIgProfile> response = restTemplate.getForEntity(targetUrl,
+                IgAPIClientIgProfile.class, PARAM_FIELDS_PROFILE_STAT, since, until, profile.getToken());
+
+        if (response.getStatusCode().is2xxSuccessful()) {
+            return response.getBody();
+        } else {
+            return null;
+        }
+    }
+
     public IgAPIClientIgProfile retrieveProfileStat(IgProfile profile) {
         String targetUrl = graphAPIBaseUrl + profile.getBusinessAccountId() +
                 "?fields={fields}&period=day&access_token={access_token}";
