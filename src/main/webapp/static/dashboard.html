@@ -132,19 +132,33 @@
                 </div>
             </div>
 
-            <!--<canvas class="my-4" id="myChart" width="900" height="380"></canvas>-->
-
             <div class="statCard">
                 <div class="statHeader">
                     <h2 class="h3">Followers</h2>
                 </div>
                 <div class="row">
-                    <div id="stat_followers" class="chatWrapper col-lg-6"></div>
-                    <div id="stat_followings" class="chatWrapper col-lg-6"></div>
+                    <div id="stat_followers" class="chatWrapper col-lg-7"></div>
+                    <div id="stat_followers_24" class="chatWrapper col-lg-5"></div>
                 </div>
             </div>
 
-            <h2>Section title</h2>
+            <div class="statCard">
+                <div class="statHeader">
+                    <h2 class="h3">Followings</h2>
+                </div>
+                <div class="row">
+                    <div id="stat_followings" class="chatWrapper col-lg-7"></div>
+                    <div id="stat_followings_24" class="chatWrapper col-lg-5"></div>
+                </div>
+            </div>
+
+            <div class="statCard">
+                <div class="statHeader">
+                    <h2 class="h3">Coverage</h2>
+                </div>
+                <div id="stat_coverage" class="chatWrapper"></div>
+            </div>
+
             <div class="table-responsive" style="display: none">
                 <table class="table table-striped table-sm">
                     <thead>
@@ -280,6 +294,7 @@
 <script src="static/js/popper.min.js" crossorigin="anonymous"></script>
 <script src="static/js/bootstrap.min.js"></script>
 <script src="static/js/echarts.min.js"></script>
+<script src="static/js/moment.min.js"></script>
 
 <script src="static/js/insdata.js"></script>
 
@@ -370,11 +385,28 @@
         var chartFollowers = echarts.init(document.getElementById("stat_followers"), null, {renderer: 'canvas'});
         chartFollowers.setOption(option);
 
+        var chartFollowers24 = echarts.init(document.getElementById("stat_followers_24"), null, {renderer: 'canvas'});
+        chartFollowers24.setOption(option);
+
         var chartFollowings = echarts.init(document.getElementById("stat_followings"), null, {renderer: 'canvas'});
         chartFollowings.setOption(option);
 
+        var chartFollowings24 = echarts.init(document.getElementById("stat_followings_24"), null, {renderer: 'canvas'});
+        chartFollowings24.setOption(option);
+
+        var chartCoverage = echarts.init(document.getElementById("stat_coverage"), null, {renderer: 'canvas'});
+        chartCoverage.setOption(option);
+
+        var ISO_DATE_FORMAT = 'YYYY-MM-DDTHH:mm:ss.SSSZ';
+        var endOfToday = encodeURIComponent(moment().endOf('day').format(ISO_DATE_FORMAT));
+        var startOf30Days = encodeURIComponent(moment().subtract(30, 'day').startOf('day').format(ISO_DATE_FORMAT));
+
+        var now = encodeURIComponent(moment().format(ISO_DATE_FORMAT));
+        var aDayAgo = encodeURIComponent(moment().subtract(24, 'hour').format(ISO_DATE_FORMAT));
+
         // load followers
-        $.getJSON("/api/profiles/1/stats/ig?metrics=followers,followers_diff&granularity=daily&since=2018-02-18T00:00:00.000%2B08:00&until=2018-03-19T23:59:59.999%2B08:00", function(data) {
+        var followersUrl = '/api/profiles/1/stats/ig?metrics=followers,followers_diff&granularity=daily&since=' + startOf30Days + '&until=' + endOfToday;
+        $.getJSON(followersUrl, function(data) {
             chartFollowers.setOption({
                 dataset: {
                     dimensions: data.dimensions,
@@ -412,8 +444,54 @@
             });
         });
 
+        var followers24Url = '/api/profiles/1/stats/ig?metrics=followers,followers_diff&granularity=hourly&since=' + aDayAgo + '&until=' + now;
+        $.getJSON(followers24Url, function(data) {
+            chartFollowers24.setOption({
+                dataset: {
+                    dimensions: data.dimensions,
+                    source: data.data
+                },
+                yAxis: [
+                    {
+                        name: 'Followers',
+                        min: 3510,
+                        max: 3582,
+                        interval: 12
+                    },
+                    {
+                        name: 'Followers Change',
+                        min: 8,
+                        max: -4,
+                        interval: 2
+                    }
+                ],
+                series: [
+                    {
+                        name: 'Followers',
+                        type: 'line',
+                        yAxisIndex: 0,
+                        encode: {
+                            x: 'time',
+                            y: 'followers'
+                        }
+                    },
+                    {
+                        name: 'Followers Change',
+                        type: 'bar',
+                        barWidth: '68%',
+                        yAxisIndex: 1,
+                        encode: {
+                            x: 'time',
+                            y: 'followers_diff'
+                        }
+                    }
+                ]
+            });
+        });
+
         // load followings
-        $.getJSON("/api/profiles/1/stats/ig?metrics=followings,followings_diff&granularity=daily&since=2018-02-18T00:00:00.000%2B08:00&until=2018-03-19T23:59:59.999%2B08:00", function(data) {
+        var followingsUrl = '/api/profiles/1/stats/ig?metrics=followings,followings_diff&granularity=daily&since=' + startOf30Days + '&until=' + endOfToday;
+        $.getJSON(followingsUrl, function(data) {
             chartFollowings.setOption({
                 dataset: {
                     dimensions: data.dimensions,
@@ -422,9 +500,9 @@
                 yAxis: [
                     {
                         name: 'Followings',
-                        min: 0,
+                        min: 600,
                         max: 7200,
-                        interval: 1200
+                        interval: 1100
                     },
                     {
                         name: 'Followings Change',
@@ -451,6 +529,95 @@
                         encode: {
                             x: 'time',
                             y: 'followings_diff'
+                        }
+                    }
+                ]
+            });
+        });
+
+        var followingsUrl24 = '/api/profiles/1/stats/ig?metrics=followings,followings_diff&granularity=hourly&since=' + aDayAgo + '&until=' + now;
+        $.getJSON(followingsUrl24, function(data) {
+            chartFollowings24.setOption({
+                dataset: {
+                    dimensions: data.dimensions,
+                    source: data.data
+                },
+                yAxis: [
+                    {
+                        name: 'Followings',
+                        min: 6300,
+                        max: 7200,
+                        interval: 150
+                    },
+                    {
+                        name: 'Followings Change',
+                        min: -60,
+                        max: 30,
+                        interval: 15
+                    }
+                ],
+                series: [
+                    {
+                        name: 'Followings',
+                        type: 'line',
+                        yAxisIndex: 0,
+                        encode: {
+                            x: 'time',
+                            y: 'followings'
+                        }
+                    },
+                    {
+                        name: 'Followings Change',
+                        type: 'bar',
+                        barWidth: '68%',
+                        yAxisIndex: 1,
+                        encode: {
+                            x: 'time',
+                            y: 'followings_diff'
+                        }
+                    }
+                ]
+            });
+        });
+
+        var followingsCoverageUrl = '/api/profiles/1/stats/ig?metrics=impressions,reach&granularity=daily&since=' + startOf30Days + '&until=' + endOfToday;
+        $.getJSON(followingsCoverageUrl, function(data) {
+            chartCoverage.setOption({
+                dataset: {
+                    dimensions: data.dimensions,
+                    source: data.data
+                },
+                yAxis: [
+                    {
+                        name: 'Value',
+                        min: 0,
+                        max: 3200,
+                        interval: 800
+                    },
+                    {
+                        name: '',
+                        min: 0,
+                        max: 3200,
+                        interval: 800
+                    }
+                ],
+                series: [
+                    {
+                        name: 'Impressions',
+                        type: 'bar',
+                        yAxisIndex: 0,
+                        encode: {
+                            x: 'time',
+                            y: 'impressions'
+                        }
+                    },
+                    {
+                        name: 'Accounts Reach',
+                        type: 'bar',
+                        yAxisIndex: 0,
+                        encode: {
+                            x: 'time',
+                            y: 'reach'
                         }
                     }
                 ]
