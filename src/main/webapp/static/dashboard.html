@@ -363,21 +363,77 @@
         yAxis: [
             {
                 type: 'value',
-                name: 'Followers',
-                scale: true,
-                min: 1200,
-                max: 3600,
-                interval: 400
+                scale: true
             },
             {
-                type: 'value',
-                name: 'Followers Change',
-                min: -40,
-                max: 200,
-                interval: 40
+                type: 'value'
             }
         ]
     };
+
+    function updateChartHourly(echartsObj, attrs, startingTimestamp) {
+
+        var fields = [];
+        attrs.forEach(function(attr) {
+            fields.push(attr.field);
+        });
+
+        var since = encodeURIComponent(moment(startingTimestamp).format(ISO_DATE_FORMAT));
+        var until = encodeURIComponent(moment(startingTimestamp).add(1, 'day').format(ISO_DATE_FORMAT));
+
+        var url = '/api/profiles/1/stats/ig?metrics=' + fields.join(',') + '&granularity=hourly&since=' + since + '&until=' + until;
+        $.getJSON(url, function(data) {
+
+            if (data.data.length == 0) {
+                return;
+            }
+
+            var splitSolutions = rangeSplit(data.data, [1, 2], [5, 2]);
+
+            echartsObj.setOption({
+                dataset: {
+                    dimensions: data.dimensions,
+                    source: data.data
+                },
+                yAxis: [
+                    {
+                        name: attrs[0].name,
+                        min: splitSolutions[0].min,
+                        max: splitSolutions[0].max,
+                        interval: splitSolutions[0].interval
+                    },
+                    {
+                        name: attrs[1].name,
+                        min: splitSolutions[1].min,
+                        max: splitSolutions[1].max,
+                        interval: splitSolutions[1].interval
+                    }
+                ],
+                series: [
+                    {
+                        name: attrs[0].name,
+                        type: 'line',
+                        yAxisIndex: 0,
+                        encode: {
+                            x: 'time',
+                            y: attrs[0].field
+                        }
+                    },
+                    {
+                        name: attrs[1].name,
+                        type: 'bar',
+                        barWidth: '68%',
+                        yAxisIndex: 1,
+                        encode: {
+                            x: 'time',
+                            y: attrs[1].field
+                        }
+                    }
+                ]
+            });
+        });
+
+    }
 
     $(function() {
         retrieveUser();
@@ -388,8 +444,16 @@
         var chartFollowers24 = echarts.init(document.getElementById("stat_followers_24"), null, {renderer: 'canvas'});
         chartFollowers24.setOption(option);
 
+        chartFollowers.on('click', function(event) {
+            updateChartFollowersHourly(event.value[0]);
+        });
+
         var chartFollowings = echarts.init(document.getElementById("stat_followings"), null, {renderer: 'canvas'});
         chartFollowings.setOption(option);
+
+        chartFollowings.on('click', function(event) {
+            updateChartFollowingsHourly(event.value[0]);
+        });
 
         var chartFollowings24 = echarts.init(document.getElementById("stat_followings_24"), null, {renderer: 'canvas'});
         chartFollowings24.setOption(option);
@@ -397,7 +461,20 @@
         var chartCoverage = echarts.init(document.getElementById("stat_coverage"), null, {renderer: 'canvas'});
         chartCoverage.setOption(option);
 
-        var ISO_DATE_FORMAT = 'YYYY-MM-DDTHH:mm:ss.SSSZ';
+        function updateChartFollowersHourly(startingTime = (new Date()).getTime() - 86400000) {
+            updateChartHourly(chartFollowers24, [
+                {name: "Followers", field: "followers"},
+                {name: "Followers Change", field: "followers_diff"}
+            ], startingTime);
+        }
+
+        function updateChartFollowingsHourly(startingTime = (new Date()).getTime() - 86400000) {
+            updateChartHourly(chartFollowings24, [
+                {name: "Followings", field: "followings"},
+                {name: "Followings Change", field: "followings_diff"}
+            ], startingTime);
+        }
+
         var endOfToday = encodeURIComponent(moment().endOf('day').format(ISO_DATE_FORMAT));
         var startOf30Days = encodeURIComponent(moment().subtract(30, 'day').startOf('day').format(ISO_DATE_FORMAT));
 
@@ -407,6 +484,9 @@
         // load followers
         var followersUrl = '/api/profiles/1/stats/ig?metrics=followers,followers_diff&granularity=daily&since=' + startOf30Days + '&until=' + endOfToday;
         $.getJSON(followersUrl, function(data) {
+
+            var splitSolutions = rangeSplit(data.data, [1, 2], [50, 5]);
+
             chartFollowers.setOption({
                 dataset: {
                     dimensions: data.dimensions,
@@ -415,9 +495,15 @@
                 yAxis: [
                     {
                         name: 'Followers',
+                        min: splitSolutions[0].min,
+                        max: splitSolutions[0].max,
+                        interval: splitSolutions[0].interval
                     },
                     {
                         name: 'Followers Change',
+                        min: splitSolutions[1].min,
+                        max: splitSolutions[1].max,
+                        interval: splitSolutions[1].interval
                     }
                 ],
                 series: [
@@ -444,54 +530,14 @@
             });
         });
 
-        var followers24Url = '/api/profiles/1/stats/ig?metrics=followers,followers_diff&granularity=hourly&since=' + aDayAgo + '&until=' + now;
-        $.getJSON(followers24Url, function(data) {
-            chartFollowers24.setOption({
-                dataset: {
-                    dimensions: data.dimensions,
-                    source: data.data
-                },
-                yAxis: [
-                    {
-                        name: 'Followers',
-                        min: 3510,
-                        max: 3582,
-                        interval: 12
-                    },
-                    {
-                        name: 'Followers Change',
-                        min: 8,
-                        max: -4,
-                        interval: 2
-                    }
-                ],
-                series: [
-                    {
-                        name: 'Followers',
-                        type: 'line',
-                        yAxisIndex: 0,
-                        encode: {
-                            x: 'time',
-                            y: 'followers'
-                        }
-                    },
-                    {
-                        name: 'Followers Change',
-                        type: 'bar',
-                        barWidth: '68%',
-                        yAxisIndex: 1,
-                        encode: {
-                            x: 'time',
-                            y: 'followers_diff'
-                        }
-                    }
-                ]
-            });
-        });
+        updateChartFollowersHourly();
 
         // load followings
         var followingsUrl = '/api/profiles/1/stats/ig?metrics=followings,followings_diff&granularity=daily&since=' + startOf30Days + '&until=' + endOfToday;
         $.getJSON(followingsUrl, function(data) {
+
+            var splitSolutions = rangeSplit(data.data, [1, 2], [100, 100]);
+
             chartFollowings.setOption({
                 dataset: {
                     dimensions: data.dimensions,
@@ -500,15 +546,15 @@
                 yAxis: [
                     {
                         name: 'Followings',
-                        min: 600,
-                        max: 7200,
-                        interval: 1100
+                        min: splitSolutions[0].min,
+                        max: splitSolutions[0].max,
+                        interval: splitSolutions[0].interval
                     },
                     {
                         name: 'Followings Change',
-                        min: -1500,
-                        max: 1500,
-                        interval: 500
+                        min: splitSolutions[1].min,
+                        max: splitSolutions[1].max,
+                        interval: splitSolutions[1].interval
                     }
                 ],
                 series: [
@@ -535,53 +581,13 @@
             });
         });
 
-        var followingsUrl24 = '/api/profiles/1/stats/ig?metrics=followings,followings_diff&granularity=hourly&since=' + aDayAgo + '&until=' + now;
-        $.getJSON(followingsUrl24, function(data) {
-            chartFollowings24.setOption({
-                dataset: {
-                    dimensions: data.dimensions,
-                    source: data.data
-                },
-                yAxis: [
-                    {
-                        name: 'Followings',
-                        min: 6300,
-                        max: 7200,
-                        interval: 150
-                    },
-                    {
-                        name: 'Followings Change',
-                        min: -60,
-                        max: 30,
-                        interval: 15
-                    }
-                ],
-                series: [
-                    {
-                        name: 'Followings',
-                        type: 'line',
-                        yAxisIndex: 0,
-                        encode: {
-                            x: 'time',
-                            y: 'followings'
-                        }
-                    },
-                    {
-                        name: 'Followings Change',
-                        type: 'bar',
-                        barWidth: '68%',
-                        yAxisIndex: 1,
-                        encode: {
-                            x: 'time',
-                            y: 'followings_diff'
-                        }
-                    }
-                ]
-            });
-        });
+        updateChartFollowingsHourly();
 
         var followingsCoverageUrl = '/api/profiles/1/stats/ig?metrics=impressions,reach&granularity=daily&since=' + startOf30Days + '&until=' + endOfToday;
         $.getJSON(followingsCoverageUrl, function(data) {
+
+            var splitSolutions = rangeSplit(data.data, [1, 2], [100, 100], [false, false]);
+
             chartCoverage.setOption({
                 dataset: {
                     dimensions: data.dimensions,
@@ -590,15 +596,15 @@
                 yAxis: [
                     {
                         name: 'Value',
-                        min: 0,
-                        max: 3200,
-                        interval: 800
+                        min: splitSolutions[0].min,
+                        max: splitSolutions[0].max,
+                        interval: splitSolutions[0].interval
                     },
                     {
                         name: '',
-                        min: 0,
-                        max: 3200,
-                        interval: 800
+                        min: splitSolutions[0].min,
+                        max: splitSolutions[0].max,
+                        interval: splitSolutions[0].interval
                     }
                 ],
                 series: [
