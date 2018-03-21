@@ -307,7 +307,7 @@
 <script>
     var option = {
         color: [
-                '#ffc107', '#5695da'
+                '#ffc107', '#56a2da'
         ],
         grid: {
             containLabel: true,
@@ -330,6 +330,9 @@
                 crossStyle: {
                     color: '#ccc'
                 }
+            },
+            textStyle: {
+                fontSize: 12
             }
         },
         toolbox: {
@@ -343,21 +346,21 @@
         legend: {},
         xAxis: [
             {
-                type: 'time',
-                axisLabel: {
-                    formatter: function (value, index) {
-                        var date = new Date(value);
-                        var texts = [date.getMonth() + 1, date.getDate()];
-                        if (index === 0) {
-                            texts.unshift(date.getYear());
-                        }
-                        return texts.join(' / ');
-                    }
+                type: 'category',
+                axisTick: {
+                    interval: 6
                 },
                 axisPointer: {
-                    type: 'shadow'
-                },
-                boundaryGap: [30, 30]
+                    type: 'line',
+                    lineStyle: {
+                        type: 'dashed'
+                    },
+                    label: {
+                        formatter: function(params) {
+                            return moment(params.value).format('MM/DD');
+                        }
+                    }
+                }
             }
         ],
         yAxis: [
@@ -371,30 +374,50 @@
         ]
     };
 
-    function updateChartHourly(echartsObj, attrs, startingTimestamp) {
+    function updateChart(echartsObj, attrs, granularity, endTimestamps, minIntervals) {
 
         var fields = [];
         attrs.forEach(function(attr) {
             fields.push(attr.field);
         });
 
-        var since = encodeURIComponent(moment(startingTimestamp).format(ISO_DATE_FORMAT));
-        var until = encodeURIComponent(moment(startingTimestamp).add(1, 'day').format(ISO_DATE_FORMAT));
+        var until = encodeURIComponent(moment(endTimestamps).format(ISO_DATE_FORMAT));
+        var since = encodeURIComponent(moment(endTimestamps).subtract(granularity === 'hourly' ? 1 : 30, 'day').format(ISO_DATE_FORMAT));
 
-        var url = '/api/profiles/1/stats/ig?metrics=' + fields.join(',') + '&granularity=hourly&since=' + since + '&until=' + until;
+        var xAxisInterval = granularity === 'hourly' ? 3 : 6;
+
+        var url = '/api/profiles/1/stats/ig?metrics=' + fields.join(',') + '&granularity=' + granularity + '&since=' + since + '&until=' + until;
         $.getJSON(url, function(data) {
 
             if (data.data.length == 0) {
                 return;
             }
 
-            var splitSolutions = rangeSplit(data.data, [1, 2], [5, 2]);
+            var splitSolutions = rangeSplit(data.data, [1, 2], minIntervals);
 
             echartsObj.setOption({
                 dataset: {
                     dimensions: data.dimensions,
                     source: data.data
                 },
+                xAxis: [{
+                    axisTick: {
+                        interval: xAxisInterval
+                    },
+                    axisLabel: {
+                        interval: xAxisInterval,
+                        formatter: function (value, index) {
+                            return moment(value).format(granularity === 'hourly' ? 'HH:mm' : 'MM/DD');
+                        }
+                    },
+                    axisPointer: {
+                        label: {
+                            formatter: function(params) {
+                                return moment(params.value).format('MM/DD HH:mm');
+                            }
+                        }
+                    }
+                }],
                 yAxis: [
                     {
                         name: attrs[0].name,
@@ -422,7 +445,7 @@
                     {
                         name: attrs[1].name,
                         type: 'bar',
-                        barWidth: '68%',
+                        barWidth: '70%',
                         yAxisIndex: 1,
                         encode: {
                             x: 'time',
@@ -461,138 +484,64 @@
         var chartCoverage = echarts.init(document.getElementById("stat_coverage"), null, {renderer: 'canvas'});
         chartCoverage.setOption(option);
 
-        function updateChartFollowersHourly(startingTime = (new Date()).getTime() - 86400000) {
-            updateChartHourly(chartFollowers24, [
+        function updateChartFollowersHourly(endTime = (new Date()).getTime()) {
+            updateChart(chartFollowers24, [
                 {name: "Followers", field: "followers"},
                 {name: "Followers Change", field: "followers_diff"}
-            ], startingTime);
+            ], 'hourly', endTime, [5, 2]);
         }
 
-        function updateChartFollowingsHourly(startingTime = (new Date()).getTime() - 86400000) {
-            updateChartHourly(chartFollowings24, [
+        function updateChartFollowingsHourly(endTime = (new Date()).getTime()) {
+            updateChart(chartFollowings24, [
                 {name: "Followings", field: "followings"},
                 {name: "Followings Change", field: "followings_diff"}
-            ], startingTime);
+            ], 'hourly', endTime, [10, 2]);
+        }
+
+        function updateChartFollowersDaily(endTime = (new Date()).getTime()) {
+            updateChart(chartFollowers, [
+                {name: "Followers", field: "followers"},
+                {name: "Followers Change", field: "followers_diff"}
+            ], 'daily', endTime, [50, 10]);
+        }
+
+        function updateChartFollowingsDaily(endTime = (new Date()).getTime()) {
+            updateChart(chartFollowings, [
+                {name: "Followings", field: "followings"},
+                {name: "Followings Change", field: "followings_diff"}
+            ], 'daily', endTime, [100, 100]);
         }
 
         var endOfToday = encodeURIComponent(moment().endOf('day').format(ISO_DATE_FORMAT));
         var startOf30Days = encodeURIComponent(moment().subtract(30, 'day').startOf('day').format(ISO_DATE_FORMAT));
 
-        var now = encodeURIComponent(moment().format(ISO_DATE_FORMAT));
-        var aDayAgo = encodeURIComponent(moment().subtract(24, 'hour').format(ISO_DATE_FORMAT));
-
         // load followers
-        var followersUrl = '/api/profiles/1/stats/ig?metrics=followers,followers_diff&granularity=daily&since=' + startOf30Days + '&until=' + endOfToday;
-        $.getJSON(followersUrl, function(data) {
-
-            var splitSolutions = rangeSplit(data.data, [1, 2], [50, 5]);
-
-            chartFollowers.setOption({
-                dataset: {
-                    dimensions: data.dimensions,
-                    source: data.data
-                },
-                yAxis: [
-                    {
-                        name: 'Followers',
-                        min: splitSolutions[0].min,
-                        max: splitSolutions[0].max,
-                        interval: splitSolutions[0].interval
-                    },
-                    {
-                        name: 'Followers Change',
-                        min: splitSolutions[1].min,
-                        max: splitSolutions[1].max,
-                        interval: splitSolutions[1].interval
-                    }
-                ],
-                series: [
-                    {
-                        name: 'Followers',
-                        type: 'line',
-                        yAxisIndex: 0,
-                        encode: {
-                            x: 'time',
-                            y: 'followers'
-                        }
-                    },
-                    {
-                        name: 'Followers Change',
-                        type: 'bar',
-                        barWidth: '68%',
-                        yAxisIndex: 1,
-                        encode: {
-                            x: 'time',
-                            y: 'followers_diff'
-                        }
-                    }
-                ]
-            });
-        });
-
+        updateChartFollowersDaily();
         updateChartFollowersHourly();
-
-        // load followings
-        var followingsUrl = '/api/profiles/1/stats/ig?metrics=followings,followings_diff&granularity=daily&since=' + startOf30Days + '&until=' + endOfToday;
-        $.getJSON(followingsUrl, function(data) {
-
-            var splitSolutions = rangeSplit(data.data, [1, 2], [100, 100]);
-
-            chartFollowings.setOption({
-                dataset: {
-                    dimensions: data.dimensions,
-                    source: data.data
-                },
-                yAxis: [
-                    {
-                        name: 'Followings',
-                        min: splitSolutions[0].min,
-                        max: splitSolutions[0].max,
-                        interval: splitSolutions[0].interval
-                    },
-                    {
-                        name: 'Followings Change',
-                        min: splitSolutions[1].min,
-                        max: splitSolutions[1].max,
-                        interval: splitSolutions[1].interval
-                    }
-                ],
-                series: [
-                    {
-                        name: 'Followings',
-                        type: 'line',
-                        yAxisIndex: 0,
-                        encode: {
-                            x: 'time',
-                            y: 'followings'
-                        }
-                    },
-                    {
-                        name: 'Followings Change',
-                        type: 'bar',
-                        barWidth: '68%',
-                        yAxisIndex: 1,
-                        encode: {
-                            x: 'time',
-                            y: 'followings_diff'
-                        }
-                    }
-                ]
-            });
-        });
-
+        updateChartFollowingsDaily();
         updateChartFollowingsHourly();
 
         var followingsCoverageUrl = '/api/profiles/1/stats/ig?metrics=impressions,reach&granularity=daily&since=' + startOf30Days + '&until=' + endOfToday;
         $.getJSON(followingsCoverageUrl, function(data) {
 
-            var splitSolutions = rangeSplit(data.data, [1, 2], [100, 100], [false, false]);
+            var splitSolutions = rangeSplit(data.data, [1, 2], [50, 50], [false, false]);
 
             chartCoverage.setOption({
                 dataset: {
                     dimensions: data.dimensions,
                     source: data.data
                 },
+                xAxis: [{
+                    axisLabel: {
+                        interval: 6,
+                        formatter: function (value, index) {
+                            return moment(value).format('MM/DD');
+                        }
+                    },
+                    axisPointer: {
+                        type: 'shadow'
+                    }
+                }],
                 yAxis: [
                     {
                         name: 'Value',
