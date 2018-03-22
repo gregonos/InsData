@@ -1,0 +1,137 @@
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">Profile</h1>
+</div>
+
+<div class="statCard">
+    <div class="statHeader">
+        <h2 class="h3">Coverage</h2>
+    </div>
+    <div id="stat_coverage" class="chatWrapper"></div>
+</div>
+
+<div class="statCard">
+    <div class="statHeader">
+        <h2 class="h3">Profile Views</h2>
+    </div>
+    <div id="stat_profile_views" class="chatWrapper"></div>
+</div>
+
+<script>
+    function loadProfile() {
+
+        var chartCoverage = echarts.init(document.getElementById("stat_coverage"), null, {renderer: 'canvas'});
+        chartCoverage.setOption(option);
+
+        var chartProfileViews = echarts.init(document.getElementById("stat_profile_views"), null, {renderer: 'canvas'});
+        chartProfileViews.setOption(option);
+
+        var endOfToday = encodeURIComponent(moment().endOf('day').format(ISO_DATE_FORMAT));
+        var startOf30Days = encodeURIComponent(moment().subtract(30, 'day').startOf('day').format(ISO_DATE_FORMAT));
+
+        var followingsCoverageUrl = '/api/profiles/1/stats/ig?metrics=impressions,reach&granularity=daily&since=' + startOf30Days + '&until=' + endOfToday;
+        $.getJSON(followingsCoverageUrl, function(data) {
+
+            var splitSolutions = rangeSplit(data.data, [1, 2], [50, 50], [false, false]);
+
+            chartCoverage.setOption({
+                dataset: {
+                    dimensions: data.dimensions,
+                    source: data.data
+                },
+                xAxis: [{
+                    axisLabel: {
+                        interval: 6,
+                        formatter: function (value, index) {
+                            return moment(value).format('MM/DD');
+                        }
+                    },
+                    axisPointer: {
+                        type: 'shadow'
+                    }
+                }],
+                yAxis: [
+                    {
+                        name: 'Value',
+                        min: splitSolutions[0].min,
+                        max: splitSolutions[0].max,
+                        interval: splitSolutions[0].interval
+                    }
+                ],
+                series: [
+                    {
+                        name: 'Impressions',
+                        type: 'bar',
+                        encode: {
+                            x: 'time',
+                            y: 'impressions'
+                        },
+                        animationDuration: 500,
+                        animationDelay: function(id) {
+                            return id * 15;
+                        }
+                    },
+                    {
+                        name: 'Accounts Reach',
+                        type: 'bar',
+                        encode: {
+                            x: 'time',
+                            y: 'reach'
+                        },
+                        animationDuration: 500,
+                        animationDelay: function(id) {
+                            return id * 15;
+                        }
+                    }
+                ]
+            });
+        });
+
+
+        var followingsProfileViewsUrl = '/api/profiles/1/stats/ig?metrics=profile_views&granularity=daily&since=' + startOf30Days + '&until=' + endOfToday;
+        $.getJSON(followingsProfileViewsUrl, function(data) {
+
+            var splitSolutions = rangeSplit(data.data, [1], [20], [false]);
+
+            chartProfileViews.setOption({
+                dataset: {
+                    dimensions: data.dimensions,
+                    source: data.data
+                },
+                xAxis: [{
+                    axisLabel: {
+                        interval: 6,
+                        formatter: function (value, index) {
+                            return moment(value).format('MM/DD');
+                        }
+                    },
+                    axisPointer: {
+                        type: 'line'
+                    }
+                }],
+                yAxis: [
+                    {
+                        name: 'Value',
+                        min: splitSolutions[0].min,
+                        max: splitSolutions[0].max,
+                        interval: splitSolutions[0].interval
+                    }
+                ],
+                series: [
+                    {
+                        name: 'Profile Views',
+                        type: 'bar',
+                        encode: {
+                            x: 'time',
+                            y: 'profile_views'
+                        },
+                        animationDuration: 500,
+                        animationDelay: function(id) {
+                            return id * 15;
+                        }
+                    }
+                ]
+            });
+        });
+
+    }
+</script>

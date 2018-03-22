@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>InsData - Dashboard</title>
+
+    <link rel="stylesheet" href="static/css/bootstrap.css" crossorigin="anonymous" />
+    <link rel="stylesheet" href="static/css/dashboard.css" />
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top bg-dark flex-md-nowrap p-0">
+    <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="#">InsData</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav ml-2 mr-auto">
+            <li class="nav-item active">
+                <a class="nav-link" href="#">Analytics <span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">Community</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">Blog</a>
+            </li>
+        </ul>
+        <div class="navbar-nav dropdown show">
+            <a class="nav-link dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <span data-feather="user"></span> <span class="data-userFullName">asdf</span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuLink">
+                <a class="dropdown-item" href="#">Settings</a>
+                <a class="dropdown-item" href="#">Sign out</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid">
+    <div class="row">
+        <nav class="col-md-2 d-none d-md-block bg-light sidebar">
+            <div class="sidebar-sticky">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#dashboard" data-navname="dashboard">
+                            <span data-feather="home"></span>
+                            Dashboard <span class="sr-only">(current)</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#profile" data-navname="profile">
+                            <span data-feather="instagram"></span>
+                            Profile
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#audience" data-navname="audience">
+                            <span data-feather="users"></span>
+                            Audience
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#posts" data-navname="posts">
+                            <span data-feather="file"></span>
+                            Posts
+                        </a>
+                    </li>
+                </ul>
+
+                <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                    <span>Saved reports</span>
+                    <a class="d-flex align-items-center text-muted" href="#">
+                        <span data-feather="plus-circle"></span>
+                    </a>
+                </h6>
+                <ul class="nav flex-column mb-2">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <span data-feather="file-text"></span>
+                            Current month
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <span data-feather="file-text"></span>
+                            Last quarter
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <span data-feather="file-text"></span>
+                            Social engagement
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <span data-feather="file-text"></span>
+                            Year-end sale
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <main role="main" class="col-md-9 ml-sm-auto col-lg-10 pt-3 px-4" id="mainContainer">
+        </main>
+    </div>
+</div>
+
+<script src="static/js/jquery-3.2.1.min.js" crossorigin="anonymous"></script>
+<script src="static/js/popper.min.js" crossorigin="anonymous"></script>
+<script src="static/js/bootstrap.min.js"></script>
+<script src="static/js/echarts.min.js"></script>
+<script src="static/js/moment.min.js"></script>
+
+<script src="static/js/insdata.js"></script>
+<script src="static/js/analytics.js"></script>
+
+<!-- Icons -->
+<script src="static/js/feather.min.js"></script>
+<script>
+    feather.replace()
+</script>
+
+<script>
+    function loadAnalyticsTemplate(tempName) {
+        $('#mainContainer').load('/static/html/analytics/' + tempName + '.html', function() {
+            onTemplateLoaded(tempName);
+        })
+    }
+
+    function onTemplateLoaded(tempName) {
+        var tempNameCap = tempName.charAt(0).toUpperCase() + tempName.slice(1);
+        if (window['load' + tempNameCap]) {
+            window['load' + tempNameCap]();
+        }
+    }
+
+    $('.sidebar a').click(function(event) {
+        loadAnalyticsTemplate(event.target.dataset.navname);
+    });
+
+    $(function() {
+        retrieveUser();
+
+        var template = 'dashboard';
+        if (location.hash) {
+            template = location.hash.slice(1);
+        }
+
+        loadAnalyticsTemplate(template);
+    });
+</script>
+
+</body>
+</html>

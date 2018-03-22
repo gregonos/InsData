@@ -1,0 +1,261 @@
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">Dashboard</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group mr-2">
+            <button class="btn btn-sm btn-outline-secondary">Share</button>
+            <button class="btn btn-sm btn-outline-secondary">Export</button>
+        </div>
+        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="dropdownTimeRange" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <span data-feather="calendar"></span>
+            This week
+        </button>
+        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownTimeRange">
+            <a class="dropdown-item" href="#">Recent 30 days</a>
+            <a class="dropdown-item" href="#">Recent 7 days</a>
+            <a class="dropdown-item" href="#">Last month</a>
+            <a class="dropdown-item" href="#">Last week</a>
+            <a class="dropdown-item" href="#">Custom...</a>
+        </div>
+    </div>
+</div>
+
+<div class="statCard">
+    <div class="statHeader">
+        <h2 class="h3">Followers</h2>
+    </div>
+    <div class="row">
+        <div id="stat_followers" class="chatWrapper col-lg-7"></div>
+        <div id="stat_followers_24" class="chatWrapper col-lg-5"></div>
+    </div>
+</div>
+
+<div class="statCard">
+    <div class="statHeader">
+        <h2 class="h3">Followings</h2>
+    </div>
+    <div class="row">
+        <div id="stat_followings" class="chatWrapper col-lg-7"></div>
+        <div id="stat_followings_24" class="chatWrapper col-lg-5"></div>
+    </div>
+</div>
+
+<div class="statCard">
+    <div class="statHeader">
+        <h2 class="h3">Coverage</h2>
+    </div>
+    <div id="stat_coverage" class="chatWrapper"></div>
+</div>
+
+<script>
+
+    function updateChart(echartsObj, attrs, granularity, endTimestamps, minIntervals) {
+
+        var fields = [];
+        attrs.forEach(function(attr) {
+            fields.push(attr.field);
+        });
+
+        var until = encodeURIComponent(moment(endTimestamps).format(ISO_DATE_FORMAT));
+        var since = encodeURIComponent(moment(endTimestamps).subtract(granularity === 'hourly' ? 1 : 30, 'day').format(ISO_DATE_FORMAT));
+
+        var xAxisInterval = granularity === 'hourly' ? 3 : 6;
+
+        var url = '/api/profiles/1/stats/ig?metrics=' + fields.join(',') + '&granularity=' + granularity + '&since=' + since + '&until=' + until;
+        $.getJSON(url, function(data) {
+
+            if (data.data.length == 0) {
+                return;
+            }
+
+            var splitSolutions = rangeSplit(data.data, [1, 2], minIntervals);
+
+            echartsObj.setOption({
+                dataset: {
+                    dimensions: data.dimensions,
+                    source: data.data
+                },
+                legend: {
+                    data: attrs
+                },
+                xAxis: [{
+                    axisTick: {
+                        interval: xAxisInterval
+                    },
+                    axisLabel: {
+                        interval: xAxisInterval,
+                        formatter: function (value, index) {
+                            return moment(value).format(granularity === 'hourly' ? 'HH:mm' : 'MM/DD');
+                        }
+                    },
+                    axisPointer: {
+                        label: {
+                            formatter: function(params) {
+                                return moment(params.value).format('MM/DD HH:mm');
+                            }
+                        }
+                    }
+                }],
+                yAxis: [
+                    {
+                        name: attrs[0].name,
+                        min: splitSolutions[0].min,
+                        max: splitSolutions[0].max,
+                        interval: splitSolutions[0].interval
+                    },
+                    {
+                        name: attrs[1].name,
+                        min: splitSolutions[1].min,
+                        max: splitSolutions[1].max,
+                        interval: splitSolutions[1].interval
+                    }
+                ],
+                series: [
+                    {
+                        name: attrs[1].name,
+                        type: 'bar',
+                        barWidth: '70%',
+                        yAxisIndex: 1,
+                        encode: {
+                            x: 'time',
+                            y: attrs[1].field
+                        },
+                        animationDuration: 500,
+                        animationDelay: function(id) {
+                            return id * 15;
+                        }
+                    },
+                    {
+                        name: attrs[0].name,
+                        type: 'line',
+                        yAxisIndex: 0,
+                        encode: {
+                            x: 'time',
+                            y: attrs[0].field
+                        }
+                    }
+                ]
+            });
+        });
+    }
+
+    function loadDashboard() {
+        var chartFollowers = echarts.init(document.getElementById("stat_followers"), null, {renderer: 'canvas'});
+        chartFollowers.setOption(option);
+
+        var chartFollowers24 = echarts.init(document.getElementById("stat_followers_24"), null, {renderer: 'canvas'});
+        chartFollowers24.setOption(option);
+
+        chartFollowers.on('click', function(event) {
+            updateChartFollowersHourly(event.value[0]);
+        });
+
+        var chartFollowings = echarts.init(document.getElementById("stat_followings"), null, {renderer: 'canvas'});
+        chartFollowings.setOption(option);
+
+        chartFollowings.on('click', function(event) {
+            updateChartFollowingsHourly(event.value[0]);
+        });
+
+        var chartFollowings24 = echarts.init(document.getElementById("stat_followings_24"), null, {renderer: 'canvas'});
+        chartFollowings24.setOption(option);
+
+        var chartCoverage = echarts.init(document.getElementById("stat_coverage"), null, {renderer: 'canvas'});
+        chartCoverage.setOption(option);
+
+        function updateChartFollowersHourly(endTime = (new Date()).getTime()) {
+            updateChart(chartFollowers24, [
+                {name: "Followers", field: "followers"},
+                {name: "Followers Change", field: "followers_diff"}
+            ], 'hourly', endTime, [5, 2]);
+        }
+
+        function updateChartFollowingsHourly(endTime = (new Date()).getTime()) {
+            updateChart(chartFollowings24, [
+                {name: "Followings", field: "followings"},
+                {name: "Followings Change", field: "followings_diff"}
+            ], 'hourly', endTime, [10, 2]);
+        }
+
+        function updateChartFollowersDaily(endTime = (new Date()).getTime()) {
+            updateChart(chartFollowers, [
+                {name: "Followers", field: "followers"},
+                {name: "Followers Change", field: "followers_diff"}
+            ], 'daily', endTime, [50, 10]);
+        }
+
+        function updateChartFollowingsDaily(endTime = (new Date()).getTime()) {
+            updateChart(chartFollowings, [
+                {name: "Followings", field: "followings"},
+                {name: "Followings Change", field: "followings_diff"}
+            ], 'daily', endTime, [100, 100]);
+        }
+
+        // load followers
+        updateChartFollowersDaily();
+        updateChartFollowersHourly();
+        updateChartFollowingsDaily();
+        updateChartFollowingsHourly();
+
+        var endOfToday = encodeURIComponent(moment().endOf('day').format(ISO_DATE_FORMAT));
+        var startOf30Days = encodeURIComponent(moment().subtract(30, 'day').startOf('day').format(ISO_DATE_FORMAT));
+
+        var followingsCoverageUrl = '/api/profiles/1/stats/ig?metrics=impressions,reach&granularity=daily&since=' + startOf30Days + '&until=' + endOfToday;
+        $.getJSON(followingsCoverageUrl, function(data) {
+
+            var splitSolutions = rangeSplit(data.data, [1, 2], [50, 50], [false, false]);
+
+            chartCoverage.setOption({
+                dataset: {
+                    dimensions: data.dimensions,
+                    source: data.data
+                },
+                xAxis: [{
+                    axisLabel: {
+                        interval: 6,
+                        formatter: function (value, index) {
+                            return moment(value).format('MM/DD');
+                        }
+                    },
+                    axisPointer: {
+                        type: 'shadow'
+                    }
+                }],
+                yAxis: [
+                    {
+                        name: 'Value',
+                        min: splitSolutions[0].min,
+                        max: splitSolutions[0].max,
+                        interval: splitSolutions[0].interval
+                    },
+                    {
+                        name: '',
+                        min: splitSolutions[0].min,
+                        max: splitSolutions[0].max,
+                        interval: splitSolutions[0].interval
+                    }
+                ],
+                series: [
+                    {
+                        name: 'Impressions',
+                        type: 'bar',
+                        yAxisIndex: 0,
+                        encode: {
+                            x: 'time',
+                            y: 'impressions'
+                        }
+                    },
+                    {
+                        name: 'Accounts Reach',
+                        type: 'bar',
+                        yAxisIndex: 0,
+                        encode: {
+                            x: 'time',
+                            y: 'reach'
+                        }
+                    }
+                ]
+            });
+        });
+    }
+
+</script>
