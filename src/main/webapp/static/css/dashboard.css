@@ -1,4 +1,5 @@
 body {
+  font-family: sans-serif, 'Myriad Pro';
   font-size: .875rem;
 }
 
@@ -6,6 +7,57 @@ body {
   width: 16px;
   height: 16px;
   vertical-align: text-bottom;
+}
+
+.container.main {
+  background-color: #eef2f6;
+  margin-left: 0;
+}
+
+.brand h1 {
+  text-align: center;
+  font-size: 2rem;
+  padding-top: 0.5rem;
+  color: #1b3454;
+  font-weight: bolder;
+  text-shadow: -1px -1px 0 #142841, 1px 1px 0 #225077;
+}
+
+.user-profile {
+  text-align: center;
+  margin: 2rem 0;
+}
+
+.user-profile-avatar img {
+  background: #999 no-repeat;
+  max-width: 100%;
+  max-height: 100%;
+  width: 60px;
+  height: 60px;
+  border-radius: 30px;
+  border: 3px solid #1b3454;
+  margin: 0 auto 0.5rem;
+}
+
+.user-profile-name {
+  font-weight: 600;
+}
+
+.user-profile .nav {
+  background-color: #1d3d60;
+}
+
+.user-profile .nav-item {
+  width: 25%;
+  text-align: center;
+}
+
+.user-profile .nav-item:hover {
+  background-color: #1b3454;
+}
+
+.user-profile .nav-item:hover a {
+  color: #fff;
 }
 
 /*
@@ -16,34 +68,31 @@ body {
   position: fixed;
   top: 0;
   bottom: 0;
-  left: 0;
   z-index: 100; /* Behind the navbar */
   padding: 0;
+  width: 190px;
+  background-color: #1F4569;
+  color: #d0f0ff;
   box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
-}
-
-.sidebar-sticky {
-  position: -webkit-sticky;
-  position: sticky;
-  top: 48px; /* Height of navbar */
-  height: calc(100vh - 48px);
-  padding-top: .5rem;
-  overflow-x: hidden;
-  overflow-y: auto; /* Scrollable contents if viewport is shorter than content. */
 }
 
 .sidebar .nav-link {
   font-weight: 500;
-  color: #333;
+  color: #829fae;
 }
 
 .sidebar .nav-link .feather {
   margin-right: 4px;
-  color: #999;
+}
+
+.sidebar .nav-link:hover {
+  color: #fff;
+  background-color: #1b3454;
 }
 
 .sidebar .nav-link.active {
-  color: #007bff;
+  background-color: #1d3d60;
+  color: #d0f0ff;
 }
 
 .sidebar .nav-link:hover .feather,
@@ -57,41 +106,29 @@ body {
 }
 
 /*
- * Navbar
+ * Main
  */
 
-.navbar {
-  background-color: rgb(31, 69, 105) !important;
+#mainContainer {
+  color: #444;
 }
 
-.navbar .feather {
-  width: 20px;
-  height: 20px;
-  vertical-align: middle;
+h2 {
+  font-size: 1.618rem;
+  font-weight: 700;
 }
 
-.navbar-brand {
-  padding-top: .75rem;
-  padding-bottom: .75rem;
+.statCard {
+  background-color: #fff;
+  margin: 15px auto;
+  padding: 15px;
+  border: 1px solid #e4e4e4;
+  box-shadow: 2px 2px 3px rgba(100, 100, 100, 0.06);
+}
+
+h3 {
   font-size: 1rem;
-  box-shadow: inset -1px 0 0 rgba(0, 0, 0, .25);
-}
-
-.navbar .form-control {
-  padding: .75rem 1rem;
-  border-width: 0;
-  border-radius: 0;
-}
-
-.form-control-dark {
-  color: #fff;
-  background-color: rgba(255, 255, 255, .1);
-  border-color: rgba(255, 255, 255, .1);
-}
-
-.form-control-dark:focus {
-  border-color: transparent;
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, .25);
+  font-weight: 600;
 }
 
 /*

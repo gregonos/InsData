@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="static/css/dashboard.css" />
 </head>
 <body>
+<!--
 <nav class="navbar navbar-expand-lg navbar-dark sticky-top bg-dark flex-md-nowrap p-0">
     <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="#">InsData</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,74 +39,66 @@
         </div>
     </div>
 </nav>
+-->
 
-<div class="container-fluid">
+<div class="container main">
     <div class="row">
-        <nav class="col-md-2 d-none d-md-block bg-light sidebar">
-            <div class="sidebar-sticky">
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="#dashboard" data-navname="dashboard">
-                            <span data-feather="home"></span>
-                            Dashboard <span class="sr-only">(current)</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#profile" data-navname="profile">
-                            <span data-feather="instagram"></span>
-                            Profile
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#audience" data-navname="audience">
-                            <span data-feather="users"></span>
-                            Audience
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#posts" data-navname="posts">
-                            <span data-feather="file"></span>
-                            Posts
-                        </a>
-                    </li>
-                </ul>
+        <aside class="col-md-2 d-none d-md-block sidebar">
+            <div class="brand">
+                <h1>InsData</h1>
+            </div>
 
-                <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-                    <span>Saved reports</span>
-                    <a class="d-flex align-items-center text-muted" href="#">
-                        <span data-feather="plus-circle"></span>
-                    </a>
-                </h6>
-                <ul class="nav flex-column mb-2">
+            <div class="user-profile">
+                <div class="user-profile-avatar">
+                    <img src="" width="60" height="60" border="0"/>
+                </div>
+                <div class="user-profile-name" id=""></div>
+                <ul class="nav mt-3">
                     <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <span data-feather="file-text"></span>
-                            Current month
-                        </a>
+                        <a class="nav-link" href="#"><span data-feather="user"></span></a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <span data-feather="file-text"></span>
-                            Last quarter
-                        </a>
+                        <a class="nav-link" href="#"><span data-feather="settings"></span></a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <span data-feather="file-text"></span>
-                            Social engagement
-                        </a>
+                        <a class="nav-link" href="#"><span data-feather="mail"></span></a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <span data-feather="file-text"></span>
-                            Year-end sale
-                        </a>
+                        <a class="nav-link disabled" href="#"><span data-feather="log-out"></span></a>
                     </li>
                 </ul>
             </div>
-        </nav>
 
-        <main role="main" class="col-md-9 ml-sm-auto col-lg-10 pt-3 px-4" id="mainContainer">
+            <ul class="nav flex-column side-menu">
+                <li class="nav-item">
+                    <a class="nav-link active" href="#dashboard" data-navname="dashboard">
+                        <span data-feather="home"></span>
+                        Dashboard <span class="sr-only">(current)</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#profile" data-navname="profile">
+                        <span data-feather="instagram"></span>
+                        Profile
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#audience" data-navname="audience">
+                        <span data-feather="users"></span>
+                        Audience
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#posts" data-navname="posts">
+                        <span data-feather="file"></span>
+                        Posts
+                    </a>
+                </li>
+            </ul>
+
+        </aside>
+
+        <main role="main" class="col-md-9 ml-sm-auto col-lg-10 pt-3" id="mainContainer">
         </main>
     </div>
 </div>
@@ -139,7 +132,9 @@
         }
     }
 
-    $('.sidebar a').click(function(event) {
+    $('.side-menu a').click(function(event) {
+        $('.side-menu a').removeClass('active');
+        $(event.target).addClass('active');
         loadAnalyticsTemplate(event.target.dataset.navname);
     });
 
