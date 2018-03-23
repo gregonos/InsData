@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 @Service
 public class IgProfileStatsDTOAssembler {
 
-    public IgProfileStatsDTO assemble(List<IgSnapshotMetric> snapshotFields, List<IgDiffMetric> diffFields,
+    public IgProfileStatsDTO assemble(List<IgSnapshotMetric> snapshotFields, List<IgDiffMetric> diffFields, List<String> calcFields,
                                       List<? extends IgProfileSnapshot> snapshots, List<? extends IgProfileDiff> diffs) {
         IgProfileStatsDTO target = new IgProfileStatsDTO();
 
@@ -33,6 +33,7 @@ public class IgProfileStatsDTOAssembler {
 
         dimensions.addAll(snapshotFields.stream().map(IgSnapshotMetric::getValue).collect(Collectors.toList()));
         dimensions.addAll(diffFields.stream().map(IgDiffMetric::getValue).collect(Collectors.toList()));
+        dimensions.addAll(calcFields);
 
         // Data
         int dataSize = 0;
@@ -58,6 +59,19 @@ public class IgProfileStatsDTOAssembler {
             IgProfileDiff diff = diffMap.get(time.getTime());
             dataItem.addAll(diffFields.stream().map(diffField -> getValueByPropertyName(diff, diffField.getFieldName())).collect(Collectors.toList()));
 
+            for (String calcField : calcFields) {
+                String calcMethodName = "calc" + CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, calcField);
+                try {
+                    Method calcMethod = this.getClass().getMethod(calcMethodName, IgProfileSnapshot.class, IgProfileDiff.class);
+                    Float rslt = (Float) calcMethod.invoke(this, snapshot, diff);
+                    dataItem.add(rslt);
+                } catch (NoSuchMethodException e) {
+                    log.error("Failed to find getter method [" + calcMethodName + "]", e);
+                } catch (InvocationTargetException | IllegalAccessException e) {
+                    log.error("Failed to call getter method [" + calcMethodName + "]", e);
+                }
+            }
+
             data.add(dataItem);
         }
 
@@ -65,6 +79,14 @@ public class IgProfileStatsDTOAssembler {
         target.setData(data);
 
         return target;
+    }
+
+    public Float calcImpressionsPerReach(IgProfileSnapshot snapshot, IgProfileDiff diff) {
+        return 0 == snapshot.getReach() ? 0 : snapshot.getImpressions().floatValue() / snapshot.getReach();
+    }
+
+    public Float calcImpressionsPerReachDiff(IgProfileSnapshot snapshot, IgProfileDiff diff) {
+        return 0 == diff.getReach() ? 0 : diff.getImpressions().floatValue() / diff.getReach();
     }
 
     private Object getValueByPropertyName(Object obj, String field) {

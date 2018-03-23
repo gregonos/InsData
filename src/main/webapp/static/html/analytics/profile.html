@@ -3,132 +3,279 @@
 </div>
 
 <div class="statCard">
-    <div class="statHeader">
+    <div class="statHeader d-flex justify-content-between">
         <h3>Coverage</h3>
+        <div class="btn-group btn-group-sm btn-group-toggle gran-switch" data-toggle="buttons">
+            <label class="btn btn-light">
+                <input type="radio" name="coverage-granularity" data-gran="coverage" id="coverage-hourly" value="hourly" autocomplete="off"/> Hourly
+            </label>
+            <label class="btn btn-light active">
+                <input type="radio" name="coverage-granularity" data-gran="coverage" id="coverage-daily" value="daily" autocomplete="off" checked/> Daily
+            </label>
+        </div>
     </div>
-    <div id="stat_coverage" class="chatWrapper"></div>
+    <div id="stat_coverage" class="chartWrapper"></div>
 </div>
 
 <div class="statCard">
-    <div class="statHeader">
+    <div class="statHeader d-flex justify-content-between">
         <h3>Profile Views</h3>
+        <div class="btn-group btn-group-sm btn-group-toggle gran-switch" data-toggle="buttons">
+            <label class="btn btn-light">
+                <input type="radio" name="profile-views-granularity" data-gran="profile_views" id="profile-views-hourly" value="hourly" autocomplete="off"/> Hourly
+            </label>
+            <label class="btn btn-light active">
+                <input type="radio" name="profile-views-granularity" data-gran="profile_views" id="profile-views-daily" value="daily" autocomplete="off" checked/> Daily
+            </label>
+        </div>
     </div>
-    <div id="stat_profile_views" class="chatWrapper"></div>
+    <div id="stat_profile_views" class="chartWrapper"></div>
 </div>
 
 <script>
+    var chartCoverage = echarts.init(document.getElementById("stat_coverage"), null, {renderer: 'canvas'});
+    chartCoverage.setOption(option);
+
+    var chartProfileViews = echarts.init(document.getElementById("stat_profile_views"), null, {renderer: 'canvas'});
+    chartProfileViews.setOption(option);
+
+    $('.gran-switch input[type=radio]').change(function (ele){
+        if ('hourly' == this.value) {
+            loadCoverageHourly(ele.target.dataset.gran);
+        } else if ('daily' == this.value) {
+            loadCoverageDaily(ele.target.dataset.gran);
+        }
+    });
+
     function loadProfile() {
+        loadCoverageDaily();
+    }
 
-        var chartCoverage = echarts.init(document.getElementById("stat_coverage"), null, {renderer: 'canvas'});
-        chartCoverage.setOption(option);
-
-        var chartProfileViews = echarts.init(document.getElementById("stat_profile_views"), null, {renderer: 'canvas'});
-        chartProfileViews.setOption(option);
-
+    function loadCoverageDaily(targetCharts = ['coverage', 'profile_views']) {
         var endOfToday = encodeURIComponent(moment().endOf('day').format(ISO_DATE_FORMAT));
         var startOf30Days = encodeURIComponent(moment().subtract(30, 'day').startOf('day').format(ISO_DATE_FORMAT));
 
-        var followingsCoverageUrl = '/api/profiles/1/stats/ig?metrics=impressions,reach,profile_views&granularity=daily&since=' + startOf30Days + '&until=' + endOfToday;
+        var followingsCoverageUrl = '/api/profiles/1/stats/ig?metrics=impressions,reach,profile_views,impressions_per_reach&granularity=daily&since=' + startOf30Days + '&until=' + endOfToday;
         $.getJSON(followingsCoverageUrl, function(data) {
 
-            var splitSolutions = rangeSplit(data.data, [1, 2], [50, 50], [false, false]);
+            var splitSolutions;
 
-            chartCoverage.setOption({
-                dataset: {
-                    dimensions: data.dimensions,
-                    source: data.data
-                },
-                xAxis: [{
-                    axisLabel: {
-                        interval: 6,
-                        formatter: function (value, index) {
-                            return moment(value).format('MM/DD');
+            if (targetCharts.indexOf('coverage') >= 0) {
+                splitSolutions = rangeSplit(data.data, [1, 4], [50, 0.5], [false, false]);
+
+                chartCoverage.setOption({
+                    dataset: {
+                        dimensions: data.dimensions,
+                        source: data.data
+                    },
+                    grid: {
+                        top: 40
+                    },
+                    tooltip: {
+                        formatter: function(params) {
+                            var html = moment(params[0].axisValue).format('YYYY/MM/DD HH:mm');
+
+                            html += '<br/>' + params[0].marker + ' ' + params[0].seriesName + ': ' + params[0].data[1];
+                            html += '<br/>' + params[1].marker + ' ' + params[1].seriesName + ': ' + params[1].data[2];
+                            html += '<br/>' + params[2].marker + ' ' + params[2].seriesName + ': ' + (Math.round(params[1].data[4] * 100) / 100);
+
+                            return html;
                         }
                     },
-                    axisPointer: {
-                        type: 'shadow'
-                    }
-                }],
-                yAxis: [
-                    {
-                        name: 'Value',
-                        min: splitSolutions[0].min,
-                        max: splitSolutions[0].max,
-                        interval: splitSolutions[0].interval
-                    }
-                ],
-                series: [
-                    {
-                        name: 'Impressions',
-                        type: 'bar',
-                        encode: {
-                            x: 'time',
-                            y: 'impressions'
-                        },
-                        animationDuration: 100,
-                        animationDelay: function(id) {
-                            return id * 15;
-                        }
+                    legend: {
+                        show: true
                     },
-                    {
-                        name: 'Accounts Reach',
-                        type: 'bar',
-                        encode: {
-                            x: 'time',
-                            y: 'reach'
+                    xAxis: [{
+                        axisLabel: {
+                            interval: 6,
+                            formatter: function (value, index) {
+                                return moment(value).format('MM/DD');
+                            }
                         },
-                        animationDuration: 1000,
-                        animationDelay: function(id) {
-                            return id * 15;
+                        axisPointer: {
+                            type: 'shadow'
                         }
-                    }
-                ]
-            });
+                    }],
+                    yAxis: [
+                        splitSolutions[0],
+                        splitSolutions[1]
+                    ],
+                    series: [
+                        $.extend({}, seriesBarBase, {
+                            name: 'Impressions',
+                            barWidth: 'auto',
+                            encode: {
+                                y: 'impressions'
+                            }
+                        }),
+                        $.extend({}, seriesBarBase, {
+                            name: 'Accounts Reached',
+                            barWidth: 'auto',
+                            encode: {
+                                y: 'reach'
+                            }
+                        }),
+                        $.extend({}, seriesLineBase, {
+                            name: 'Impressions per Reach',
+                            smooth: true,
+                            yAxisIndex: 1,
+                            encode: {
+                                y: 'impressions_per_reach'
+                            }
+                        })
+                    ]
+                });
+            }
 
-            splitSolutions = rangeSplit(data.data, [3], [20], [false]);
+            if (targetCharts.indexOf('profile_views') >= 0) {
+                splitSolutions = rangeSplit(data.data, [3], [20], [false]);
 
-            chartProfileViews.setOption({
-                dataset: {
-                    dimensions: data.dimensions,
-                    source: data.data
-                },
-                xAxis: [{
-                    axisLabel: {
-                        interval: 6,
-                        formatter: function (value, index) {
-                            return moment(value).format('MM/DD');
-                        }
+                chartProfileViews.setOption({
+                    dataset: {
+                        dimensions: data.dimensions,
+                        source: data.data
                     },
-                    axisPointer: {
-                        type: 'line'
-                    }
-                }],
-                yAxis: [
-                    {
-                        name: 'Value',
-                        min: splitSolutions[0].min,
-                        max: splitSolutions[0].max,
-                        interval: splitSolutions[0].interval
-                    }
-                ],
-                series: [
-                    {
-                        name: 'Profile Views',
-                        type: 'bar',
-                        encode: {
-                            x: 'time',
-                            y: 'profile_views'
+                    xAxis: [{
+                        axisLabel: {
+                            interval: 6,
+                            formatter: function (value, index) {
+                                return moment(value).format('MM/DD');
+                            }
                         },
-                        animationDuration: 1000,
-                        animationDelay: function(id) {
-                            return id * 15;
+                        axisPointer: {
+                            type: 'line'
                         }
-                    }
-                ]
-            });
+                    }],
+                    yAxis: [
+                        splitSolutions[0]
+                    ],
+                    series: [
+                        $.extend({}, seriesBarBase, {
+                            name: 'Profile Views',
+                            yAxisIndex: 0,
+                            encode: {
+                                y: 'profile_views'
+                            }
+                        })
+                    ]
+                });
+            }
 
         });
+    }
 
+    function loadCoverageHourly(targetCharts = ['coverage', 'profile_views']) {
 
+        var now = encodeURIComponent(moment().format(ISO_DATE_FORMAT));
+        var startOf7Days = encodeURIComponent(moment().subtract(3, 'day').format(ISO_DATE_FORMAT));
+
+        var indexes = [2, 3, 5];
+
+        var followingsCoverageUrl = '/api/profiles/1/stats/ig?metrics=impressions,impressions_diff,reach_diff,profile_views_diff,impressions_per_reach_diff&granularity=hourly&since=' + startOf7Days + '&until=' + now;
+        $.getJSON(followingsCoverageUrl, function (data) {
+
+            var splitSolutions;
+
+            if (targetCharts.indexOf('coverage') >= 0) {
+                splitSolutions = rangeSplit(data.data, [2, 5], [10, 0.5], [false, false]);
+
+                chartCoverage.setOption({
+                    dataset: {
+                        dimensions: data.dimensions,
+                        source: data.data
+                    },
+                    grid: {
+                        top: 40
+                    },
+                    tooltip: {
+                        formatter: function(params) {
+                            var html = moment(params[0].axisValue).format('YYYY/MM/DD HH:mm');
+
+                            html += '<br/>' + params[0].marker + ' ' + params[0].seriesName + ': ' + params[0].data[2];
+                            html += '<br/>' + params[1].marker + ' ' + params[1].seriesName + ': ' + params[1].data[3];
+                            html += '<br/>' + params[2].marker + ' ' + params[2].seriesName + ': ' + (Math.round(params[1].data[5] * 100) / 100);
+
+                            return html;
+                        }
+                    },
+                    legend: {
+                        show: true
+                    },
+                    xAxis: [{
+                        axisLabel: {
+                            interval: 11,
+                            formatter: function (value, index) {
+                                return moment(value).format('MM/DD HH:mm');
+                            }
+                        },
+                        axisPointer: {
+                            type: 'shadow'
+                        }
+                    }],
+                    yAxis: [
+                        splitSolutions[0],
+                        splitSolutions[1]
+                    ],
+                    series: [
+                        $.extend({}, seriesBarBaseHourly, {
+                            name: 'Impressions',
+                            barWidth: 'auto',
+                            encode: {
+                                y: 'impressions_diff'
+                            }
+                        }),
+                        $.extend({}, seriesBarBaseHourly, {
+                            name: 'Accounts Reached',
+                            barWidth: 'auto',
+                            encode: {
+                                y: 'reach_diff'
+                            }
+                        }),
+                        $.extend({}, seriesLineBase, {
+                            name: 'Impressions per Reach',
+                            smooth: true,
+                            yAxisIndex: 1,
+                            encode: {
+                                y: 'impressions_per_reach_diff'
+                            }
+                        })
+                    ]
+                });
+            }
+
+            if (targetCharts.indexOf('profile_views') >= 0) {
+                splitSolutions = rangeSplit(data.data, [4], [5], [false]);
+
+                chartProfileViews.setOption({
+                    dataset: {
+                        dimensions: data.dimensions,
+                        source: data.data
+                    },
+                    xAxis: [{
+                        axisLabel: {
+                            interval: 11,
+                            formatter: function (value, index) {
+                                return moment(value).format('MM/DD HH:mm');
+                            }
+                        },
+                        axisPointer: {
+                            type: 'line'
+                        }
+                    }],
+                    yAxis: [
+                        splitSolutions[0]
+                    ],
+                    series: [
+                        $.extend({}, seriesBarBaseHourly, {
+                            name: 'Profile Views',
+                            yAxisIndex: 0,
+                            encode: {
+                                y: 'profile_views_diff'
+                            }
+                        })
+                    ]
+                });
+            }
+        });
     }
 </script>

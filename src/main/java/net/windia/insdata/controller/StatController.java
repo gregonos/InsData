@@ -44,12 +44,15 @@ public class StatController {
 
         List<IgSnapshotMetric> snapshotFields = new ArrayList<>();
         List<IgDiffMetric> diffFields = new ArrayList<>();
+        List<String> calcFields = new ArrayList<>();
 
         for (String field : metricsStr.split(",")) {
             if (IgSnapshotMetric.accepts(field)) {
                 snapshotFields.add(IgSnapshotMetric.forName(field));
             } else if (IgDiffMetric.accepts(field)) {
                 diffFields.add(IgDiffMetric.forName(field));
+            } else {
+                calcFields.add(field);
             }
         }
 
@@ -65,6 +68,6 @@ public class StatController {
             diffs = igProfileDataService.getDiffs(profileId, granularity, since, until);
         }
 
-        return igProfileStatsAssembler.assemble(snapshotFields, diffFields, snapshots, diffs);
+        return igProfileStatsAssembler.assemble(snapshotFields, diffFields, calcFields, snapshots, diffs);
     }
 }

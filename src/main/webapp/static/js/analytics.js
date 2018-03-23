@@ -2,14 +2,97 @@ var ISO_DATE_FORMAT = 'YYYY-MM-DDTHH:mm:ss.SSSZ';
 
 var PREFERRED_SPLITS = [6, 5, 4, 7, 3, 8, 2, 9, 10];
 
+var xAxisBase = {
+    type: 'category',
+    axisTick: {
+        show: false
+    },
+    axisLabel: {
+        interval: 6,
+        formatter: function (value, index) {
+            return moment(value).format('MM/DD');
+        }
+    },
+    axisLine: {
+        lineStyle: {
+            color: '#aaa'
+        }
+    },
+    splitLine: {
+        lineStyle: {
+            color: '#e8e8e8'
+        }
+    },
+    axisPointer: {
+        type: 'line',
+        lineStyle: {
+            type: 'dashed'
+        },
+        label: {
+            formatter: function(params) {
+                return moment(params.value).format('MM/DD HH:mm');
+            }
+        }
+    }
+};
+
+var yAxisBase = {
+    type: 'value',
+    scale: true,
+    axisLine: {
+        show: false
+    },
+    axisTick: {
+        show: false
+    },
+    splitLine: {
+        lineStyle: {
+            color: '#e8e8e8'
+        }
+    }
+};
+
+var seriesBarBase = {
+    type: 'bar',
+    barWidth: '70%',
+    encode: {
+        x: 'time'
+    },
+    animationEasing: 'backOut',
+    animationDuration: 500,
+    animationDelay: function(id) {
+        return id * 20;
+    }
+};
+
+var seriesBarBaseHourly = $.extend({}, seriesBarBase, {
+    animationDuration: 500,
+    animationDelay: function(id) {
+        return id * 10;
+    }
+});
+
+var seriesLineBase = {
+    type: 'line',
+    encode: {
+        x: 'time'
+    }
+};
+
+var chartColors = ['#3d92d4', '#ffc107', '#48c0d4'];
+
 var option = {
-    color: [
-        '#3d92d4', '#ffc107'
-    ],
+    color: chartColors,
+    textStyle: {
+        fontSize: 11,
+        color: '#666'
+    },
     grid: {
         containLabel: true,
         left: 0,
-        right: 1
+        right: 0,
+        top: 15,
+        bottom: 5
     },
     tooltip: {
         trigger: 'axis',
@@ -23,34 +106,15 @@ var option = {
             fontSize: 12
         }
     },
-    legend: {},
+    legend: {
+        show: false
+    },
     xAxis: [
-        {
-            type: 'category',
-            axisTick: {
-                interval: 6
-            },
-            axisPointer: {
-                type: 'line',
-                lineStyle: {
-                    type: 'dashed'
-                },
-                label: {
-                    formatter: function(params) {
-                        return moment(params.value).format('MM/DD');
-                    }
-                }
-            }
-        }
+        xAxisBase
     ],
     yAxis: [
-        {
-            type: 'value',
-            scale: true
-        },
-        {
-            type: 'value'
-        }
+        yAxisBase,
+        yAxisBase
     ]
 };
 

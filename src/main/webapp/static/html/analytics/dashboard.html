@@ -24,8 +24,8 @@
         <h3>Followers</h3>
     </div>
     <div class="row">
-        <div id="stat_followers" class="chatWrapper col-lg-7"></div>
-        <div id="stat_followers_24" class="chatWrapper col-lg-5"></div>
+        <div id="stat_followers" class="chartWrapper col-lg-7"></div>
+        <div id="stat_followers_24" class="chartWrapper col-lg-5"></div>
     </div>
 </div>
 
@@ -34,8 +34,8 @@
         <h3>Followings</h3>
     </div>
     <div class="row">
-        <div id="stat_followings" class="chatWrapper col-lg-7"></div>
-        <div id="stat_followings_24" class="chatWrapper col-lg-5"></div>
+        <div id="stat_followings" class="chartWrapper col-lg-7"></div>
+        <div id="stat_followings_24" class="chartWrapper col-lg-5"></div>
     </div>
 </div>
 
@@ -43,10 +43,11 @@
     <div class="statHeader">
         <h3>Coverage</h3>
     </div>
-    <div id="stat_coverage" class="chatWrapper"></div>
+    <div id="stat_coverage" class="chartWrapper"></div>
 </div>
 
 <script>
+    feather.replace();
 
     function updateChart(echartsObj, attrs, granularity, endTimestamps, minIntervals) {
 
@@ -86,53 +87,27 @@
                         formatter: function (value, index) {
                             return moment(value).format(granularity === 'hourly' ? 'HH:mm' : 'MM/DD');
                         }
-                    },
-                    axisPointer: {
-                        label: {
-                            formatter: function(params) {
-                                return moment(params.value).format('MM/DD HH:mm');
-                            }
-                        }
                     }
                 }],
                 yAxis: [
-                    {
-                        name: attrs[0].name,
-                        min: splitSolutions[0].min,
-                        max: splitSolutions[0].max,
-                        interval: splitSolutions[0].interval
-                    },
-                    {
-                        name: attrs[1].name,
-                        min: splitSolutions[1].min,
-                        max: splitSolutions[1].max,
-                        interval: splitSolutions[1].interval
-                    }
+                    splitSolutions[0],
+                    splitSolutions[1]
                 ],
                 series: [
-                    {
+                    $.extend({}, seriesBarBase, {
                         name: attrs[1].name,
-                        type: 'bar',
-                        barWidth: '70%',
                         yAxisIndex: 1,
                         encode: {
-                            x: 'time',
                             y: attrs[1].field
-                        },
-                        animationDuration: 1000,
-                        animationDelay: function(id) {
-                            return id * 15;
                         }
-                    },
-                    {
+                    }),
+                    $.extend({}, seriesLineBase, {
                         name: attrs[0].name,
-                        type: 'line',
                         yAxisIndex: 0,
                         encode: {
-                            x: 'time',
                             y: attrs[0].field
                         }
-                    }
+                    })
                 ]
             });
         });
@@ -210,49 +185,28 @@
                     source: data.data
                 },
                 xAxis: [{
-                    axisLabel: {
-                        interval: 6,
-                        formatter: function (value, index) {
-                            return moment(value).format('MM/DD');
-                        }
-                    },
                     axisPointer: {
                         type: 'shadow'
                     }
                 }],
                 yAxis: [
-                    {
-                        name: 'Value',
-                        min: splitSolutions[0].min,
-                        max: splitSolutions[0].max,
-                        interval: splitSolutions[0].interval
-                    },
-                    {
-                        name: '',
-                        min: splitSolutions[0].min,
-                        max: splitSolutions[0].max,
-                        interval: splitSolutions[0].interval
-                    }
+                    splitSolutions[0]
                 ],
                 series: [
-                    {
+                    $.extend({}, seriesBarBase, {
                         name: 'Impressions',
-                        type: 'bar',
-                        yAxisIndex: 0,
+                        barWidth: 'auto',
                         encode: {
-                            x: 'time',
                             y: 'impressions'
                         }
-                    },
-                    {
-                        name: 'Accounts Reach',
-                        type: 'bar',
-                        yAxisIndex: 0,
+                    }),
+                    $.extend({}, seriesBarBase, {
+                        name: 'Accounts Reached',
+                        barWidth: 'auto',
                         encode: {
-                            x: 'time',
                             y: 'reach'
                         }
-                    }
+                    })
                 ]
             });
         });
