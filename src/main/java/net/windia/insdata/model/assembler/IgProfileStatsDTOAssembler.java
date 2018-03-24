@@ -3,14 +3,17 @@ package net.windia.insdata.model.assembler;
 import com.google.common.base.CaseFormat;
 import lombok.extern.slf4j.Slf4j;
 import net.windia.insdata.constants.IgDiffMetric;
+import net.windia.insdata.constants.IgOnlineFollowersGranularity;
 import net.windia.insdata.constants.IgSnapshotMetric;
 import net.windia.insdata.model.dto.IgProfileStatsDTO;
+import net.windia.insdata.model.internal.IgOnlineFollowers;
 import net.windia.insdata.model.internal.IgProfileDiff;
 import net.windia.insdata.model.internal.IgProfileSnapshot;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -86,6 +89,9 @@ public class IgProfileStatsDTOAssembler {
     }
 
     public Float calcImpressionsPerReachDiff(IgProfileSnapshot snapshot, IgProfileDiff diff) {
+        if (null == diff) {
+            return 0F;
+        }
         return 0 == diff.getReach() ? 0 : diff.getImpressions().floatValue() / diff.getReach();
     }
 
@@ -106,5 +112,38 @@ public class IgProfileStatsDTOAssembler {
         }
 
         return null;
+    }
+
+    public IgProfileStatsDTO assemble(String granularity, List<IgOnlineFollowers> onlineFollowers) {
+        IgProfileStatsDTO target = new IgProfileStatsDTO();
+
+        // Dimensions
+        List<String> dimensions = new ArrayList<>(4);
+        dimensions.add(IgProfileStatsDTO.DIMENSION_DATE);
+        dimensions.add(IgProfileStatsDTO.DIMENSION_WEEKDAY);
+        dimensions.add(IgProfileStatsDTO.DIMENSION_COUNT);
+        dimensions.add(IgProfileStatsDTO.DIMENSION_PERCENTAGE);
+
+        List<List<Object>> data = new ArrayList<>(onlineFollowers.size());
+        for (IgOnlineFollowers onlineFollower : onlineFollowers) {
+            List<Object> row = new ArrayList<>(4);
+
+            if (IgOnlineFollowersGranularity.AGGREGATE_HOUR.getValue().equals(granularity) ||
+                    IgOnlineFollowersGranularity.AGGREGATE_HOUR_WEEKDAY.getValue().equals(granularity)) {
+                row.add(onlineFollower.getHour());
+            } else {
+                row.add(onlineFollower.getDate().getTime() + 3600000 * onlineFollower.getHour());
+            }
+            row.add(onlineFollower.getWeekday());
+            row.add(onlineFollower.getCount());
+            row.add(onlineFollower.getPercentage());
+
+            data.add(row);
+        }
+
+        target.setDimensions(dimensions);
+        target.setData(data);
+
+        return target;
     }
 }

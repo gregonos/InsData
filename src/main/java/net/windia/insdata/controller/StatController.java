@@ -6,17 +6,14 @@ import net.windia.insdata.constants.IgSnapshotMetric;
 import net.windia.insdata.constants.InsDataConstants;
 import net.windia.insdata.model.assembler.IgProfileStatsDTOAssembler;
 import net.windia.insdata.model.dto.IgProfileStatsDTO;
+import net.windia.insdata.model.internal.IgOnlineFollowers;
 import net.windia.insdata.model.internal.IgProfileDiff;
 import net.windia.insdata.model.internal.IgProfileSnapshot;
+import net.windia.insdata.service.IgOnlineFollowersService;
 import net.windia.insdata.service.IgProfileDataService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -30,6 +27,9 @@ public class StatController {
 
     @Autowired
     private IgProfileDataService igProfileDataService;
+
+    @Autowired
+    private IgOnlineFollowersService igOnlineFollowersService;
 
     @Autowired
     private IgProfileStatsDTOAssembler igProfileStatsAssembler;
@@ -69,5 +69,16 @@ public class StatController {
         }
 
         return igProfileStatsAssembler.assemble(snapshotFields, diffFields, calcFields, snapshots, diffs);
+    }
+
+    @RequestMapping(value = "/{profileId}/stats/ig/online-followers", method = RequestMethod.GET)
+    public IgProfileStatsDTO getIgProfileOnlineFollowers(@PathVariable("profileId") Long profileId,
+                                                         @RequestParam("granularity") String granularity,
+                                                         @RequestParam(value = "since", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Date since,
+                                                         @RequestParam(value = "until", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Date until) {
+
+        List<IgOnlineFollowers> onlineFollowers = igOnlineFollowersService.getOnlineFollowers(profileId, granularity, since, until);
+
+        return igProfileStatsAssembler.assemble(granularity, onlineFollowers);
     }
 }

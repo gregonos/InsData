@@ -43,11 +43,7 @@ public class IgMediaDiffDailyService extends IgMediaDiffService<IgMediaSnapshotD
     @Override
     protected IgMediaSnapshotDaily newSnapshotInstance(IgMediaSnapshotDaily reference) {
         IgMediaSnapshotDaily instance = new IgMediaSnapshotDaily();
-        Date capturedAt = reference.getCapturedAt();
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(capturedAt);
-        cal.add(Calendar.DATE, -1);
-        instance.realizeCapturedAt(reference.getCapturedAt(), reference.getIgProfile().getUser().getTimeZone());
+        instance.realizeCapturedAt(reference.getMedia().getCreatedAt(), reference.getIgProfile().getUser().getTimeZone());
 
         return instance;
     }

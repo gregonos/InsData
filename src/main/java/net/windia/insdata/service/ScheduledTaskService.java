@@ -154,6 +154,21 @@ public class ScheduledTaskService {
         log.info("Insight history saved successfully! ");
     }
 
+//    @Scheduled(initialDelay = 2000, fixedRate = 3600000)
+    public void retrieveOnlineFollowersHistory() {
+        IgProfile myProfile = igProfileRepo.findById(1L).get();
+
+        long since = 1519171200;
+        Date now = new Date();
+
+        while (since < now.getTime() / 1000) {
+            IgAPIClientProfileAudience igOnlineFollowersRaw = igRestClientService.retrieveProfileOnlineFollowers(myProfile, since, since + 86400);
+            igOnlineFollowersService.saveOnlineFollowers(myProfile, igOnlineFollowersRaw);
+
+            since += 86400;
+        }
+    }
+
     @Scheduled(cron = "0 11 * * * *")
 //    @Scheduled(initialDelay = 12000, fixedRate = 3600000)
     public void retrieveMediaStat() {

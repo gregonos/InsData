@@ -129,7 +129,10 @@ public class IgRestClientService {
 //            until = 1520751661;
 //
 //            log.debug("since = " + since + " until = " + until);
+        return retrieveProfileOnlineFollowers(profile, since, until);
+    }
 
+    public IgAPIClientProfileAudience retrieveProfileOnlineFollowers(IgProfile profile, long since, long until) {
         String targetUrl = graphAPIBaseUrl + profile.getBusinessAccountId() +
                 "/insights?metric={metric}&period=lifetime&since={since}&until={until}&access_token={access_token}";
 

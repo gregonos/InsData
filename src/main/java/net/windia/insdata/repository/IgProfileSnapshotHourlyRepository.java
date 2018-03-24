@@ -13,7 +13,7 @@ public interface IgProfileSnapshotHourlyRepository extends CrudRepository<IgProf
 
     IgProfileSnapshotHourly findFirstByIgProfileOrderByCapturedAtDesc(IgProfile igProfile);
 
-    @Query("SELECT sh.capturedAt, sh.hour, sh.followers FROM IgProfileSnapshotHourly sh " +
+    @Query("SELECT sh FROM IgProfileSnapshotHourly sh " +
             "WHERE sh.igProfile = :igProfile AND sh.capturedAt > :from AND sh.capturedAt < :to " +
             "ORDER BY sh.capturedAt ASC")
     List<IgProfileSnapshotHourly> findFollowersByDay(@Param("igProfile") IgProfile igProfile,

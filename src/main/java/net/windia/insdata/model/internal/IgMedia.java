@@ -47,6 +47,11 @@ public class IgMedia {
         this.id = id;
     }
 
+    public IgMedia(String id, Date createdAt) {
+        this.id = id;
+        this.createdAt = createdAt;
+    }
+
     public String getId() {
         return id;
     }

@@ -131,30 +131,56 @@ h2 {
 /*
  * Charts
  */
-.statCard {
-  background-color: #fff;
-  margin: 15px auto;
+
+#mainContainer .row>div {
+  padding-left: 0;
+}
+
+#mainContainer .row>div:first-child {
+  padding-left: 15px;
+}
+
+#mainContainer .card {
+  border-radius: 0;
   border: 1px solid #e4e4e4;
   box-shadow: 2px 2px 3px rgba(100, 100, 100, 0.06);
+  margin-bottom: 15px;
 }
 
-.statCard .statHeader {
-  padding: 15px 15px 10px;
+#mainContainer .card-header {
+  display: flex;
+  border-bottom: 0;
+  background-color: #fff;
+  padding: 15px 15px 15px 20px;
   color: #444;
+  -webkit-box-align: center;
+  align-items: center;
+  -webkit-box-pack: justify;
+  justify-content: space-between;
 }
 
-.statCard .chartWrapper {
-  padding: 0 15px 15px;
+#mainContainer .card-body {
+  padding: 0 20px 15px;
+}
+
+.statCard .row {
+  padding: 0 15px;
 }
 
 h3 {
   font-size: 1rem;
   font-weight: 600;
   margin-bottom: 0;
+  line-height: 100%;
+  height: 1rem;
 }
 
 .chartWrapper {
   height: 220px;
+}
+
+#stat_online_followers_heat {
+  height: 280px;
 }
 
 .color1 {

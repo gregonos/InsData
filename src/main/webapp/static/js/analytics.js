@@ -2,6 +2,8 @@ var ISO_DATE_FORMAT = 'YYYY-MM-DDTHH:mm:ss.SSSZ';
 
 var PREFERRED_SPLITS = [6, 5, 4, 7, 3, 8, 2, 9, 10];
 
+var WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
 var xAxisBase = {
     type: 'category',
     axisTick: {
@@ -118,6 +120,13 @@ var option = {
     ]
 };
 
+function floatToPercentage(value) {
+    return (Math.round(value * 1000)) / 10 + '%';
+}
+
+function weekdayIndexToName(index) {
+    return WEEKDAYS[index - 1];
+}
 
 function rangeSplit(data, indexes, minIntervals, scale = [true, true]) {
     var results = [];

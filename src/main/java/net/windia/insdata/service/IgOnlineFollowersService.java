@@ -1,6 +1,7 @@
 package net.windia.insdata.service;
 
 import lombok.extern.slf4j.Slf4j;
+import net.windia.insdata.constants.IgOnlineFollowersGranularity;
 import net.windia.insdata.model.client.IgAPIClientDataEntry;
 import net.windia.insdata.model.client.IgAPIClientProfileAudience;
 import net.windia.insdata.model.internal.IgOnlineFollowers;
@@ -82,5 +83,22 @@ public class IgOnlineFollowersService {
 
         enrichPercentage(myProfile, onlineFollowersRecords, baseTime.getTime());
         igOnlineFollowersRepo.saveAll(onlineFollowersRecords);
+    }
+
+    public List<IgOnlineFollowers> getOnlineFollowers(Long profileId, String granularity, Date since, Date until) {
+
+        if (IgOnlineFollowersGranularity.HOURLY.getValue().equals(granularity)) {
+            return igOnlineFollowersRepo.findByIgProfileIdAndDateBetweenOrderByDateAscHourAsc(profileId, since, until);
+        } else if (IgOnlineFollowersGranularity.DAILY.getValue().equals(granularity)) {
+            return igOnlineFollowersRepo.findDailyByIgProfileIdAndDateRange(profileId, since, until);
+        } else if (IgOnlineFollowersGranularity.AGGREGATE_HOUR.getValue().equals(granularity)) {
+            return igOnlineFollowersRepo.findAggregateHourByProfileId(profileId);
+        } else if (IgOnlineFollowersGranularity.AGGREGATE_WEEKDAY.getValue().equals(granularity)) {
+            return igOnlineFollowersRepo.findAggregateWeekdayByProfileId(profileId);
+        } else if (IgOnlineFollowersGranularity.AGGREGATE_HOUR_WEEKDAY.getValue().equals(granularity)) {
+            return igOnlineFollowersRepo.findAggregateHourAndWeekdayByProfileId(profileId);
+        } else {
+            return null;
+        }
     }
 }

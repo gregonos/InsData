@@ -2,8 +2,230 @@
     <h2>AUDIENCE</h2>
 </div>
 
+<div class="card">
+    <div class="card-header">
+        <h3>Online Followers</h3>
+        <div class="btn-group btn-group-sm btn-group-toggle gran-switch" data-toggle="buttons">
+            <label class="btn btn-light">
+                <input type="radio" name="coverage-granularity" data-gran="coverage" id="coverage-hourly" value="hourly" autocomplete="off"/> Hourly
+            </label>
+            <label class="btn btn-light active">
+                <input type="radio" name="coverage-granularity" data-gran="coverage" id="coverage-daily" value="daily" autocomplete="off" checked/> Daily
+            </label>
+        </div>
+    </div>
+    <div id="stat_online_followers_daily" class="card-body chartWrapper"></div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3>Online Followers Aggregated 24 Hours and Weekdays</h3>
+    </div>
+    <div class="row card-body">
+        <div id="stat_online_followers_aggr_hour" class="chartWrapper col-md-8"></div>
+        <div id="stat_online_followers_aggr_weekday" class="chartWrapper col-md-4"></div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3>Online Followers Heat</h3>
+    </div>
+    <div id="stat_online_followers_heat" class="card-body chartWrapper"></div>
+</div>
+
 <script>
+    var chartOnlineFollowersDaily = echarts.init(document.getElementById("stat_online_followers_daily"), null, {renderer: 'canvas'});
+    chartOnlineFollowersDaily.setOption(option);
+
+    var chartOnlineFollowersHour = echarts.init(document.getElementById("stat_online_followers_aggr_hour"), null, {renderer: 'canvas'});
+    chartOnlineFollowersHour.setOption(option);
+
+    var chartOnlineFollowersWeekday = echarts.init(document.getElementById("stat_online_followers_aggr_weekday"), null, {renderer: 'canvas'});
+    chartOnlineFollowersWeekday.setOption(option);
+
+    var chartOnlineFollowersHeat = echarts.init(document.getElementById("stat_online_followers_heat"), null, {renderer: 'canvas'});
+    chartOnlineFollowersHeat.setOption(option);
+
+    function loadOnlineFollowersHeat() {
+        var onlineFollowersUrl = '/api/profiles/1/stats/ig/online-followers?granularity=aggregate_hour_weekday';
+        $.getJSON(onlineFollowersUrl, function(data) {
+
+            chartOnlineFollowersHeat.setOption({
+                dataset: {
+                    dimensions: data.dimensions,
+                    source: data.data
+                },
+                grid: {
+                    top: 20,
+                    left: 5
+                },
+                tooltip: {
+                    trigger: 'item',
+                    formatter: function (params) {
+                        var html = weekdayIndexToName(params.value[1]) + ' ' + params.value[0] + ':00';
+                        html += '<br/>' + params.marker + ' ' + floatToPercentage(params.data[3]);
+
+                        return html;
+                    }
+                },
+                xAxis: [{
+                    boundaryGap: false,
+                    axisLabel: {
+                        interval: 0,
+                        margin: 15,
+                        formatter: function (value, index) {
+                            return value;
+                        }
+                    },
+                    axisLine: {
+                        lineStyle: {
+                            color: '#ddd'
+                        }
+                    },
+                    splitLine: {
+                        show: true,
+                        lineStyle: {
+                            type: 'dotted',
+                            color: '#ddd'
+                        }
+                    },
+                    axisPointer: {
+                        show: false
+                    }
+                }],
+                yAxis: [{
+                    type: 'category',
+                    boundaryGap: false,
+                    axisTick: {
+                        show: false
+                    },
+                    axisLabel: {
+                        margin: 15,
+                        formatter: weekdayIndexToName
+                    },
+                    axisLine: {
+                        lineStyle: {
+                            color: '#ddd'
+                        }
+                    },
+                    splitLine: {
+                        show: true,
+                        lineStyle: {
+                            type: 'dotted',
+                            color: '#ddd'
+                        }
+                    },
+                    axisPointer: {
+                        show: false
+                    }
+                }],
+                series: [
+                    {
+                        type: 'scatter',
+                        name: 'Online Percentage',
+                        itemStyle: {
+                            color: chartColors[1],
+                            opacity: 0.5
+                        },
+                        symbolSize: function (val) {
+                            var p2 = val[3] - 0.3;
+                            if (p2 < 0) {
+                                p2 = 0;
+                            }
+                            return p2 * 300;
+                        },
+                        encode: {
+                            x: 'date',
+                            y: 'weekday'
+                        }
+                    }
+                ]
+            });
+        });
+    }
+
+    function loadOnlineFollowers(granularity = 'daily', target) {
+        var endOfToday = encodeURIComponent(moment().endOf('day').format(ISO_DATE_FORMAT));
+        var startOf5Days = encodeURIComponent(moment().subtract(13, 'day').startOf('day').format(ISO_DATE_FORMAT));
+
+
+        var onlineFollowersUrl = '/api/profiles/1/stats/ig/online-followers?granularity=' + granularity + '&since=' + startOf5Days + '&until=' + endOfToday;
+        $.getJSON(onlineFollowersUrl, function(data) {
+
+            var splitSolutions = rangeSplit(data.data, [2, 3], [50, 0.01], [false, true]);
+
+            target.setOption({
+                dataset: {
+                    dimensions: data.dimensions,
+                    source: data.data
+                },
+                tooltip: {
+                    formatter: function (params) {
+                        var html;
+
+                        if ('daily' === granularity || 'hourly' === granularity) {
+                            html = moment(params[0].axisValue).format('YYYY-MM-DD HH:mm');
+                        } else {
+                            html = params[0].axisValue;
+                        }
+
+                        html += '<br/>' + params[0].marker + ' ' + params[0].seriesName + ': ' + params[0].data[2];
+                        html += '<br/>' + params[1].marker + ' ' + params[1].seriesName + ': ' + floatToPercentage(params[1].data[3]);
+
+                        return html;
+                    }
+                },
+                xAxis: [{
+                    axisLabel: {
+                        interval: 0,
+                        formatter: function (value, index) {
+                            if ('daily' === granularity) {
+                                return moment(value).format('MM-DD');
+                            } else if ('hourly' === granularity) {
+                                return moment(value).format('HH:mm');
+                            } else if ('aggregate_weekday' === granularity) {
+                                return weekdayIndexToName(value);
+                            } else {
+                                return value;
+                            }
+                        }
+                    }
+                }],
+                yAxis: [
+                    splitSolutions[0],
+                    $.extend({
+                        axisLabel: {
+                            formatter: floatToPercentage
+                        }
+                    }, splitSolutions[1])
+                ],
+                series: [
+                    $.extend({}, seriesBarBase, {
+                        name: 'Count',
+                        yAxisIndex: 0,
+                        encode: {
+                            x: 'aggregate_weekday' === granularity ? 'weekday' : 'date',
+                            y: 'count'
+                        }
+                    }),
+                    $.extend({}, seriesLineBase, {
+                        name: 'Percentage',
+                        yAxisIndex: 1,
+                        encode: {
+                            x: 'aggregate_weekday' === granularity ? 'weekday' : 'date',
+                            y: 'percentage'
+                        }
+                    })
+                ]
+            });
+        });
+    }
+
     function loadAudience() {
-        console.log("audience page loaded!");
+        loadOnlineFollowers('daily', chartOnlineFollowersDaily);
+        loadOnlineFollowers('aggregate_hour', chartOnlineFollowersHour);
+        loadOnlineFollowers('aggregate_weekday', chartOnlineFollowersWeekday);
+        loadOnlineFollowersHeat();
     }
 </script>

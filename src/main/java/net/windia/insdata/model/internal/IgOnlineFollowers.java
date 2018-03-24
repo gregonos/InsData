@@ -9,6 +9,21 @@ import javax.persistence.Table;
 @Table
 public class IgOnlineFollowers extends IgStat {
 
+    public IgOnlineFollowers() {
+    }
+
+    public IgOnlineFollowers(Date date, int hour, byte weekday, double count, double percentage) {
+        this(date, (byte) hour, weekday, count, percentage);
+    }
+
+    public IgOnlineFollowers(Date date, byte hour, byte weekday, double count, double percentage) {
+        this.date = date;
+        this.hour = hour;
+        this.weekday = weekday;
+        this.count = new Double(count).intValue();
+        this.percentage = (float) percentage;
+    }
+
     @Column(nullable = false)
     private Date date;
 
