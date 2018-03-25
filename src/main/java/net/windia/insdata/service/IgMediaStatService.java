@@ -19,6 +19,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 
 @Slf4j
@@ -50,16 +52,10 @@ public abstract class IgMediaStatService<Snapshot extends IgMediaSnapshot> {
         Map<String, IgMedia> mediaMap = mediaCache.get(profile.getId());
         if (null == mediaIdSet) {
             List<IgMedia> allMediaIds = mediaRepo.findIdByIgProfile(profile);
-            mediaIdSet = new HashSet<>(allMediaIds.size());
-            for (IgMedia idHolder : allMediaIds) {
-                mediaIdSet.add(idHolder.getId());
-            }
+            mediaIdSet = allMediaIds.stream().map(IgMedia::getId).collect(Collectors.toSet());
             mediaIdCache.put(profile.getId(), mediaIdSet);
 
-            mediaMap = new HashMap<>(allMediaIds.size());
-            for (IgMedia allMediaId : allMediaIds) {
-                mediaMap.put(allMediaId.getId(), allMediaId);
-            }
+            mediaMap = allMediaIds.stream().collect(Collectors.toMap(IgMedia::getId, Function.identity()));
             mediaCache.put(profile.getId(), mediaMap);
         }
 

@@ -169,15 +169,15 @@
         var now = encodeURIComponent(moment().format(ISO_DATE_FORMAT));
         var startOf7Days = encodeURIComponent(moment().subtract(3, 'day').format(ISO_DATE_FORMAT));
 
-        var indexes = [2, 3, 5];
+        var indexes = [1, 2, 4];
 
-        var followingsCoverageUrl = '/api/profiles/1/stats/ig?metrics=impressions,impressions_diff,reach_diff,profile_views_diff,impressions_per_reach_diff&granularity=hourly&since=' + startOf7Days + '&until=' + now;
+        var followingsCoverageUrl = '/api/profiles/1/stats/ig?metrics=impressions,reach,profile_views,impressions_per_reach&granularity=hourly&since=' + startOf7Days + '&until=' + now;
         $.getJSON(followingsCoverageUrl, function (data) {
 
             var splitSolutions;
 
             if (targetCharts.indexOf('coverage') >= 0) {
-                splitSolutions = rangeSplit(data.data, [2, 5], [10, 0.5], [false, false]);
+                splitSolutions = rangeSplit(data.data, [1, 4], [10, 0.5], [false, false]);
 
                 chartCoverage.setOption({
                     dataset: {
@@ -191,9 +191,9 @@
                         formatter: function(params) {
                             var html = moment(params[0].axisValue).format('YYYY/MM/DD HH:mm');
 
-                            html += '<br/>' + params[0].marker + ' ' + params[0].seriesName + ': ' + params[0].data[2];
-                            html += '<br/>' + params[1].marker + ' ' + params[1].seriesName + ': ' + params[1].data[3];
-                            html += '<br/>' + params[2].marker + ' ' + params[2].seriesName + ': ' + (Math.round(params[1].data[5] * 100) / 100);
+                            html += '<br/>' + params[0].marker + ' ' + params[0].seriesName + ': ' + params[0].data[1];
+                            html += '<br/>' + params[1].marker + ' ' + params[1].seriesName + ': ' + params[1].data[2];
+                            html += '<br/>' + params[2].marker + ' ' + params[2].seriesName + ': ' + (Math.round(params[1].data[4] * 100) / 100);
 
                             return html;
                         }
@@ -221,14 +221,14 @@
                             name: 'Impressions',
                             barWidth: 'auto',
                             encode: {
-                                y: 'impressions_diff'
+                                y: 'impressions'
                             }
                         }),
                         $.extend({}, seriesBarBaseHourly, {
                             name: 'Accounts Reached',
                             barWidth: 'auto',
                             encode: {
-                                y: 'reach_diff'
+                                y: 'reach'
                             }
                         }),
                         $.extend({}, seriesLineBase, {
@@ -236,7 +236,7 @@
                             smooth: true,
                             yAxisIndex: 1,
                             encode: {
-                                y: 'impressions_per_reach_diff'
+                                y: 'impressions_per_reach'
                             }
                         })
                     ]
@@ -244,7 +244,7 @@
             }
 
             if (targetCharts.indexOf('profile_views') >= 0) {
-                splitSolutions = rangeSplit(data.data, [4], [5], [false]);
+                splitSolutions = rangeSplit(data.data, [3], [5], [false]);
 
                 chartProfileViews.setOption({
                     dataset: {
@@ -270,7 +270,7 @@
                             name: 'Profile Views',
                             yAxisIndex: 0,
                             encode: {
-                                y: 'profile_views_diff'
+                                y: 'profile_views'
                             }
                         })
                     ]

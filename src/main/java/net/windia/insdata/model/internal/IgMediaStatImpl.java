@@ -7,7 +7,7 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
 @MappedSuperclass
-public abstract class IgMediaStatImpl extends IgStat implements IgMediaStat {
+public abstract class IgMediaStatImpl extends IgStatBase implements IgMediaStat {
 
     @ManyToOne
     private IgMedia media;

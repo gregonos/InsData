@@ -1,8 +1,11 @@
 package net.windia.insdata.constants;
 
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.Map;
+import net.windia.insdata.model.internal.IgOnlineFollowers;
+import net.windia.insdata.repository.IgOnlineFollowersRepository;
+
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public enum IgOnlineFollowersGranularity {
 
@@ -14,12 +17,18 @@ public enum IgOnlineFollowersGranularity {
 
     private final String value;
 
-    private static final Map<String, IgOnlineFollowersGranularity> valueToInstanceMap = new HashMap<>();
+    private DataExtractor extractor;
+
+    private static final Map<String, IgOnlineFollowersGranularity> valueToInstanceMap =
+            EnumSet.allOf(IgOnlineFollowersGranularity.class).stream().collect(
+                        Collectors.toMap(IgOnlineFollowersGranularity::getValue, Function.identity()));
 
     static {
-        for (IgOnlineFollowersGranularity metric : EnumSet.allOf(IgOnlineFollowersGranularity.class)) {
-            valueToInstanceMap.put(metric.getValue(), metric);
-        }
+        HOURLY.extractor = IgOnlineFollowersRepository::findByIgProfileIdAndDateBetweenOrderByDateAscHourAsc;
+        DAILY.extractor = IgOnlineFollowersRepository::findDailyByIgProfileIdAndDateRange;
+        AGGREGATE_HOUR.extractor = (repo, profileId, since, until) -> repo.findAggregateHourByProfileId(profileId);
+        AGGREGATE_WEEKDAY.extractor = (repo, profileId, since, until) -> repo.findAggregateWeekdayByProfileId(profileId);
+        AGGREGATE_HOUR_WEEKDAY.extractor = (repo, profileId, since, until) -> repo.findAggregateHourAndWeekdayByProfileId(profileId);
     }
 
     IgOnlineFollowersGranularity(String value) {
@@ -30,11 +39,19 @@ public enum IgOnlineFollowersGranularity {
         return value;
     }
 
+    public List<IgOnlineFollowers> extractData(IgOnlineFollowersRepository repo, Long igProfileId, Date since, Date until) {
+        return extractor.extract(repo, igProfileId, since, until);
+    }
+
     public static boolean accepts(String value) {
         return valueToInstanceMap.keySet().contains(value);
     }
 
     public static IgOnlineFollowersGranularity forName(String value) {
         return valueToInstanceMap.get(value);
+    }
+
+    interface DataExtractor {
+        List<IgOnlineFollowers> extract(IgOnlineFollowersRepository repo, Long igProfileId, Date since, Date until);
     }
 }

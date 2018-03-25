@@ -35,6 +35,11 @@ public class IgMediaSnapshotDaily extends IgMediaStatImpl implements IgMediaSnap
         this.capturedAt = capturedAt;
     }
 
+    @Override
+    public Date getIndicativeDate() {
+        return getCapturedAt();
+    }
+
     public Date getWeek() {
         return week;
     }

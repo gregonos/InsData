@@ -122,7 +122,7 @@ public class IgRestClientService {
 
     public IgAPIClientProfileAudience retrieveProfileOnlineFollowers(IgProfile profile) {
 
-        long since = ((new Date()).getTime() - 86400000 * 2) / 1000;
+        long since = ((new Date()).getTime() - 86400000 * 3 - 7200000) / 1000;
         long until = since + 86400;
 //
 //            since = 1520665261;
@@ -249,7 +249,8 @@ public class IgRestClientService {
                 businessMediaCount++;
             } else if (400 == response.getStatusCodeValue()) {
 
-                log.debug("The first ineligible media found. " + businessMediaCount + " business media have been found. Start to retrieve basic stat only for the rest.");
+                log.debug("The first ineligible media found. "
+                        + businessMediaCount + " business media have been found. Start to retrieve basic stat only for the rest.");
 
                 response = restTemplate.getForEntity(targetUrl, IgAPIClientMediaSet.class,
                         PARAM_FIELDS_MEDIA_STAT_BASIC, paging.getCursors().getAfter(), 25 - businessMediaCount, profile.getToken());
@@ -257,7 +258,8 @@ public class IgRestClientService {
                 mediaList.addAll(mediasRaw.getData());
                 mediasRaw.setData(mediaList);
                 mediasRaw.getPaging().setNext(graphAPIBaseUrl + profile.getBusinessAccountId()
-                        + "/media?fields=" + PARAM_FIELDS_MEDIA_STAT_BASIC + "&after=" + mediasRaw.getPaging().getCursors().getAfter()
+                        + "/media?fields=" + PARAM_FIELDS_MEDIA_STAT_BASIC
+                        + "&after=" + mediasRaw.getPaging().getCursors().getAfter()
                         + "&limit=25&access_token=" + profile.getToken());
 
                 break;

@@ -147,7 +147,7 @@
 
     function loadOnlineFollowers(granularity = 'daily', target) {
         var endOfToday = encodeURIComponent(moment().endOf('day').format(ISO_DATE_FORMAT));
-        var startOf5Days = encodeURIComponent(moment().subtract(13, 'day').startOf('day').format(ISO_DATE_FORMAT));
+        var startOf5Days = encodeURIComponent(moment().subtract(14, 'day').startOf('day').format(ISO_DATE_FORMAT));
 
 
         var onlineFollowersUrl = '/api/profiles/1/stats/ig/online-followers?granularity=' + granularity + '&since=' + startOf5Days + '&until=' + endOfToday;

@@ -36,4 +36,10 @@ public class IgProfileSnapshotHourly extends IgProfileStatImpl implements IgProf
         this.setCapturedAt(capturedAt);
         calcHourly(timeZone, this, capturedAt);
     }
+
+    @Override
+    public Date getIndicativeDate() {
+        return getCapturedAt();
+    }
+
 }

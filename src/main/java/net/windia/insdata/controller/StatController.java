@@ -1,23 +1,22 @@
 package net.windia.insdata.controller;
 
 import lombok.extern.slf4j.Slf4j;
-import net.windia.insdata.constants.IgDiffMetric;
-import net.windia.insdata.constants.IgSnapshotMetric;
-import net.windia.insdata.constants.InsDataConstants;
+import net.windia.insdata.constants.*;
+import net.windia.insdata.exception.UnsupportedGranularityException;
+import net.windia.insdata.exception.UnsupportedMetricException;
 import net.windia.insdata.model.assembler.IgProfileStatsDTOAssembler;
 import net.windia.insdata.model.dto.IgProfileStatsDTO;
 import net.windia.insdata.model.internal.IgOnlineFollowers;
-import net.windia.insdata.model.internal.IgProfileDiff;
-import net.windia.insdata.model.internal.IgProfileSnapshot;
+import net.windia.insdata.model.internal.IgStat;
 import net.windia.insdata.service.IgOnlineFollowersService;
 import net.windia.insdata.service.IgProfileDataService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.*;
 
 @Slf4j
 @RestController
@@ -40,35 +39,52 @@ public class StatController {
                                                @RequestParam("metrics") String metricsStr,
                                                @RequestParam("granularity") String granularity,
                                                @RequestParam("since") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Date since,
-                                               @RequestParam("until") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Date until) {
+                                               @RequestParam("until") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Date until)
 
-        List<IgSnapshotMetric> snapshotFields = new ArrayList<>();
-        List<IgDiffMetric> diffFields = new ArrayList<>();
-        List<String> calcFields = new ArrayList<>();
+            throws UnsupportedGranularityException, UnsupportedMetricException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
 
-        for (String field : metricsStr.split(",")) {
-            if (IgSnapshotMetric.accepts(field)) {
-                snapshotFields.add(IgSnapshotMetric.forName(field));
-            } else if (IgDiffMetric.accepts(field)) {
-                diffFields.add(IgDiffMetric.forName(field));
-            } else {
-                calcFields.add(field);
+        StatGranularity granInstance = StatGranularity.forName(granularity);
+        if (null == granInstance) {
+            throw new UnsupportedGranularityException(granularity);
+        }
+
+        String[] metricsInStr = metricsStr.split(",");
+        List<IgMetric> metrics = new ArrayList<>(metricsInStr.length);
+        List<String> illegalMetrics = new ArrayList<>();
+        Set<IgDataSource> requiredSources = new HashSet<>();
+        for (String s : metricsInStr) {
+            IgMetric metric = IgMetric.forName(s);
+
+            if (null == metric) {
+                illegalMetrics.add(s);
+            }
+            else {
+                metrics.add(metric);
+
+                if (!metric.supports(granInstance)) {
+                    throw new UnsupportedGranularityException(metric, granInstance);
+                }
+
+                requiredSources.add(metric.getSource(granInstance));
             }
         }
 
-        List<? extends IgProfileSnapshot> snapshots = null;
-
-        if (snapshotFields.size() > 0) {
-            snapshots = igProfileDataService.getSnapshots(profileId, granularity, since, until);
+        if (illegalMetrics.size() > 0) {
+            throw new UnsupportedMetricException(illegalMetrics);
         }
 
-        List<? extends IgProfileDiff> diffs = null;
+        Map<IgDataSource, List<? extends IgStat>> sourceMap = new HashMap<>(requiredSources.size());
+        for (IgDataSource source : requiredSources) {
+            Method sourceGetter = igProfileDataService.getClass().getMethod(
+                    "get" + source.getName(), Long.class, StatGranularity.class, Date.class, Date.class);
 
-        if (diffFields.size() > 0) {
-            diffs = igProfileDataService.getDiffs(profileId, granularity, since, until);
+            List<? extends IgStat> sourceCollection =
+                    (List<? extends IgStat>) sourceGetter.invoke(igProfileDataService, profileId, granInstance, since, until);
+
+            sourceMap.put(source, sourceCollection);
         }
 
-        return igProfileStatsAssembler.assemble(snapshotFields, diffFields, calcFields, snapshots, diffs);
+        return igProfileStatsAssembler.assemble(metrics, granInstance, sourceMap);
     }
 
     @RequestMapping(value = "/{profileId}/stats/ig/online-followers", method = RequestMethod.GET)
@@ -77,7 +93,11 @@ public class StatController {
                                                          @RequestParam(value = "since", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Date since,
                                                          @RequestParam(value = "until", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Date until) {
 
-        List<IgOnlineFollowers> onlineFollowers = igOnlineFollowersService.getOnlineFollowers(profileId, granularity, since, until);
+        List<IgOnlineFollowers> onlineFollowers =
+                igOnlineFollowersService.getOnlineFollowers(
+                        profileId,
+                        IgOnlineFollowersGranularity.forName(granularity),
+                        since, until);
 
         return igProfileStatsAssembler.assemble(granularity, onlineFollowers);
     }

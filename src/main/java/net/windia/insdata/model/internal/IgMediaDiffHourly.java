@@ -29,6 +29,11 @@ public class IgMediaDiffHourly extends IgMediaStatImpl implements IgMediaDiff, I
         this.comparedTo = comparedTo;
     }
 
+    @Override
+    public Date getIndicativeDate() {
+        return getComparedTo();
+    }
+
     public Byte getHour() {
         return hour;
     }

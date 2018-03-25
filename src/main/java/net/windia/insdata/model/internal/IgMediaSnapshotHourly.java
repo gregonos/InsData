@@ -32,6 +32,11 @@ public class IgMediaSnapshotHourly extends IgMediaStatImpl implements IgMediaSna
     }
 
     @Override
+    public Date getIndicativeDate() {
+        return getCapturedAt();
+    }
+
+    @Override
     public void realizeCapturedAt(Date capturedAt, String timeZone) {
         this.setCapturedAt(capturedAt);
         calcHourly(timeZone, this, capturedAt);

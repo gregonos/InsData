@@ -2,6 +2,7 @@ package net.windia.insdata.service;
 
 import lombok.extern.slf4j.Slf4j;
 import net.windia.insdata.constants.StatGranularity;
+import net.windia.insdata.exception.UnsupportedGranularityException;
 import net.windia.insdata.model.internal.IgProfileDiff;
 import net.windia.insdata.model.internal.IgProfileSnapshot;
 import net.windia.insdata.repository.IgProfileDiffDailyRepository;
@@ -30,23 +31,27 @@ public class IgProfileDataService {
     @Autowired
     private IgProfileDiffDailyRepository diffDailyRepo;
 
-    public List<? extends IgProfileSnapshot> getSnapshots(Long igProfileId, String granularity, Date since, Date until) {
-        if (StatGranularity.HOURLY.getValue().equalsIgnoreCase(granularity)) {
+    public List<? extends IgProfileSnapshot> getSnapshots(Long igProfileId, StatGranularity granularity, Date since, Date until)
+            throws UnsupportedGranularityException {
+
+        if (StatGranularity.HOURLY == granularity) {
             return snapshotHourlyRepo.findByIgProfileIdAndCapturedAtBetweenOrderByCapturedAtAsc(igProfileId, since, until);
-        } else if (StatGranularity.DAILY.getValue().equalsIgnoreCase(granularity)) {
+        } else if (StatGranularity.DAILY == granularity) {
             return snapshotDailyRepo.findByIgProfileIdAndCapturedAtBetweenOrderByCapturedAtAsc(igProfileId, since, until);
         } else {
-            throw new IllegalArgumentException("Granularity has to be one of 'hourly' and 'daily'.");
+            throw new UnsupportedGranularityException(granularity.getValue());
         }
     }
 
-    public List<? extends IgProfileDiff> getDiffs(Long igProfileId, String granularity, Date since, Date until) {
-        if (StatGranularity.HOURLY.getValue().equalsIgnoreCase(granularity)) {
+    public List<? extends IgProfileDiff> getDiffs(Long igProfileId, StatGranularity granularity, Date since, Date until)
+            throws UnsupportedGranularityException {
+
+        if (StatGranularity.HOURLY == granularity) {
             return diffHourlyRepo.findByIgProfileIdAndComparedToBetweenOrderByComparedToAsc(igProfileId, since, until);
-        } else if (StatGranularity.DAILY.getValue().equalsIgnoreCase(granularity)) {
+        } else if (StatGranularity.DAILY == granularity) {
             return diffDailyRepo.findByIgProfileIdAndComparedToBetweenOrderByComparedToAsc(igProfileId, since, until);
         } else {
-            throw new IllegalArgumentException("Granularity has to be one of 'hourly' and 'daily'.");
+            throw new UnsupportedGranularityException(granularity.getValue());
         }
     }
 }

@@ -25,4 +25,10 @@ public class IgProfileSnapshotDaily extends IgProfileDailyStat implements IgProf
         this.setCapturedAt(capturedAt);
         calcDaily(timeZone, this, capturedAt);
     }
+
+    @Override
+    public Date getIndicativeDate() {
+        return getCapturedAt();
+    }
+
 }

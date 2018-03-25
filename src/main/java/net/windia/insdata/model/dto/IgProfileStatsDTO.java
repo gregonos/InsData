@@ -3,6 +3,7 @@ package net.windia.insdata.model.dto;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.List;
 
 @Data
@@ -17,6 +18,6 @@ public class IgProfileStatsDTO implements Serializable {
 
     private List<String> dimensions;
 
-    private List<List<Object>> data;
+    private Collection<List<Object>> data;
 
 }

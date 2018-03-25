@@ -1,5 +1,6 @@
 package net.windia.insdata.model.internal;
 
+import java.util.Calendar;
 import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -7,7 +8,7 @@ import javax.persistence.Table;
 
 @Entity
 @Table
-public class IgOnlineFollowers extends IgStat {
+public class IgOnlineFollowers extends IgStatBase {
 
     public IgOnlineFollowers() {
     }
@@ -45,6 +46,15 @@ public class IgOnlineFollowers extends IgStat {
 
     public void setDate(Date date) {
         this.date = date;
+    }
+
+    @Override
+    public Date getIndicativeDate() {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(getDate());
+        cal.set(Calendar.HOUR, getHour());
+
+        return cal.getTime();
     }
 
     public Byte getHour() {

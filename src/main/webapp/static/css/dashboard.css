@@ -17,7 +17,7 @@ body {
 .brand h1 {
   text-align: center;
   font-size: 2rem;
-  padding-top: 0.5rem;
+  padding-top: 12px;
   color: #1b3454;
   font-weight: bolder;
   text-shadow: -1px -1px 0 #142841, 1px 1px 0 #225077;

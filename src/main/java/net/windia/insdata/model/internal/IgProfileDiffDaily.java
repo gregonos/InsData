@@ -25,4 +25,9 @@ public class IgProfileDiffDaily extends IgProfileDailyStat implements IgProfileD
         this.setComparedTo(comparedTo);
         calcDaily(timeZone, this, comparedTo);
     }
+
+    @Override
+    public Date getIndicativeDate() {
+        return getComparedTo();
+    }
 }

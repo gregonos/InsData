@@ -1,6 +1,6 @@
 package net.windia.insdata.model.internal;
 
-public interface IgProfileStat {
+public interface IgProfileStat extends IgStat {
 
     IgProfile getIgProfile();
 

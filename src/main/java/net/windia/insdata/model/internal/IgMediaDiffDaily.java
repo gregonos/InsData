@@ -35,6 +35,11 @@ public class IgMediaDiffDaily extends IgMediaStatImpl implements IgMediaDiff, Ig
         calcDaily(timeZone, this, comparedTo);
     }
 
+    @Override
+    public Date getIndicativeDate() {
+        return getComparedTo();
+    }
+
     public Date getWeek() {
         return week;
     }

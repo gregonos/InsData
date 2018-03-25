@@ -4,7 +4,7 @@ import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
 
 @MappedSuperclass
-public abstract class IgProfileStatImpl extends IgStat implements IgProfileStat {
+public abstract class IgProfileStatImpl extends IgStatBase implements IgProfileStat {
 
     @Column(nullable = false)
     private Integer mediaCount;

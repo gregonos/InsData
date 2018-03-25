@@ -36,4 +36,9 @@ public class IgProfileDiffHourly extends IgProfileStatImpl implements IgProfileD
     public void setHour(Byte hour) {
         this.hour = hour;
     }
+
+    @Override
+    public Date getIndicativeDate() {
+        return getComparedTo();
+    }
 }

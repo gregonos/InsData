@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -33,10 +34,9 @@ public class IgOnlineFollowersService {
         List<IgProfileSnapshotHourly> igProfileSnapshotHourlyList =
                 igProfileSnapshotHourlyRepo.findFollowersByDay(igProfile, baseTime, endTimeCal.getTime());
 
-        Map<Byte, Integer> hourToFollowersMap = new HashMap<>(24);
-        for (IgProfileSnapshotHourly igProfileSnapshotHourly : igProfileSnapshotHourlyList) {
-            hourToFollowersMap.put(igProfileSnapshotHourly.getHour(), igProfileSnapshotHourly.getFollowers());
-        }
+        Map<Byte, Integer> hourToFollowersMap =
+                igProfileSnapshotHourlyList.stream().collect(
+                        Collectors.toMap(IgProfileSnapshotHourly::getHour, IgProfileSnapshotHourly::getFollowers));
 
         for (IgOnlineFollowers onlineFollowersRecord : onlineFollowersRecords) {
             Integer followerCount = hourToFollowersMap.get(onlineFollowersRecord.getHour());
@@ -85,20 +85,12 @@ public class IgOnlineFollowersService {
         igOnlineFollowersRepo.saveAll(onlineFollowersRecords);
     }
 
-    public List<IgOnlineFollowers> getOnlineFollowers(Long profileId, String granularity, Date since, Date until) {
+    public List<IgOnlineFollowers> getOnlineFollowers(Long profileId, IgOnlineFollowersGranularity granularity, Date since, Date until) {
 
-        if (IgOnlineFollowersGranularity.HOURLY.getValue().equals(granularity)) {
-            return igOnlineFollowersRepo.findByIgProfileIdAndDateBetweenOrderByDateAscHourAsc(profileId, since, until);
-        } else if (IgOnlineFollowersGranularity.DAILY.getValue().equals(granularity)) {
-            return igOnlineFollowersRepo.findDailyByIgProfileIdAndDateRange(profileId, since, until);
-        } else if (IgOnlineFollowersGranularity.AGGREGATE_HOUR.getValue().equals(granularity)) {
-            return igOnlineFollowersRepo.findAggregateHourByProfileId(profileId);
-        } else if (IgOnlineFollowersGranularity.AGGREGATE_WEEKDAY.getValue().equals(granularity)) {
-            return igOnlineFollowersRepo.findAggregateWeekdayByProfileId(profileId);
-        } else if (IgOnlineFollowersGranularity.AGGREGATE_HOUR_WEEKDAY.getValue().equals(granularity)) {
-            return igOnlineFollowersRepo.findAggregateHourAndWeekdayByProfileId(profileId);
-        } else {
+        if (null == granularity) {
             return null;
+        } else {
+            return granularity.extractData(igOnlineFollowersRepo, profileId, since, until);
         }
     }
 }

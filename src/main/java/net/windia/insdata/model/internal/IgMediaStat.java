@@ -2,7 +2,7 @@ package net.windia.insdata.model.internal;
 
 import java.util.Date;
 
-public interface IgMediaStat {
+public interface IgMediaStat extends IgStat {
 
     IgProfile getIgProfile();
 

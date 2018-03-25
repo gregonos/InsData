@@ -2,116 +2,108 @@ package net.windia.insdata.model.assembler;
 
 import com.google.common.base.CaseFormat;
 import lombok.extern.slf4j.Slf4j;
-import net.windia.insdata.constants.IgDiffMetric;
+import net.windia.insdata.constants.IgDataSource;
+import net.windia.insdata.constants.IgMetric;
 import net.windia.insdata.constants.IgOnlineFollowersGranularity;
-import net.windia.insdata.constants.IgSnapshotMetric;
+import net.windia.insdata.constants.StatGranularity;
 import net.windia.insdata.model.dto.IgProfileStatsDTO;
-import net.windia.insdata.model.internal.IgOnlineFollowers;
-import net.windia.insdata.model.internal.IgProfileDiff;
-import net.windia.insdata.model.internal.IgProfileSnapshot;
+import net.windia.insdata.model.internal.*;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.*;
+import java.util.function.Function;
 
 @Slf4j
 @Service
 public class IgProfileStatsDTOAssembler {
 
-    public IgProfileStatsDTO assemble(List<IgSnapshotMetric> snapshotFields, List<IgDiffMetric> diffFields, List<String> calcFields,
-                                      List<? extends IgProfileSnapshot> snapshots, List<? extends IgProfileDiff> diffs) {
+    public IgProfileStatsDTO assemble(List<IgMetric> metrics, StatGranularity granInstance, Map<IgDataSource, List<? extends IgStat>> sourceMap)
+            throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+
         IgProfileStatsDTO target = new IgProfileStatsDTO();
 
         // Dimensions
-        int fieldSize = 1 + snapshotFields.size() + diffFields.size();
-        List<String> dimensions = new ArrayList<>(fieldSize);
+        List<String> dimensions = new ArrayList<>(metrics.size());
         dimensions.add(IgProfileStatsDTO.DIMENSION_TIME);
-
-        dimensions.addAll(snapshotFields.stream().map(IgSnapshotMetric::getValue).collect(Collectors.toList()));
-        dimensions.addAll(diffFields.stream().map(IgDiffMetric::getValue).collect(Collectors.toList()));
-        dimensions.addAll(calcFields);
+        metrics.forEach(metric -> dimensions.add(metric.getName()));
+        target.setDimensions(dimensions);
 
         // Data
-        int dataSize = 0;
-        dataSize += null == snapshots ? 0 : snapshots.size();
-        List<List<Object>> data = new ArrayList<>(dataSize);
+        Map<Date, List<Object>> dataMap = new LinkedHashMap<>();
+        for (IgMetric metric : metrics) {
+            String calcMethodName = "calc" + CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, metric.getName());
 
-        Map<Long, IgProfileDiff> diffMap = new HashMap<>();
-        if (null != diffs) {
-            for (IgProfileDiff diff : diffs) {
-                diffMap.put(diff.getComparedTo().getTime(), diff);
-            }
+            Method calculator = this.getClass().getMethod(calcMethodName, Map.class, StatGranularity.class, List.class);
+            calculator.invoke(this, dataMap, granInstance, sourceMap.get(metric.getSource(granInstance)));
         }
 
-        for (IgProfileSnapshot snapshot : snapshots) {
-            List<Object> dataItem = new ArrayList<>(fieldSize);
-
-            // Time
-            Date time = snapshot.getCapturedAt();
-            dataItem.add(time);
-
-            dataItem.addAll(snapshotFields.stream().map(snapshotField -> getValueByPropertyName(snapshot, snapshotField.getFieldName())).collect(Collectors.toList()));
-
-            IgProfileDiff diff = diffMap.get(time.getTime());
-            dataItem.addAll(diffFields.stream().map(diffField -> getValueByPropertyName(diff, diffField.getFieldName())).collect(Collectors.toList()));
-
-            for (String calcField : calcFields) {
-                String calcMethodName = "calc" + CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, calcField);
-                try {
-                    Method calcMethod = this.getClass().getMethod(calcMethodName, IgProfileSnapshot.class, IgProfileDiff.class);
-                    Float rslt = (Float) calcMethod.invoke(this, snapshot, diff);
-                    dataItem.add(rslt);
-                } catch (NoSuchMethodException e) {
-                    log.error("Failed to find getter method [" + calcMethodName + "]", e);
-                } catch (InvocationTargetException | IllegalAccessException e) {
-                    log.error("Failed to call getter method [" + calcMethodName + "]", e);
-                }
-            }
-
-            data.add(dataItem);
-        }
-
-        target.setDimensions(dimensions);
-        target.setData(data);
+        target.setData(dataMap.values());
 
         return target;
     }
 
-    public Float calcImpressionsPerReach(IgProfileSnapshot snapshot, IgProfileDiff diff) {
-        return 0 == snapshot.getReach() ? 0 : snapshot.getImpressions().floatValue() / snapshot.getReach();
+    private void directlyRetrieveFromSource(Map<Date, List<Object>> dataMap, List<? extends IgStat> source, Function<IgStat, Object> retriever) {
+        source.forEach(igStat -> getDataItem(dataMap, igStat.getIndicativeDate()).add(retriever.apply(igStat)));
     }
 
-    public Float calcImpressionsPerReachDiff(IgProfileSnapshot snapshot, IgProfileDiff diff) {
-        if (null == diff) {
-            return 0F;
+    private void retrieveHourlyFromDiffAndDailyFromSnapshot(Map<Date, List<Object>> dataMap, StatGranularity gran, List<? extends IgStat> source, Function<IgStat, Object> retriever) {
+        for (IgStat igStat : source) {
+            if (StatGranularity.HOURLY == gran) {
+                IgProfileDiffHourly diff = (IgProfileDiffHourly) igStat;
+                getDataItem(dataMap, diff.getComparedTo()).add(retriever.apply(diff));
+            } else if (StatGranularity.DAILY == gran) {
+                IgProfileSnapshotDaily snapshot = (IgProfileSnapshotDaily) igStat;
+                getDataItem(dataMap, snapshot.getCapturedAt()).add(retriever.apply(snapshot));
+            }
         }
-        return 0 == diff.getReach() ? 0 : diff.getImpressions().floatValue() / diff.getReach();
     }
 
-    private Object getValueByPropertyName(Object obj, String field) {
-        if (null == obj) {
-            return null;
+    public void calcFollowers(Map<Date, List<Object>> dataMap, StatGranularity gran, List<IgProfileSnapshot> snapshots) {
+        directlyRetrieveFromSource(dataMap, snapshots, igStat -> ((IgProfileSnapshot) igStat).getFollowers());
+    }
+
+    public void calcFollowersDiff(Map<Date, List<Object>> dataMap, StatGranularity gran, List<IgProfileDiff> diffs) {
+        directlyRetrieveFromSource(dataMap, diffs, igStat -> ((IgProfileDiff) igStat).getFollowers());
+    }
+
+    public void calcFollowings(Map<Date, List<Object>> dataMap, StatGranularity gran, List<IgProfileSnapshot> snapshots) {
+        directlyRetrieveFromSource(dataMap, snapshots, igStat -> ((IgProfileSnapshot) igStat).getFollows());
+    }
+
+    public void calcFollowingsDiff(Map<Date, List<Object>> dataMap, StatGranularity gran, List<IgProfileDiff> diffs) {
+        directlyRetrieveFromSource(dataMap, diffs, igStat -> ((IgProfileDiff) igStat).getFollows());
+    }
+
+    public void calcImpressions(Map<Date, List<Object>> dataMap, StatGranularity gran, List<? extends IgStat> stats) {
+        retrieveHourlyFromDiffAndDailyFromSnapshot(dataMap, gran, stats, igStat -> ((IgProfileStat) igStat).getImpressions());
+    }
+
+    public void calcReach(Map<Date, List<Object>> dataMap, StatGranularity gran, List<? extends IgStat> stats) {
+        retrieveHourlyFromDiffAndDailyFromSnapshot(dataMap, gran, stats, igStat -> ((IgProfileStat) igStat).getReach());
+    }
+
+    public void calcProfileViews(Map<Date, List<Object>> dataMap, StatGranularity gran, List<? extends IgStat> stats) {
+        retrieveHourlyFromDiffAndDailyFromSnapshot(dataMap, gran, stats, igStat -> ((IgProfileStat) igStat).getProfileViews());
+    }
+
+    public void calcImpressionsPerReach(Map<Date, List<Object>> dataMap, StatGranularity gran, List<? extends IgStat> stats) {
+        retrieveHourlyFromDiffAndDailyFromSnapshot(dataMap, gran, stats, igStat -> {
+            IgProfileStat stat = (IgProfileStat) igStat;
+            return 0 == stat.getReach() ? 0F : stat.getImpressions().floatValue() / stat.getReach();
+        });
+    }
+
+    private static List<Object> getDataItem(Map<Date, List<Object>> dataMap, Date key) {
+        List<Object> dataItem = dataMap.get(key);
+        if (null == dataItem) {
+            dataItem = new ArrayList<>();
+            dataItem.add(key);
+            dataMap.put(key, dataItem);
         }
 
-        String getterName = "get" + CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_CAMEL, field);
-
-        try {
-            Method getter = obj.getClass().getMethod(getterName);
-            return getter.invoke(obj);
-        } catch (NoSuchMethodException e) {
-            log.error("Failed to find getter method [" + getterName + "]", e);
-        } catch (InvocationTargetException | IllegalAccessException e) {
-            log.error("Failed to call getter method [" + getterName + "]", e);
-        }
-
-        return null;
+        return dataItem;
     }
 
     public IgProfileStatsDTO assemble(String granularity, List<IgOnlineFollowers> onlineFollowers) {
