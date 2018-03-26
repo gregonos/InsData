@@ -93,7 +93,7 @@ var option = {
         containLabel: true,
         left: 0,
         right: 0,
-        top: 15,
+        top: 8,
         bottom: 5
     },
     tooltip: {

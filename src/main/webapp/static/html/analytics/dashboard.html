@@ -174,10 +174,10 @@
         var endOfToday = encodeURIComponent(moment().endOf('day').format(ISO_DATE_FORMAT));
         var startOf30Days = encodeURIComponent(moment().subtract(30, 'day').startOf('day').format(ISO_DATE_FORMAT));
 
-        var followingsCoverageUrl = '/api/profiles/1/stats/ig?metrics=impressions,reach&granularity=daily&since=' + startOf30Days + '&until=' + endOfToday;
+        var followingsCoverageUrl = '/api/profiles/1/stats/ig?metrics=impressions,reach,impressions_per_reach&granularity=daily&since=' + startOf30Days + '&until=' + endOfToday;
         $.getJSON(followingsCoverageUrl, function(data) {
 
-            var splitSolutions = rangeSplit(data.data, [1, 2], [50, 50], [false, false]);
+            var splitSolutions = rangeSplit(data.data, [1, 3], [50, 0.5], [false, false]);
 
             chartCoverage.setOption({
                 dataset: {
@@ -190,7 +190,8 @@
                     }
                 }],
                 yAxis: [
-                    splitSolutions[0]
+                    splitSolutions[0],
+                    splitSolutions[1]
                 ],
                 series: [
                     $.extend({}, seriesBarBase, {
@@ -205,6 +206,14 @@
                         barWidth: 'auto',
                         encode: {
                             y: 'reach'
+                        }
+                    }),
+                    $.extend({}, seriesLineBase, {
+                        name: 'Impressions per Reach',
+                        smooth: true,
+                        yAxisIndex: 1,
+                        encode: {
+                            y: 'impressions_per_reach'
                         }
                     })
                 ]

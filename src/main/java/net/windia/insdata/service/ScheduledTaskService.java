@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
@@ -154,14 +155,19 @@ public class ScheduledTaskService {
         log.info("Insight history saved successfully! ");
     }
 
-//    @Scheduled(initialDelay = 2000, fixedRate = 3600000)
+//    @Scheduled(initialDelay = 6000, fixedRate = 3600000)
     public void retrieveOnlineFollowersHistory() {
         IgProfile myProfile = igProfileRepo.findById(1L).get();
 
-        long since = 1519171200;
+        log.debug("Starting to download historical online followers data...");
+
+        long since = 1519394400;
         Date now = new Date();
 
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
         while (since < now.getTime() / 1000) {
+            log.debug("Retrieving online followers data based on time: " + formatter.format(new Date(since * 1000)));
             IgAPIClientProfileAudience igOnlineFollowersRaw = igRestClientService.retrieveProfileOnlineFollowers(myProfile, since, since + 86400);
             igOnlineFollowersService.saveOnlineFollowers(myProfile, igOnlineFollowersRaw);
 
