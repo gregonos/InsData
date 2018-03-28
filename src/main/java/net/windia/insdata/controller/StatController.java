@@ -43,8 +43,8 @@ public class StatController {
 
             throws UnsupportedGranularityException, UnsupportedMetricException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
 
-        StatGranularity granInstance = StatGranularity.forName(granularity);
-        if (null == granInstance) {
+        StatGranularity gran = StatGranularity.forName(granularity);
+        if (null == gran) {
             throw new UnsupportedGranularityException(granularity);
         }
 
@@ -53,20 +53,22 @@ public class StatController {
         List<String> illegalMetrics = new ArrayList<>();
         Set<IgDataSource> requiredSources = new HashSet<>();
         for (String s : metricsInStr) {
-            IgMetric metric = IgMetric.forName(s);
+            IgMetric metric;
 
-            if (null == metric) {
+            try {
+                metric = Enum.valueOf(IgMetric.class, s.toUpperCase());
+            } catch (IllegalArgumentException e) {
                 illegalMetrics.add(s);
+                continue;
             }
-            else {
-                metrics.add(metric);
 
-                if (!metric.supports(granInstance)) {
-                    throw new UnsupportedGranularityException(metric, granInstance);
-                }
+            metrics.add(metric);
 
-                requiredSources.add(metric.getSource(granInstance));
+            if (!metric.supports(gran)) {
+                throw new UnsupportedGranularityException(metric, gran);
             }
+
+            requiredSources.add(metric.getSource(gran));
         }
 
         if (illegalMetrics.size() > 0) {
@@ -79,12 +81,12 @@ public class StatController {
                     "get" + source.getName(), Long.class, StatGranularity.class, Date.class, Date.class);
 
             List<? extends IgStat> sourceCollection =
-                    (List<? extends IgStat>) sourceGetter.invoke(igProfileDataService, profileId, granInstance, since, until);
+                    (List<? extends IgStat>) sourceGetter.invoke(igProfileDataService, profileId, gran, since, until);
 
             sourceMap.put(source, sourceCollection);
         }
 
-        return igProfileStatsAssembler.assemble(metrics, granInstance, sourceMap);
+        return igProfileStatsAssembler.assemble(metrics, gran, sourceMap);
     }
 
     @RequestMapping(value = "/{profileId}/stats/ig/online-followers", method = RequestMethod.GET)

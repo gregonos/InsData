@@ -1,6 +1,6 @@
 package net.windia.insdata.exception;
 
-public class InsDataException extends Exception {
+public class InsDataException extends RuntimeException {
 
     private Error error;
 

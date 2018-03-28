@@ -1,6 +1,5 @@
 package net.windia.insdata.exception;
 
-import net.windia.insdata.constants.IgMetric;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;

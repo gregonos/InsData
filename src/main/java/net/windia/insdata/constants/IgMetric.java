@@ -1,144 +1,213 @@
 package net.windia.insdata.constants;
 
-import org.apache.commons.lang3.ArrayUtils;
+import net.windia.insdata.exception.UnsupportedGranularityException;
+import net.windia.insdata.model.internal.IgProfileDiff;
+import net.windia.insdata.model.internal.IgProfileSnapshot;
+import net.windia.insdata.model.internal.IgProfileStat;
+import net.windia.insdata.model.internal.IgStat;
 
+import java.util.EnumMap;
 import java.util.EnumSet;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-import static net.windia.insdata.constants.IgDataSource.*;
+import static net.windia.insdata.constants.IgDataSource.DIFF;
+import static net.windia.insdata.constants.IgDataSource.SNAPSHOT;
 import static net.windia.insdata.constants.StatGranularity.DAILY;
 import static net.windia.insdata.constants.StatGranularity.HOURLY;
-import static net.windia.insdata.constants.StatGranularity.HOURLY_AND_DAILY;
 
 public enum IgMetric {
 
-    FOLLOWERS("followers", HOURLY_AND_DAILY, SNAPSHOT, "followers"),
-    FOLLOWERS_DIFF("followers_diff", HOURLY_AND_DAILY, DIFF, "followers"),
-    FOLLOWINGS("followings", HOURLY_AND_DAILY, SNAPSHOT, "follows"),
-    FOLLOWINGS_DIFF("followings_diff", HOURLY_AND_DAILY, DIFF, "follows"),
+    FOLLOWERS() {
+        @Override
+        protected void init() {
+            this.initForSameHourlyAndDaily(SNAPSHOT, sourceRecord -> ((IgProfileSnapshot) sourceRecord).getFollowers());
+        }
+    },
 
-    NEW_FOLLOWERS("new_followers", HOURLY_AND_DAILY),
+    FOLLOWERS_DIFF() {
+        @Override
+        protected void init() {
+            this.initForSameHourlyAndDaily(DIFF, sourceRecord -> ((IgProfileDiff) sourceRecord).getFollowers());
+        }
+    },
 
-    POSTS("posts", HOURLY_AND_DAILY, SNAPSHOT, "mediaCount"),
-    POSTS_DIFF("posts_diff", HOURLY_AND_DAILY, DIFF, "mediaCount"),
+    FOLLOWINGS() {
+        @Override
+        protected void init() {
+            this.initForSameHourlyAndDaily(SNAPSHOT, sourceRecord -> ((IgProfileSnapshot) sourceRecord).getFollows());
+        }
+    },
 
-    IMPRESSIONS("impressions", HOURLY_AND_DAILY),
-    REACH("reach", HOURLY_AND_DAILY),
-    IMPRESSIONS_PER_REACH("impressions_per_reach", HOURLY_AND_DAILY),
-    PROFILE_VIEWS("profile_views", HOURLY_AND_DAILY),
+    FOLLOWINGS_DIFF() {
+        @Override
+        protected void init() {
+            this.initForSameHourlyAndDaily(DIFF, sourceRecord -> ((IgProfileDiff) sourceRecord).getFollows());
+        }
+    },
 
-    IMPRESSIONS_POST_NEW("impressions_post_new", HOURLY_AND_DAILY),
-    IMPRESSIONS_POST_EXISTING("impressions_post_existing", HOURLY_AND_DAILY),
+    POSTS() {
+        @Override
+        protected void init() {
+            this.initForSameHourlyAndDaily(SNAPSHOT, sourceRecord -> ((IgProfileSnapshot) sourceRecord).getMediaCount());
+        }
+    },
 
-    EMAIL_CONTACTS("email_contacts", HOURLY_AND_DAILY),
-    PHONE_CALL_CLICKS("phone_call_clicks", HOURLY_AND_DAILY),
-    GET_DIRECTIONS_CLICKS("get_directions_clicks", HOURLY_AND_DAILY),
-    WEBSITE_CLICKS("website_clicks", HOURLY_AND_DAILY),
+    POSTS_DIFF() {
+        @Override
+        protected void init() {
+            this.initForSameHourlyAndDaily(DIFF, sourceRecord -> ((IgProfileDiff) sourceRecord).getMediaCount());
+        }
+    },
+
+    NEW_FOLLOWERS() {
+        @Override
+        protected void init() {
+            this.initForHourlyDiffAndDailySnapshot(sourceRecord -> ((IgProfileStat) sourceRecord).getNewFollowers());
+        }
+    },
+
+    IMPRESSIONS() {
+        @Override
+        protected void init() {
+            this.initForHourlyDiffAndDailySnapshot(sourceRecord -> ((IgProfileStat) sourceRecord).getImpressions());
+        }
+    },
+
+    REACH() {
+        @Override
+        protected void init() {
+            this.initForHourlyDiffAndDailySnapshot(sourceRecord -> ((IgProfileStat) sourceRecord).getReach());
+        }
+    },
+
+    IMPRESSIONS_PER_REACH() {
+        @Override
+        protected void init() {
+            this.initForHourlyDiffAndDailySnapshot(sourceRecord -> {
+                IgProfileStat stat = (IgProfileStat) sourceRecord;
+                return 0 == stat.getReach() ? 0F : stat.getImpressions().floatValue() / stat.getReach();
+            });
+        }
+    },
+
+    PROFILE_VIEWS() {
+        @Override
+        protected void init() {
+            this.initForHourlyDiffAndDailySnapshot(sourceRecord -> ((IgProfileStat) sourceRecord).getProfileViews());
+        }
+    },
+
+    EMAIL_CONTACTS() {
+        @Override
+        protected void init() {
+            this.initForHourlyDiffAndDailySnapshot(sourceRecord -> ((IgProfileStat) sourceRecord).getEmailContacts());
+        }
+    },
+
+    PHONE_CALL_CLICKS() {
+        @Override
+        protected void init() {
+            this.initForHourlyDiffAndDailySnapshot(sourceRecord -> ((IgProfileStat) sourceRecord).getPhoneCallClicks());
+        }
+    },
+
+    GET_DIRECTIONS_CLICKS() {
+        @Override
+        protected void init() {
+            this.initForHourlyDiffAndDailySnapshot(sourceRecord -> ((IgProfileStat) sourceRecord).getGetDirectionsClicks());
+        }
+    },
+
+    WEBSITE_CLICKS() {
+        @Override
+        protected void init() {
+            this.initForHourlyDiffAndDailySnapshot(sourceRecord -> ((IgProfileStat) sourceRecord).getWebsiteClicks());
+        }
+    },
+
+    IMPRESSIONS_POST_NEW() {
+        @Override
+        protected void init() {
+            // TODO: implement
+        }
+    },
+
+    IMPRESSIONS_POST_EXISTING() {
+        @Override
+        protected void init() {
+            // TODO: implement
+        }
+    },
     ;
 
-    private static final Map<String, IgMetric> nameToInstanceMap = new HashMap<>();
-
-    private String name;
-    private StatGranularity[] granularities;
-    private IgMetricSettings settings;
-    private Map<StatGranularity, IgMetricSettings> settingsPerGranularity = new HashMap<>();
+    private Map<StatGranularity, IgMetricVariant> variantsMap = new EnumMap<>(StatGranularity.class);
 
     static {
-        NEW_FOLLOWERS.setSettings(HOURLY, DIFF, "newFollowers");
-        NEW_FOLLOWERS.setSettings(DAILY, SNAPSHOT, "newFollowers");
-
-        IMPRESSIONS.setSettings(HOURLY, DIFF, "impressions");
-        IMPRESSIONS.setSettings(DAILY, SNAPSHOT, "impressions");
-
-        REACH.setSettings(HOURLY, DIFF, "reach");
-        REACH.setSettings(DAILY, SNAPSHOT, "reach");
-
-        IMPRESSIONS_PER_REACH.setSettings(HOURLY, DIFF, "impressionsPerReach");
-        IMPRESSIONS_PER_REACH.setSettings(DAILY, SNAPSHOT, "impressionsPerReach");
-
-        PROFILE_VIEWS.setSettings(HOURLY, DIFF, "profileViews");
-        PROFILE_VIEWS.setSettings(DAILY, SNAPSHOT, "profileViews");
-
-        IMPRESSIONS_POST_NEW.setSettings(HOURLY, POST_DIFF, "impressions");
-        IMPRESSIONS_POST_NEW.setSettings(DAILY, POST_DIFF_BY_DATE, "impressions");
-
-        IMPRESSIONS_POST_EXISTING.setSettings(HOURLY, POST_DIFF, "impressions");
-        IMPRESSIONS_POST_EXISTING.setSettings(DAILY, POST_DIFF_BY_DATE, "impressions");
-
-        EMAIL_CONTACTS.setSettings(HOURLY, DIFF, "emailContacts");
-        EMAIL_CONTACTS.setSettings(DAILY, SNAPSHOT, "emailContacts");
-
-        PHONE_CALL_CLICKS.setSettings(HOURLY, DIFF, "phoneCallClicks");
-        PHONE_CALL_CLICKS.setSettings(DAILY, SNAPSHOT, "phoneCallClicks");
-
-        GET_DIRECTIONS_CLICKS.setSettings(HOURLY, DIFF, "getDirectionsClicks");
-        GET_DIRECTIONS_CLICKS.setSettings(DAILY, SNAPSHOT, "getDirectionsClicks");
-
-        WEBSITE_CLICKS.setSettings(HOURLY, DIFF, "websiteClicks");
-        WEBSITE_CLICKS.setSettings(DAILY, SNAPSHOT, "websiteClicks");
-
-        for (IgMetric metric : EnumSet.allOf(IgMetric.class)) {
-            nameToInstanceMap.put(metric.getName(), metric);
-        }
-
+        EnumSet.allOf(IgMetric.class).forEach(IgMetric::init);
     }
 
-    IgMetric(String name, StatGranularity[] granularities) {
-        this.name = name;
-        this.granularities = granularities;
+    protected abstract void init();
+
+    protected void initForSameHourlyAndDaily(IgDataSource source, IgMetricCalculator calculator) {
+        this.variantsMap.put(HOURLY, new IgMetricVariant(source, calculator));
+        this.variantsMap.put(DAILY, this.variantsMap.get(HOURLY));
     }
 
-    IgMetric(String name, StatGranularity[] granularities, IgDataSource source, String field) {
-        this(name, granularities);
-        this.setSettings(source, field);
-    }
-
-    public String getName() {
-        return name;
+    protected void initForHourlyDiffAndDailySnapshot(IgMetricCalculator calculator) {
+        this.variantsMap.put(HOURLY, new IgMetricVariant(DIFF, calculator));
+        this.variantsMap.put(DAILY, new IgMetricVariant(SNAPSHOT, calculator));
     }
 
     public boolean supports(StatGranularity granularity) {
-        return ArrayUtils.contains(this.granularities, granularity);
+        return variantsMap.keySet().contains(granularity);
     }
 
-    public void setSettings(StatGranularity gran, IgDataSource source, String field) {
-        settingsPerGranularity.put(gran, new IgMetricSettings(source, field));
-    }
+    private IgMetricVariant getVariant(StatGranularity granularity) {
+        IgMetricVariant variant = variantsMap.get(granularity);
 
-    public void setSettings(IgDataSource source, String field) {
-        this.settings = new IgMetricSettings(source, field);
-    }
+        if (null == variant) {
+            throw new UnsupportedGranularityException(granularity.getValue());
+        }
 
-    public IgMetricSettings getSettings(StatGranularity granularity) {
-        IgMetricSettings settingsForGran = settingsPerGranularity.get(granularity);
-
-        return null == settingsForGran ? this.settings : settingsForGran;
+        return variant;
     }
 
     public IgDataSource getSource(StatGranularity gran) {
-        return getSettings(gran).source;
+        return getVariant(gran).source;
     }
 
-    public String getField(StatGranularity gran) {
-        return getSettings(gran).field;
+    public Map<Object, Object> calculate(StatGranularity gran, List<? extends IgStat> sourceData) {
+        return getVariant(gran).calculator.calculate(sourceData);
     }
 
-    public static IgMetric forName(String name) {
-        return nameToInstanceMap.get(name);
+    public Set<StatGranularity> getGranularities() {
+        return this.variantsMap.keySet();
     }
 
-    public StatGranularity[] getGranularities() {
-        return granularities;
-    }
+    class IgMetricVariant {
+        private IgDataSource source;
+        private IgMetricCalculator calculator;
 
-    class IgMetricSettings {
-        IgDataSource source;
-        String field;
-
-        IgMetricSettings(IgDataSource source, String field) {
+        IgMetricVariant(IgDataSource source, IgMetricCalculator calculator) {
             this.source = source;
-            this.field = field;
+            this.calculator = calculator;
         }
     }
+
+    interface IgMetricCalculator {
+
+        default Map<Object, Object> calculate(List<? extends IgStat> sourceData) {
+            Map<Object, Object> resultMap = new LinkedHashMap<>(sourceData.size());
+
+            sourceData.forEach(sourceRecord -> resultMap.put(sourceRecord.getIndicativeDate(), extract(sourceRecord)));
+
+            return resultMap;
+        }
+
+        Object extract(IgStat sourceRecord);
+    }
+
 }

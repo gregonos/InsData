@@ -97,7 +97,8 @@ public class ScheduledTaskService {
             log.debug("Profile basic snapshot hourly data parsed and stored successfully!");
         }
 
-        if (0 == DateTimeUtils.hourOfFacebookServer()) {
+        int hourOfFacebookServer = DateTimeUtils.hourOfFacebookServer();
+        if (0 == hourOfFacebookServer) {
 //        if (true) {
 
             log.debug("A new reporting day detected. Start to process daily stat...");
@@ -116,6 +117,7 @@ public class ScheduledTaskService {
 
             igProfileAudienceService.saveAudience(myProfile, igProfileAudienceRaw);
             log.debug("Profile audience data parsed and stored successfully!");
+        } else if (1 == hourOfFacebookServer) {
 
             // Online Followers
             log.debug("Fetching profile online followers data... ");
@@ -161,7 +163,7 @@ public class ScheduledTaskService {
 
         log.debug("Starting to download historical online followers data...");
 
-        long since = 1519394400;
+        long since = 1521897000;
         Date now = new Date();
 
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
