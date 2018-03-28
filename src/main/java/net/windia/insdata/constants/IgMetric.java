@@ -1,19 +1,15 @@
 package net.windia.insdata.constants;
 
 import net.windia.insdata.exception.UnsupportedGranularityException;
-import net.windia.insdata.model.internal.IgProfileDiff;
-import net.windia.insdata.model.internal.IgProfileSnapshot;
-import net.windia.insdata.model.internal.IgProfileStat;
-import net.windia.insdata.model.internal.IgStat;
+import net.windia.insdata.model.internal.*;
+import net.windia.insdata.util.DateTimeUtils;
 
-import java.util.EnumMap;
-import java.util.EnumSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static net.windia.insdata.constants.IgDataSource.DIFF;
+import static net.windia.insdata.constants.IgDataSource.POST_DIFF;
 import static net.windia.insdata.constants.IgDataSource.SNAPSHOT;
 import static net.windia.insdata.constants.StatGranularity.DAILY;
 import static net.windia.insdata.constants.StatGranularity.HOURLY;
@@ -131,14 +127,18 @@ public enum IgMetric {
     IMPRESSIONS_POST_NEW() {
         @Override
         protected void init() {
-            // TODO: implement
+            getVariantsMap().put(DAILY,
+                    new IgMetricVariant(POST_DIFF,
+                            (IgNewPostAggregator) sourceRecord -> ((IgMediaDiff) sourceRecord).getImpressions()));
         }
     },
 
     IMPRESSIONS_POST_EXISTING() {
         @Override
         protected void init() {
-            // TODO: implement
+            getVariantsMap().put(DAILY,
+                    new IgMetricVariant(POST_DIFF,
+                            (IgExistingPostAggregator) sourceRecord -> ((IgMediaDiff) sourceRecord).getImpressions()));
         }
     },
     ;
@@ -159,6 +159,10 @@ public enum IgMetric {
     protected void initForHourlyDiffAndDailySnapshot(IgMetricCalculator calculator) {
         this.variantsMap.put(HOURLY, new IgMetricVariant(DIFF, calculator));
         this.variantsMap.put(DAILY, new IgMetricVariant(SNAPSHOT, calculator));
+    }
+
+    protected Map<StatGranularity, IgMetricVariant> getVariantsMap() {
+        return variantsMap;
     }
 
     public boolean supports(StatGranularity granularity) {
@@ -208,6 +212,45 @@ public enum IgMetric {
         }
 
         Object extract(IgStat sourceRecord);
+    }
+
+    interface IgMetricAggregator extends IgMetricCalculator {
+
+        @Override
+        default Map<Object, Object> calculate(List<? extends IgStat> sourceData) {
+            Map<Object, Object> resultMap = new LinkedHashMap<>();
+
+            Map<Object, Integer> reduceResult = sourceData.stream()
+                    .filter(predicate())
+                    .collect(Collectors.groupingBy(sourceRec -> DateTimeUtils.dateOfFacebookServer(sourceRec.getIndicativeDate()),
+                            Collectors.summingInt(sourceRec -> (int) extract(sourceRec))));
+
+            reduceResult.forEach(resultMap::put);
+
+            return resultMap;
+        }
+
+        Predicate<IgStat> predicate();
+    }
+
+    interface IgNewPostAggregator extends IgMetricAggregator {
+        @Override
+        default Predicate<IgStat> predicate() {
+            return sourceRec -> {
+                IgMediaDiff diff = (IgMediaDiff) sourceRec;
+                return diff.getComparedTo().equals(diff.getMedia().getCreatedAt());
+            };
+        }
+    }
+
+    interface IgExistingPostAggregator extends IgMetricAggregator {
+        @Override
+        default Predicate<IgStat> predicate() {
+            return sourceRec -> {
+                IgMediaDiff diff = (IgMediaDiff) sourceRec;
+                return !diff.getComparedTo().equals(diff.getMedia().getCreatedAt());
+            };
+        }
     }
 
 }

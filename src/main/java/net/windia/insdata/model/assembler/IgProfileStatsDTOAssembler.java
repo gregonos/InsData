@@ -20,8 +20,7 @@ import java.util.Map;
 @Service
 public class IgProfileStatsDTOAssembler {
 
-    public IgProfileStatsDTO assemble(List<IgMetric> metrics, StatGranularity granInstance, Map<IgDataSource, List<? extends IgStat>> sourceMap)
-            throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    public IgProfileStatsDTO assemble(List<IgMetric> metrics, StatGranularity granInstance, Map<IgDataSource, List<? extends IgStat>> sourceMap) {
 
         IgProfileStatsDTO target = new IgProfileStatsDTO();
 
@@ -34,8 +33,12 @@ public class IgProfileStatsDTOAssembler {
         // Data
         Map<Object, List<Object>> dataMap = new LinkedHashMap<>();
         for (IgMetric metric : metrics) {
+            log.debug(metric.getSource(granInstance).toString());
+            log.debug("size = " + sourceMap.get(metric.getSource(granInstance)).size());
             Map<Object, Object> metricResult = metric.calculate(granInstance, sourceMap.get(metric.getSource(granInstance)));
+            log.debug("result size = " + metricResult.size());
             for (Object key : metricResult.keySet()) {
+                log.debug(key + " -> " + metricResult.get(key));
                 List<Object> dataItem = dataMap.get(key);
                 if (null == dataItem) {
                     dataItem = new ArrayList<>(dimensions.size());

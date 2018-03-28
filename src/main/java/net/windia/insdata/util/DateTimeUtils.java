@@ -3,6 +3,7 @@ package net.windia.insdata.util;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
@@ -17,8 +18,23 @@ public class DateTimeUtils {
         facebookServerTimeZone = timeZone;
     }
 
+    public static String getFacebookServerTimeZone() {
+        return facebookServerTimeZone;
+    }
+
     public static int hourOfFacebookServer() {
         return hourInTimeZone(facebookServerTimeZone);
+    }
+
+    public static Date dateOfFacebookServer(Date time) {
+        Calendar instance = Calendar.getInstance(TimeZone.getTimeZone(facebookServerTimeZone));
+        instance.setTime(time);
+        instance.set(Calendar.HOUR_OF_DAY, 0);
+        instance.clear(Calendar.MINUTE);
+        instance.clear(Calendar.SECOND);
+        instance.clear(Calendar.MILLISECOND);
+
+        return instance.getTime();
     }
 
     public static int hourInTimeZone(String timeZoneId, Date time) {

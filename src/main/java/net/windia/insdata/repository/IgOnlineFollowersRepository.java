@@ -31,6 +31,6 @@ public interface IgOnlineFollowersRepository extends CrudRepository<IgOnlineFoll
 
     @Query("SELECT new IgOnlineFollowers(o.date, o.hour, o.weekday, AVG(o.count), AVG(o.percentage)) FROM IgOnlineFollowers  o " +
             "WHERE o.igProfile.id = :profileId AND o.percentage IS NOT NULL " +
-            "GROUP BY o.weekday, o.hour ORDER BY o.weekday ASC, o.hour ASC")
+            "GROUP BY o.weekday, o.hour ORDER BY o.weekday DESC, o.hour ASC")
     List<IgOnlineFollowers> findAggregateHourAndWeekdayByProfileId(@Param("profileId") Long profileId);
 }

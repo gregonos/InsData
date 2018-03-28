@@ -163,7 +163,7 @@ public class ScheduledTaskService {
 
         log.debug("Starting to download historical online followers data...");
 
-        long since = 1521897000;
+        long since = 1521957863;
         Date now = new Date();
 
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");

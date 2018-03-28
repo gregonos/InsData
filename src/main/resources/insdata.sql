@@ -11,7 +11,7 @@ CREATE TABLE ig_media
   shortcode     VARCHAR(16)   NOT NULL,
   thumbnail_url VARCHAR(256)  NULL,
   url           VARCHAR(256)  NULL,
-  created_at    DATETIME      NOT NULL
+  created_at    TIMESTAMP      NOT NULL
 )
   ENGINE = InnoDB
   CHARSET = utf8;
@@ -383,8 +383,8 @@ CREATE TABLE profile
   user_id         BIGINT       NULL,
   type            VARCHAR(16)  NOT NULL,
   token           VARCHAR(256) NULL,
-  created_at      DATETIME     NOT NULL,
-  last_updated_at DATETIME     NOT NULL
+  created_at      TIMESTAMP     NOT NULL,
+  last_updated_at TIMESTAMP     NOT NULL
 )
   COMMENT 'A social media profile belonging to the user'
   ENGINE = InnoDB

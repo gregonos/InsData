@@ -3,12 +3,10 @@ package net.windia.insdata.service;
 import lombok.extern.slf4j.Slf4j;
 import net.windia.insdata.constants.StatGranularity;
 import net.windia.insdata.exception.UnsupportedGranularityException;
+import net.windia.insdata.model.internal.IgMediaDiff;
 import net.windia.insdata.model.internal.IgProfileDiff;
 import net.windia.insdata.model.internal.IgProfileSnapshot;
-import net.windia.insdata.repository.IgProfileDiffDailyRepository;
-import net.windia.insdata.repository.IgProfileDiffHourlyRepository;
-import net.windia.insdata.repository.IgProfileSnapshotDailyRepository;
-import net.windia.insdata.repository.IgProfileSnapshotHourlyRepository;
+import net.windia.insdata.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +29,12 @@ public class IgProfileDataService {
     @Autowired
     private IgProfileDiffDailyRepository diffDailyRepo;
 
+    @Autowired
+    private IgMediaDiffHourlyRepository mediaDiffHourlyRepo;
+
+    @Autowired
+    private IgMediaDiffDailyRepository mediaDiffDailyRepo;
+
     public List<? extends IgProfileSnapshot> getSnapshots(Long igProfileId, StatGranularity granularity, Date since, Date until)
             throws UnsupportedGranularityException {
 
@@ -50,6 +54,17 @@ public class IgProfileDataService {
             return diffHourlyRepo.findByIgProfileIdAndComparedToBetweenOrderByComparedToAsc(igProfileId, since, until);
         } else if (StatGranularity.DAILY == granularity) {
             return diffDailyRepo.findByIgProfileIdAndComparedToBetweenOrderByComparedToAsc(igProfileId, since, until);
+        } else {
+            throw new UnsupportedGranularityException(granularity.getValue());
+        }
+    }
+
+    public List<? extends IgMediaDiff> getPostDiffs(Long igProfileId, StatGranularity granularity, Date since, Date until)
+        throws UnsupportedGranularityException {
+        if (StatGranularity.HOURLY == granularity) {
+            return mediaDiffHourlyRepo.findByIgProfileIdAndComparedToBetweenOrderByComparedToAsc(igProfileId, since, until);
+        } else if (StatGranularity.DAILY == granularity) {
+            return mediaDiffDailyRepo.findByIgProfileIdAndComparedToBetweenOrderByComparedToAsc(igProfileId, since, until);
         } else {
             throw new UnsupportedGranularityException(granularity.getValue());
         }
