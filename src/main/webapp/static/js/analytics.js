@@ -81,7 +81,7 @@ var seriesLineBase = {
     }
 };
 
-var chartColors = ['#3d92d4', '#ffc107', '#48c0d4'];
+var chartColors = ['#3d92d4', '#ffc107', '#48c0d4', '#45aef9'];
 
 var option = {
     color: chartColors,

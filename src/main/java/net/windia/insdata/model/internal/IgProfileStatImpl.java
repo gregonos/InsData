@@ -1,10 +1,14 @@
 package net.windia.insdata.model.internal;
 
+import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
 
 @MappedSuperclass
 public abstract class IgProfileStatImpl extends IgStatBase implements IgProfileStat {
+
+    @Column(nullable = false)
+    private Date capturedAt;
 
     @Column(nullable = false)
     private Integer mediaCount;
@@ -38,6 +42,14 @@ public abstract class IgProfileStatImpl extends IgStatBase implements IgProfileS
 
     @Column(nullable = false)
     private Integer websiteClicks;
+
+    public Date getCapturedAt() {
+        return capturedAt;
+    }
+
+    public void setCapturedAt(Date capturedAt) {
+        this.capturedAt = capturedAt;
+    }
 
     public Integer getMediaCount() {
         return mediaCount;

@@ -21,13 +21,13 @@ public class IgProfileDiffDaily extends IgProfileDailyStat implements IgProfileD
     }
 
     @Override
-    public void realizeComparedTo(Date comparedTo, String timeZone) {
-        this.setComparedTo(comparedTo);
-        calcDaily(timeZone, this, comparedTo);
+    public void realizeCapturedAt(Date capturedAt, String timeZone) {
+        this.setCapturedAt(capturedAt);
+        calcDaily(timeZone, this, capturedAt);
     }
 
     @Override
     public Date getIndicativeDate() {
-        return getComparedTo();
+        return getCapturedAt();
     }
 }

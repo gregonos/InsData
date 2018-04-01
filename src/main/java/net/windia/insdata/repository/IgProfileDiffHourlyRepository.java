@@ -7,5 +7,5 @@ import java.util.Date;
 import java.util.List;
 
 public interface IgProfileDiffHourlyRepository extends CrudRepository<IgProfileDiffHourly, Long> {
-    List<IgProfileDiffHourly> findByIgProfileIdAndComparedToBetweenOrderByComparedToAsc(Long igProfileId, Date since, Date until);
+    List<IgProfileDiffHourly> findByIgProfileIdAndCapturedAtBetweenOrderByCapturedAtAsc(Long igProfileId, Date since, Date until);
 }

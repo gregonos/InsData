@@ -10,18 +10,7 @@ import javax.persistence.Table;
 public class IgMediaSnapshotHourly extends IgMediaStatImpl implements IgMediaSnapshot, IgStatHourly {
 
     @Column(nullable = false)
-    private Date capturedAt;
-
-    @Column(nullable = false)
     private Byte hour;
-
-    public Date getCapturedAt() {
-        return capturedAt;
-    }
-
-    public void setCapturedAt(Date capturedAt) {
-        this.capturedAt = capturedAt;
-    }
 
     public Byte getHour() {
         return hour;

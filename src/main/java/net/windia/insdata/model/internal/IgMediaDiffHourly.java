@@ -16,9 +16,9 @@ public class IgMediaDiffHourly extends IgMediaStatImpl implements IgMediaDiff, I
     private Byte hour;
 
     @Override
-    public void realizeComparedTo(Date comparedTo, String timeZone) {
-        this.setComparedTo(comparedTo);
-        calcHourly(timeZone, this, comparedTo);
+    public void realizeCapturedAt(Date capturedAt, String timeZone) {
+        this.setCapturedAt(capturedAt);
+        calcHourly(timeZone, this, capturedAt);
     }
 
     public Date getComparedTo() {
@@ -31,7 +31,7 @@ public class IgMediaDiffHourly extends IgMediaStatImpl implements IgMediaDiff, I
 
     @Override
     public Date getIndicativeDate() {
-        return getComparedTo();
+        return getCapturedAt();
     }
 
     public Byte getHour() {

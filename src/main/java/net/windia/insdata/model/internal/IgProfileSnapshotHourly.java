@@ -10,18 +10,7 @@ import javax.persistence.Table;
 public class IgProfileSnapshotHourly extends IgProfileStatImpl implements IgProfileSnapshot, IgStatHourly {
 
     @Column(nullable = false)
-    private Date capturedAt;
-
-    @Column(nullable = false)
     private Byte hour;
-
-    public Date getCapturedAt() {
-        return capturedAt;
-    }
-
-    public void setCapturedAt(Date capturedAt) {
-        this.capturedAt = capturedAt;
-    }
 
     public Byte getHour() {
         return hour;

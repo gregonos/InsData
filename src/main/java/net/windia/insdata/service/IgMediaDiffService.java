@@ -98,7 +98,9 @@ public abstract class IgMediaDiffService<Snapshot extends IgMediaSnapshot, Diff 
             diff.setIgProfile(profile);
             diff.setMediaType(newSnapshot.getMediaType());
             diff.setMedia(newSnapshot.getMedia());
-            diff.realizeComparedTo(lastSnapshot.getCapturedAt(), profile.getUser().getTimeZone());
+
+            diff.realizeCapturedAt(newSnapshot.getCapturedAt(), profile.getUser().getTimeZone());
+            diff.setComparedTo(lastSnapshot.getCapturedAt());
 
             diff.setLikes(newSnapshot.getLikes() - lastSnapshot.getLikes());
             diff.setComments(newSnapshot.getComments() - lastSnapshot.getComments());

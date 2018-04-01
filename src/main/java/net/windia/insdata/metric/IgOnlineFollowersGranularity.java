@@ -1,4 +1,4 @@
-package net.windia.insdata.constants;
+package net.windia.insdata.metric;
 
 import net.windia.insdata.model.internal.IgOnlineFollowers;
 import net.windia.insdata.repository.IgOnlineFollowersRepository;

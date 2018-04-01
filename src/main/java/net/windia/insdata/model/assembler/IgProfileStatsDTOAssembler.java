@@ -1,20 +1,22 @@
 package net.windia.insdata.model.assembler;
 
 import lombok.extern.slf4j.Slf4j;
-import net.windia.insdata.constants.IgDataSource;
-import net.windia.insdata.constants.IgMetric;
-import net.windia.insdata.constants.IgOnlineFollowersGranularity;
-import net.windia.insdata.constants.StatGranularity;
+import net.windia.insdata.metric.IgDataSource;
+import net.windia.insdata.metric.IgMetric;
+import net.windia.insdata.metric.IgOnlineFollowersGranularity;
+import net.windia.insdata.metric.StatGranularity;
 import net.windia.insdata.model.dto.IgProfileStatsDTO;
 import net.windia.insdata.model.internal.IgOnlineFollowers;
 import net.windia.insdata.model.internal.IgStat;
 import org.springframework.stereotype.Service;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -27,29 +29,36 @@ public class IgProfileStatsDTOAssembler {
         // Dimensions
         List<String> dimensions = new ArrayList<>(metrics.size() + 1);
         dimensions.add(IgProfileStatsDTO.DIMENSION_TIME);
-        metrics.forEach(metric -> dimensions.add(metric.name().toLowerCase()));
+        metrics.forEach(metric -> dimensions.add(metric.getName().toLowerCase()));
         target.setDimensions(dimensions);
 
         // Data
-        Map<Object, List<Object>> dataMap = new LinkedHashMap<>();
+        Map<Object, Map<String, Object>> dataMap = new LinkedHashMap<>();
         for (IgMetric metric : metrics) {
-            log.debug(metric.getSource(granInstance).toString());
-            log.debug("size = " + sourceMap.get(metric.getSource(granInstance)).size());
-            Map<Object, Object> metricResult = metric.calculate(granInstance, sourceMap.get(metric.getSource(granInstance)));
-            log.debug("result size = " + metricResult.size());
+
+            @SuppressWarnings("unchecked")
+            Map metricResult = metric.calculate(granInstance, (List<List<? extends IgStat>>) metric.getSources(granInstance).stream().map(sourceMap::get).collect(Collectors.toList()));
             for (Object key : metricResult.keySet()) {
-                log.debug(key + " -> " + metricResult.get(key));
-                List<Object> dataItem = dataMap.get(key);
+                Map<String, Object> dataItem = dataMap.get(key);
                 if (null == dataItem) {
-                    dataItem = new ArrayList<>(dimensions.size());
-                    dataItem.add(key);
+                    dataItem = new HashMap<>(dimensions.size() - 1);
+                    dataItem.put(IgProfileStatsDTO.DIMENSION_TIME, key);
                     dataMap.put(key, dataItem);
                 }
-                dataItem.add(metricResult.get(key));
+                dataItem.put(metric.getName().toLowerCase(), metricResult.get(key));
             }
         }
 
-        target.setData(dataMap.values());
+        List<List<Object>> resultDataSet = new ArrayList<>(dataMap.size());
+        for (Map<String, Object> dataEntry : dataMap.values()) {
+            List<Object> resultDataItem = dimensions.stream().map(dataEntry::get).collect(Collectors.toList());
+            resultDataSet.add(resultDataItem);
+        }
+
+        resultDataSet.sort(
+                (dataSet1, dataSet2) -> (int)(((Date)dataSet1.get(0)).getTime() - ((Date)dataSet2.get(0)).getTime()));
+
+        target.setData(resultDataSet);
 
         return target;
     }

@@ -1,7 +1,7 @@
 package net.windia.insdata.service;
 
 import lombok.extern.slf4j.Slf4j;
-import net.windia.insdata.constants.StatGranularity;
+import net.windia.insdata.metric.StatGranularity;
 import net.windia.insdata.exception.UnsupportedGranularityException;
 import net.windia.insdata.model.internal.IgMediaDiff;
 import net.windia.insdata.model.internal.IgProfileDiff;
@@ -51,9 +51,9 @@ public class IgProfileDataService {
             throws UnsupportedGranularityException {
 
         if (StatGranularity.HOURLY == granularity) {
-            return diffHourlyRepo.findByIgProfileIdAndComparedToBetweenOrderByComparedToAsc(igProfileId, since, until);
+            return diffHourlyRepo.findByIgProfileIdAndCapturedAtBetweenOrderByCapturedAtAsc(igProfileId, since, until);
         } else if (StatGranularity.DAILY == granularity) {
-            return diffDailyRepo.findByIgProfileIdAndComparedToBetweenOrderByComparedToAsc(igProfileId, since, until);
+            return diffDailyRepo.findByIgProfileIdAndCapturedAtBetweenOrderByCapturedAtAsc(igProfileId, since, until);
         } else {
             throw new UnsupportedGranularityException(granularity.getValue());
         }
@@ -62,9 +62,9 @@ public class IgProfileDataService {
     public List<? extends IgMediaDiff> getPostDiffs(Long igProfileId, StatGranularity granularity, Date since, Date until)
         throws UnsupportedGranularityException {
         if (StatGranularity.HOURLY == granularity) {
-            return mediaDiffHourlyRepo.findByIgProfileIdAndComparedToBetweenOrderByComparedToAsc(igProfileId, since, until);
+            return mediaDiffHourlyRepo.findByIgProfileIdAndCapturedAtBetweenOrderByCapturedAtAsc(igProfileId, since, until);
         } else if (StatGranularity.DAILY == granularity) {
-            return mediaDiffDailyRepo.findByIgProfileIdAndComparedToBetweenOrderByComparedToAsc(igProfileId, since, until);
+            return mediaDiffDailyRepo.findByIgProfileIdAndCapturedAtBetweenOrderByCapturedAtAsc(igProfileId, since, until);
         } else {
             throw new UnsupportedGranularityException(granularity.getValue());
         }

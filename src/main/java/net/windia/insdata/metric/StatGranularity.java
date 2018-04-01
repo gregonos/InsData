@@ -1,4 +1,4 @@
-package net.windia.insdata.constants;
+package net.windia.insdata.metric;
 
 
 import java.util.EnumSet;
@@ -9,8 +9,6 @@ public enum StatGranularity {
 
     HOURLY("hourly"),
     DAILY("daily");
-
-    public static final StatGranularity[] HOURLY_AND_DAILY = new StatGranularity[] {HOURLY, DAILY};
 
     private static final Map<String, StatGranularity> valueToInstanceMap = new HashMap<>();
 

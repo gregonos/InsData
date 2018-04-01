@@ -11,7 +11,7 @@ CREATE TABLE ig_media
   shortcode     VARCHAR(16)   NOT NULL,
   thumbnail_url VARCHAR(256)  NULL,
   url           VARCHAR(256)  NULL,
-  created_at    TIMESTAMP      NOT NULL
+  created_at    TIMESTAMP     NOT NULL
 )
   ENGINE = InnoDB
   CHARSET = utf8;
@@ -26,7 +26,7 @@ CREATE TABLE ig_media_diff_daily
   media_id      VARCHAR(20)                         NOT NULL,
   ig_profile_id BIGINT                              NOT NULL,
   media_type    VARCHAR(16)                         NOT NULL,
-  compared_to   TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP,
+  compared_to   TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
   impressions   INT                                 NOT NULL,
   reach         INT                                 NOT NULL,
   engagement    INT                                 NOT NULL,
@@ -68,7 +68,7 @@ CREATE TABLE ig_media_diff_hourly
   media_id      VARCHAR(20)                         NOT NULL,
   ig_profile_id BIGINT                              NOT NULL,
   media_type    VARCHAR(16)                         NOT NULL,
-  compared_to   TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP,
+  compared_to   TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
   impressions   INT                                 NOT NULL,
   reach         INT                                 NOT NULL,
   engagement    INT                                 NOT NULL,
@@ -102,7 +102,7 @@ CREATE TABLE ig_media_snapshot_daily
   media_id      VARCHAR(20)                         NOT NULL,
   ig_profile_id BIGINT                              NOT NULL,
   media_type    VARCHAR(16)                         NOT NULL,
-  captured_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP,
+  captured_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
   impressions   INT                                 NOT NULL,
   reach         INT                                 NOT NULL,
   engagement    INT                                 NOT NULL,
@@ -144,7 +144,7 @@ CREATE TABLE ig_media_snapshot_hourly
   media_id      VARCHAR(20)                         NOT NULL,
   ig_profile_id BIGINT                              NOT NULL,
   media_type    VARCHAR(16)                         NOT NULL,
-  captured_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP,
+  captured_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
   impressions   INT                                 NOT NULL,
   reach         INT                                 NOT NULL,
   engagement    INT                                 NOT NULL,
@@ -238,7 +238,7 @@ CREATE TABLE ig_profile_audience_daily
   id            BIGINT AUTO_INCREMENT
     PRIMARY KEY,
   ig_profile_id BIGINT                              NOT NULL,
-  captured_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP,
+  captured_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
   type          VARCHAR(16)                         NOT NULL,
   section       VARCHAR(64)                         NOT NULL,
   count         INT                                 NOT NULL,
@@ -257,7 +257,7 @@ CREATE TABLE ig_profile_diff_daily
   id                    BIGINT AUTO_INCREMENT
     PRIMARY KEY,
   ig_profile_id         BIGINT                              NOT NULL,
-  compared_to           TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP,
+  compared_to           TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
   media_count           INT                                 NOT NULL,
   followers             INT                                 NOT NULL,
   follows               INT                                 NOT NULL,
@@ -292,7 +292,7 @@ CREATE TABLE ig_profile_diff_hourly
   id                    BIGINT AUTO_INCREMENT
     PRIMARY KEY,
   ig_profile_id         BIGINT                              NOT NULL,
-  compared_to           TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP,
+  compared_to           TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
   media_count           INT                                 NOT NULL,
   followers             INT                                 NOT NULL,
   follows               INT                                 NOT NULL,
@@ -319,7 +319,7 @@ CREATE TABLE ig_profile_snapshot_daily
   id                    BIGINT AUTO_INCREMENT
     PRIMARY KEY,
   ig_profile_id         BIGINT                              NOT NULL,
-  captured_at           TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP,
+  captured_at           TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
   media_count           INT                                 NOT NULL,
   followers             INT                                 NOT NULL,
   follows               INT                                 NOT NULL,
@@ -354,7 +354,7 @@ CREATE TABLE ig_profile_snapshot_hourly
   id                    BIGINT AUTO_INCREMENT
     PRIMARY KEY,
   ig_profile_id         BIGINT                              NOT NULL,
-  captured_at           TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP,
+  captured_at           TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
   media_count           INT                                 NOT NULL,
   followers             INT                                 NOT NULL,
   follows               INT                                 NOT NULL,
@@ -383,8 +383,8 @@ CREATE TABLE profile
   user_id         BIGINT       NULL,
   type            VARCHAR(16)  NOT NULL,
   token           VARCHAR(256) NULL,
-  created_at      TIMESTAMP     NOT NULL,
-  last_updated_at TIMESTAMP     NOT NULL
+  created_at      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  last_updated_at TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 )
   COMMENT 'A social media profile belonging to the user'
   ENGINE = InnoDB

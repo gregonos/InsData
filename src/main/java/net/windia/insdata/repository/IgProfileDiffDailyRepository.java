@@ -7,5 +7,5 @@ import java.util.Date;
 import java.util.List;
 
 public interface IgProfileDiffDailyRepository extends CrudRepository<IgProfileDiffDaily, Long> {
-    List<IgProfileDiffDaily> findByIgProfileIdAndComparedToBetweenOrderByComparedToAsc(Long igProfileId, Date since, Date until);
+    List<IgProfileDiffDaily> findByIgProfileIdAndCapturedAtBetweenOrderByCapturedAtAsc(Long igProfileId, Date since, Date until);
 }

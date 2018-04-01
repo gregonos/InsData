@@ -24,9 +24,9 @@ public class IgProfileDiffHourly extends IgProfileStatImpl implements IgProfileD
     }
 
     @Override
-    public void realizeComparedTo(Date comparedTo, String timeZone) {
-        this.setComparedTo(comparedTo);
-        calcHourly(timeZone, this, comparedTo);
+    public void realizeCapturedAt(Date capturedAt, String timeZone) {
+        this.setCapturedAt(capturedAt);
+        calcHourly(timeZone, this, capturedAt);
     }
 
     public Byte getHour() {
@@ -39,6 +39,6 @@ public class IgProfileDiffHourly extends IgProfileStatImpl implements IgProfileD
 
     @Override
     public Date getIndicativeDate() {
-        return getComparedTo();
+        return getCapturedAt();
     }
 }

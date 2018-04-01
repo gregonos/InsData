@@ -39,6 +39,9 @@ public abstract class IgMediaStatImpl extends IgStatBase implements IgMediaStat 
     @Transient
     private Date createdAt;
 
+    @Column(nullable = false)
+    private Date capturedAt;
+
     public IgMedia getMedia() {
         return media;
     }
@@ -118,5 +121,13 @@ public abstract class IgMediaStatImpl extends IgStatBase implements IgMediaStat 
 
     public void setCreatedAt(Date createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Date getCapturedAt() {
+        return capturedAt;
+    }
+
+    public void setCapturedAt(Date capturedAt) {
+        this.capturedAt = capturedAt;
     }
 }

@@ -1,7 +1,7 @@
 package net.windia.insdata.service;
 
 import lombok.extern.slf4j.Slf4j;
-import net.windia.insdata.constants.IgOnlineFollowersGranularity;
+import net.windia.insdata.metric.IgOnlineFollowersGranularity;
 import net.windia.insdata.model.client.IgAPIClientDataEntry;
 import net.windia.insdata.model.client.IgAPIClientProfileAudience;
 import net.windia.insdata.model.internal.IgOnlineFollowers;

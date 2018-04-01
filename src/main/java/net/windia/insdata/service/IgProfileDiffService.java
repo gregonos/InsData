@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.windia.insdata.model.internal.IgProfile;
 import net.windia.insdata.model.internal.IgProfileDiff;
 import net.windia.insdata.model.internal.IgProfileSnapshot;
+import net.windia.insdata.model.internal.IgProfileSnapshotDaily;
 import net.windia.insdata.model.internal.IgProfileSnapshotHourly;
 import net.windia.insdata.util.DateTimeUtils;
 import org.springframework.data.repository.CrudRepository;
@@ -56,7 +57,8 @@ public abstract class IgProfileDiffService<Diff extends IgProfileDiff, Snapshot 
     }
 
     private Diff calculateDiff(Snapshot lastSnapshot, Snapshot newSnapshot) {
-        if (1 == DateTimeUtils.hourOfFacebookServer() && newSnapshot instanceof IgProfileSnapshotHourly) {
+        if (newSnapshot instanceof IgProfileSnapshotDaily ||
+                (1 == DateTimeUtils.hourOfFacebookServer() && newSnapshot instanceof IgProfileSnapshotHourly)) {
             lastSnapshot.setNewFollowers(0);
             lastSnapshot.setImpressions(0);
             lastSnapshot.setReach(0);
@@ -69,7 +71,9 @@ public abstract class IgProfileDiffService<Diff extends IgProfileDiff, Snapshot 
 
         Diff diff = newDiffInstance();
         diff.setIgProfile(newSnapshot.getIgProfile());
-        diff.realizeComparedTo(lastSnapshot.getCapturedAt(), newSnapshot.getIgProfile().getUser().getTimeZone());
+
+        diff.realizeCapturedAt(newSnapshot.getCapturedAt(), newSnapshot.getIgProfile().getUser().getTimeZone());
+        diff.setComparedTo(lastSnapshot.getCapturedAt());
 
         diff.setMediaCount(newSnapshot.getMediaCount() - lastSnapshot.getMediaCount());
         diff.setFollowers(newSnapshot.getFollowers() - lastSnapshot.getFollowers());

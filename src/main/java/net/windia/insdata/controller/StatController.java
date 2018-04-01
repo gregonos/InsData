@@ -4,6 +4,10 @@ import lombok.extern.slf4j.Slf4j;
 import net.windia.insdata.constants.*;
 import net.windia.insdata.exception.UnsupportedGranularityException;
 import net.windia.insdata.exception.UnsupportedMetricException;
+import net.windia.insdata.metric.IgDataSource;
+import net.windia.insdata.metric.IgMetric;
+import net.windia.insdata.metric.IgOnlineFollowersGranularity;
+import net.windia.insdata.metric.StatGranularity;
 import net.windia.insdata.model.assembler.IgProfileStatsDTOAssembler;
 import net.windia.insdata.model.dto.IgProfileStatsDTO;
 import net.windia.insdata.model.internal.IgOnlineFollowers;
@@ -55,9 +59,8 @@ public class StatController {
         for (String s : metricsInStr) {
             IgMetric metric;
 
-            try {
-                metric = Enum.valueOf(IgMetric.class, s.toUpperCase());
-            } catch (IllegalArgumentException e) {
+            metric = IgMetric.forName(s.toUpperCase());
+            if (null == metric) {
                 illegalMetrics.add(s);
                 continue;
             }
@@ -68,20 +71,26 @@ public class StatController {
                 throw new UnsupportedGranularityException(metric, gran);
             }
 
-            requiredSources.add(metric.getSource(gran));
+            requiredSources.addAll(metric.getSources(gran));
         }
 
         if (illegalMetrics.size() > 0) {
             throw new UnsupportedMetricException(illegalMetrics);
         }
 
-        Map<IgDataSource, List<? extends IgStat>> sourceMap = new HashMap<>(requiredSources.size());
+        Map<IgDataSource, List<? extends IgStat>> sourceMap = new EnumMap<>(IgDataSource.class);
         for (IgDataSource source : requiredSources) {
             Method sourceGetter = igProfileDataService.getClass().getMethod(
                     "get" + source.getName(), Long.class, StatGranularity.class, Date.class, Date.class);
 
+            StatGranularity sourceGran = source.getGranularity();
+            if (null == sourceGran) {
+                sourceGran = gran;
+            }
+
+            @SuppressWarnings("unchecked")
             List<? extends IgStat> sourceCollection =
-                    (List<? extends IgStat>) sourceGetter.invoke(igProfileDataService, profileId, gran, since, until);
+                    (List<? extends IgStat>) sourceGetter.invoke(igProfileDataService, profileId, sourceGran, since, until);
 
             sourceMap.put(source, sourceCollection);
         }

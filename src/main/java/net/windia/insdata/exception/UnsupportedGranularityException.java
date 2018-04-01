@@ -1,7 +1,7 @@
 package net.windia.insdata.exception;
 
-import net.windia.insdata.constants.IgMetric;
-import net.windia.insdata.constants.StatGranularity;
+import net.windia.insdata.metric.IgMetric;
+import net.windia.insdata.metric.StatGranularity;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Collection;
@@ -28,7 +28,7 @@ public class UnsupportedGranularityException extends InsDataException {
     private static String buildMessage(IgMetric metric, StatGranularity unsupported) {
         String messageTemplate = "Metric \\'%s\\' does not support granularity \\'%s\\'. Must be one of: %s";
 
-        return String.format(messageTemplate, metric.name().toLowerCase(), unsupported.getValue(),
+        return String.format(messageTemplate, metric.getName().toLowerCase(), unsupported.getValue(),
                 StringUtils.join(metric.getGranularities(), ", "));
     }
 
