@@ -14,7 +14,7 @@ public interface IgOnlineFollowersRepository extends CrudRepository<IgOnlineFoll
 
     @Query("SELECT new IgOnlineFollowers(o.date, 0, o.weekday, AVG(o.count), AVG(o.percentage)) FROM IgOnlineFollowers o " +
             "WHERE o.igProfile.id = :profileId AND o.date BETWEEN :since AND :until " +
-            "GROUP BY o.date ORDER BY o.date ASC")
+            "GROUP BY o.date HAVING COUNT(o.date) = 24 ORDER BY o.date ASC")
     List<IgOnlineFollowers> findDailyByIgProfileIdAndDateRange(@Param("profileId") Long profileId,
                                                                @Param("since") Date since,
                                                                @Param("until") Date until);

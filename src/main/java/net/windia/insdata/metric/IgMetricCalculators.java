@@ -37,6 +37,24 @@ public final class IgMetricCalculators {
         }
     }
 
+    static class IgSimpleAggregator<S extends IgStat> implements IgMetricCalculator<S, Date, Integer> {
+
+        private final ToIntFunction<S> extractor;
+
+        IgSimpleAggregator(ToIntFunction<S> extractor) {
+            this.extractor = extractor;
+        }
+
+        @Override
+        public Map<Date, Integer> calculate(List<List<S>> dataSources, StatGranularity gran) {
+            List<S> dataSource = dataSources.get(0);
+
+            return dataSource.stream()
+                    .collect(Collectors.groupingBy(sourceRec -> DateTimeUtils.dateTimeOfFacebookServer(sourceRec.getIndicativeDate(), gran),
+                            Collectors.summingInt(extractor)));
+        }
+    }
+
     static class IgConditionalAggregator<S extends IgStat> implements IgMetricCalculator<S, Date, Integer> {
 
         private final Predicate<S> filter;
@@ -90,11 +108,13 @@ public final class IgMetricCalculators {
         public Map<Date, Double> calculate(List<List<S>> dataSources, StatGranularity gran) {
 
             List<S1> stats1 = (List<S1>) dataSources.get(0);
-            Map<Date, S2> stats2Map = ((List<S2>) dataSources.get(1)).stream().collect(Collectors.toMap(IgStat::getIndicativeDate, Function.identity()));
+            Map<Date, S2> stats2Map = ((List<S2>) dataSources.get(1)).stream().collect(
+                    Collectors.toMap(stat -> DateTimeUtils.dateTimeOfFacebookServer(stat.getIndicativeDate(), gran), Function.identity()));
 
             return stats1.stream()
                     .collect(Collectors.groupingBy(stat1 -> DateTimeUtils.dateTimeOfFacebookServer(stat1.getIndicativeDate(), gran),
-                            Collectors.summingDouble(stat1 -> extractor.applyAsDouble(stat1, stats2Map.get(stat1.getIndicativeDate())))));
+                            Collectors.summingDouble(stat1 -> extractor.applyAsDouble(stat1,
+                                    stats2Map.get(DateTimeUtils.dateTimeOfFacebookServer(stat1.getIndicativeDate(), gran))))));
         }
     }
 
@@ -104,6 +124,10 @@ public final class IgMetricCalculators {
 
     public static <S extends IgStat> IgConditionalAggregator<S> conditionalAggregator(Predicate<S> filter, ToIntFunction<S> extractor) {
         return new IgConditionalAggregator<>(filter, extractor);
+    }
+
+    public static <S extends IgStat> IgSimpleAggregator<S> simpleAggregator(ToIntFunction<S> extractor) {
+        return new IgSimpleAggregator<>(extractor);
     }
 
     public static <S extends IgStat, S1 extends S, S2 extends S> IgBiSourceAggregator<S, S1, S2> biSourceAggregator(ToDoubleBiFunction<S1, S2> extractor) {

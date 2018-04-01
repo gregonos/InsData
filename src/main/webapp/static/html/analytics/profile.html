@@ -26,6 +26,13 @@
 
 <div class="card">
     <div class="card-header">
+        <h3>Engagement</h3>
+    </div>
+    <div id="stat_engagement" class="chartWrapper card-body"></div>
+</div>
+
+<div class="card">
+    <div class="card-header">
         <h3>Profile Views</h3>
     </div>
     <div id="stat_profile_views" class="card-body chartWrapper"></div>
@@ -41,8 +48,12 @@
     var chartProfileViews = echarts.init(document.getElementById("stat_profile_views"), null, {renderer: 'canvas'});
     chartProfileViews.setOption(option);
 
+    var chartEngagement = echarts.init(document.getElementById("stat_engagement"), null, {renderer: 'canvas'});
+    chartEngagement.setOption(option);
+
     $('.gran-switch input[type=radio]').change(function (ele){
-        loadProfileChart(['coverage', 'profile_views'], this.value);
+        loadProfileChart(this.value);
+        loadEngagement(this.value);
 //        if ('hourly' == this.value) {
 //            loadCoverageHourly(ele.target.dataset.gran);
 //        } else if ('daily' == this.value) {
@@ -51,9 +62,10 @@
 
     function loadProfile() {
         loadProfileChart();
+        loadEngagement();
     }
 
-    function loadProfileChart(targetCharts = ['coverage', 'profile_views'], gran = 'daily') {
+    function loadProfileChart(gran = 'daily') {
         var until = encodeURIComponent(moment().format(ISO_DATE_FORMAT));
         var startTime;
         if ('daily' == gran) {
@@ -124,7 +136,6 @@
                     $.extend({}, seriesBarBase, {
                         name: 'Impressions Existing Post',
                         barWidth: 'auto',
-                        barGap: '-100%',
                         stack: 'impressions',
                         encode: {
                             y: 'impressions_post_existing'
@@ -134,7 +145,6 @@
                         color: chartColors[3],
                         name: 'Impressions New Post',
                         barWidth: 'auto',
-                        barGap: '-100%',
                         stack: 'impressions',
                         encode: {
                             y: 'impressions_post_new'
@@ -144,7 +154,6 @@
                         color: chartColors[1],
                         name: 'Accounts Reached',
                         barWidth: 'auto',
-                        barGap: '30%',
                         encode: {
                             y: 'reach'
                         }
@@ -227,6 +236,134 @@
                         yAxisIndex: 0,
                         encode: {
                             y: 'profile_views'
+                        }
+                    })
+                ]
+            });
+        });
+    }
+
+    function loadEngagement(gran = 'daily') {
+        var until = encodeURIComponent(moment().format(ISO_DATE_FORMAT));
+        var startTime;
+        if ('daily' == gran) {
+            startTime = moment().subtract(30, 'day').startOf('day');
+        } else {
+            startTime = moment().subtract(3, 'day');
+        }
+        var start = encodeURIComponent(startTime.format(ISO_DATE_FORMAT));
+
+        // 0 - engagements
+        // 1 - likes
+        // 2 - comments
+        // 3 - saves
+        // 4 - video_views
+        // 5 - engagements_per_k_followers
+        // 6 - engagements_per_k_reach
+
+        var followingsEngUrl = '' +
+                '/api/profiles/1/stats/ig?metrics=engagements,likes,comments,saves,video_views,engagements_per_k_followers,engagements_per_k_reach' +
+                '&granularity=' + gran + '&since=' + start + '&until=' + until;
+        $.getJSON(followingsEngUrl, function(data) {
+
+            var splitSolutions;
+
+            splitSolutions = rangeSplit(data.data, [1, 7], ['daily' == gran ? 10 : 1, 10], [false, false]);
+
+            chartEngagement.setOption({
+                dataset: {
+                    dimensions: data.dimensions,
+                    source: data.data
+                },
+                grid: {
+                    top: 24
+                },
+                tooltip: {
+                    formatter: function(params) {
+                        var html = moment(params[0].axisValue).format('YYYY/MM/DD HH:mm');
+
+                        html += '<br/>' + params[0].marker + ' ' + params[0].seriesName + ': ' + params[0].data[2];
+                        html += '<br/>' + params[1].marker + ' ' + params[1].seriesName + ': ' + params[1].data[3];
+                        html += '<br/>' + params[2].marker + ' ' + params[2].seriesName + ': ' + params[2].data[4];
+                        html += '<br/>' + params[3].marker + ' ' + params[3].seriesName + ': ' + params[2].data[5];
+                        html += '<br/>' + params[4].marker + ' ' + params[4].seriesName + ': ' + (Math.round(params[4].data[6] * 100) / 100);
+                        html += '<br/>' + params[5].marker + ' ' + params[5].seriesName + ': ' + (Math.round(params[5].data[7] * 100) / 100);
+
+
+                        return html;
+                    }
+                },
+                legend: {
+                    show: true,
+                    top: -5
+                },
+                xAxis: [{
+                    axisLabel: {
+                        interval: 'daily' == gran ? 6 : 11,
+                        formatter: function (value, index) {
+                            return moment(value).format('daily' == gran ? 'MM/DD' : 'MM/DD HH:mm');
+                        }
+                    },
+                    axisPointer: {
+                        type: 'shadow'
+                    }
+                }],
+                yAxis: [
+                    splitSolutions[0],
+                    splitSolutions[1]
+                ],
+                series: [
+                    $.extend({}, seriesBarBase, {
+                        name: 'Likes',
+                        barWidth: 'auto',
+                        stack: 'engagements',
+                        encode: {
+                            y: 'likes'
+                        }
+                    }),
+                    $.extend({}, seriesBarBase, {
+                        color: chartColors[2],
+                        name: 'Comments',
+                        barWidth: 'auto',
+                        stack: 'engagements',
+                        encode: {
+                            y: 'comments'
+                        }
+                    }),
+                    $.extend({}, seriesBarBase, {
+                        color: chartColors[3],
+                        name: 'Saves',
+                        barWidth: 'auto',
+                        stack: 'engagements',
+                        encode: {
+                            y: 'saves'
+                        }
+                    }),
+                    $.extend({}, seriesBarBase, {
+//                        color: chartColors[1],
+                        name: 'Video Views',
+                        barWidth: 'auto',
+                        stack: 'engagements',
+                        encode: {
+                            y: 'video_views'
+                        }
+                    }),
+                    $.extend({}, seriesLineBase, {
+                        color: chartColors[2],
+                        name: 'Engagements per K Followers',
+                        smooth: true,
+                        yAxisIndex: 1,
+                        encode: {
+                            y: 'engagements_per_k_followers'
+                        }
+                    }),
+                    $.extend({}, seriesLineBase, {
+                        color: chartColors[3],
+                        name: 'Engagements per K Reach',
+                        smooth: true,
+                        yAxisIndex: 1,
+                        encode: {
+                            y: 'engagements_per_k_reach'
                         }
                     })
                 ]

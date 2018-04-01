@@ -94,15 +94,38 @@ public class IgMetric<S extends IgStat, I, V> {
                         IgMediaDiff::getImpressions)
         ));
 
-        allMetricsMap.put("IMPRESSIONS_PER_K_FOLLOWERS", new IgMetric<>("IMPRESSIONS_PER_K_FOLLOWERS", DIFF, SNAPSHOT,
-                // daily calculator
-                IgMetricCalculators.biSourceCalculator((IgProfileDiff diff, IgProfileSnapshot snapshot) ->
-                        null == snapshot || 0 == snapshot.getFollowers() ? 0D : diff.getImpressions().doubleValue() / snapshot.getFollowers() * 1000
-                ),
-                // hourly calculator
+        allMetricsMap.put("IMPRESSIONS_PER_K_FOLLOWERS",
+                new IgMetric<>("IMPRESSIONS_PER_K_FOLLOWERS", new IgDataSource[] {DIFF, SNAPSHOT},
                 IgMetricCalculators.biSourceCalculator((IgProfileDiff diff, IgProfileSnapshot snapshot) ->
                         null == snapshot || 0 == snapshot.getFollowers() ? 0D : diff.getImpressions().doubleValue() / snapshot.getFollowers() * 1000
                 )));
+
+        allMetricsMap.put("ENGAGEMENTS", new IgMetric<>("ENGAGEMENTS", POST_DIFF,
+                IgMetricCalculators.simpleAggregator(IgMediaDiff::getEngagement)));
+
+        allMetricsMap.put("LIKES", new IgMetric<>("LIKES", POST_DIFF,
+                IgMetricCalculators.simpleAggregator(IgMediaDiff::getLikes)));
+
+        allMetricsMap.put("VIDEO_VIEWS", new IgMetric<>("VIDEO_VIEWS", POST_DIFF,
+                IgMetricCalculators.simpleAggregator(IgMediaDiff::getVideoViews)));
+
+        allMetricsMap.put("COMMENTS", new IgMetric<>("COMMENTS", POST_DIFF,
+                IgMetricCalculators.simpleAggregator(IgMediaDiff::getComments)));
+
+        allMetricsMap.put("SAVES", new IgMetric<>("SAVES", POST_DIFF,
+                IgMetricCalculators.simpleAggregator(IgMediaDiff::getSaved)));
+
+        allMetricsMap.put("ENGAGEMENTS_PER_K_FOLLOWERS",
+                new IgMetric<>("ENGAGEMENTS_PER_K_FOLLOWERS", new IgDataSource[] {POST_DIFF, SNAPSHOT},
+                IgMetricCalculators.biSourceAggregator((IgMediaDiff diff, IgProfileSnapshot snapshot) ->
+                        null == snapshot || 0 == snapshot.getFollowers() ? 0D : diff.getEngagement().doubleValue() / snapshot.getFollowers() * 1000
+                )));
+
+        allMetricsMap.put("ENGAGEMENTS_PER_K_REACH",
+                new IgMetric<>("ENGAGEMENTS_PER_K_REACH", new IgDataSource[] {POST_DIFF, DIFF},
+                        IgMetricCalculators.biSourceAggregator((IgMediaDiff m, IgProfileDiff p) ->
+                                null == p || 0 == p.getReach() ? 0D : m.getEngagement().doubleValue() / p.getReach() * 1000
+                        )));
 
     }
 //
@@ -131,10 +154,16 @@ public class IgMetric<S extends IgStat, I, V> {
         this.variantsMap.put(DAILY, new IgMetricVariant<>(source, dailyCalculator));
     }
 
-    private IgMetric(String name, IgDataSource source1, IgDataSource source2,
+    private IgMetric(String name, IgDataSource[] dataSources,
+                     IgMetricCalculator<S, I,V> calculator) {
+        this.name = name;
+        this.variantsMap.put(HOURLY, new IgMetricVariant<>(dataSources, calculator));
+        this.variantsMap.put(DAILY, this.variantsMap.get(HOURLY));
+    }
+
+    private IgMetric(String name, IgDataSource[] dataSources,
                      IgMetricCalculator<S, I, V> dailyCalculator, IgMetricCalculator<S, I, V> hourlyCalculator) {
         this.name = name;
-        IgDataSource[] dataSources = {source1, source2};
         this.variantsMap.put(HOURLY, new IgMetricVariant<>(dataSources, hourlyCalculator));
         this.variantsMap.put(DAILY, new IgMetricVariant<>(dataSources, dailyCalculator));
     }
