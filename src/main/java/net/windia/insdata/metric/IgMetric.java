@@ -32,6 +32,16 @@ public class IgMetric<S extends IgStat, I, V> {
         allMetricsMap.put("FOLLOWERS_DIFF", new IgMetric<>("FOLLOWERS_DIFF", DIFF,
                 IgMetricCalculators.simpleCalculator(IgProfileDiff::getFollowers)));
 
+        allMetricsMap.put("FOLLOWERS_GAIN", new IgMetric<>("FOLLOWERS_GAIN", DIFF,
+                IgMetricCalculators.simpleCalculator(
+                        (IgProfileDiff diff) -> Math.max(diff.getFollowers(), diff.getNewFollowers()))
+                ));
+
+        allMetricsMap.put("FOLLOWERS_LOSS", new IgMetric<>("FOLLOWERS_LOSS", DIFF,
+                IgMetricCalculators.simpleCalculator(
+                        (IgProfileDiff diff) -> diff.getFollowers() - Math.max(diff.getFollowers(), diff.getNewFollowers()))
+        ));
+
         allMetricsMap.put("FOLLOWINGS", new IgMetric<>("FOLLOWINGS", SNAPSHOT,
                 IgMetricCalculators.simpleCalculator(IgProfileSnapshot::getFollows)));
 
@@ -101,7 +111,7 @@ public class IgMetric<S extends IgStat, I, V> {
                 )));
 
         allMetricsMap.put("ENGAGEMENTS", new IgMetric<>("ENGAGEMENTS", POST_DIFF,
-                IgMetricCalculators.simpleAggregator(IgMediaDiff::getEngagement)));
+                IgMetricCalculators.simpleAggregator(IgMediaDiff::getEngagementSum)));
 
         allMetricsMap.put("LIKES", new IgMetric<>("LIKES", POST_DIFF,
                 IgMetricCalculators.simpleAggregator(IgMediaDiff::getLikes)));
@@ -118,7 +128,7 @@ public class IgMetric<S extends IgStat, I, V> {
         allMetricsMap.put("ENGAGEMENTS_PER_K_FOLLOWERS",
                 new IgMetric<>("ENGAGEMENTS_PER_K_FOLLOWERS", new IgDataSource[] {POST_DIFF, SNAPSHOT},
                 IgMetricCalculators.biSourceAggregator((IgMediaDiff diff, IgProfileSnapshot snapshot) ->
-                        null == snapshot || 0 == snapshot.getFollowers() ? 0D : diff.getEngagement().doubleValue() / snapshot.getFollowers() * 1000
+                        null == snapshot || 0 == snapshot.getFollowers() ? 0D : diff.getEngagementSum().doubleValue() / snapshot.getFollowers() * 1000
                 )));
 
         allMetricsMap.put("ENGAGEMENTS_PER_K_REACH",

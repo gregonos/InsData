@@ -74,6 +74,11 @@ public abstract class IgMediaStatImpl extends IgStatBase implements IgMediaStat 
         this.engagement = engagement;
     }
 
+    @Transient
+    public Integer getEngagementSum() {
+        return getLikes() + getComments() + getSaved() + getVideoViews();
+    }
+
     public Integer getSaved() {
         return saved;
     }

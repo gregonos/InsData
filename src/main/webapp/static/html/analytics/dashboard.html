@@ -70,6 +70,7 @@
 
             var splitSolutions = rangeSplit(data.data, [1, 2], minIntervals);
 
+            echartsObj.hideLoading();
             echartsObj.setOption({
                 dataset: {
                     dimensions: data.dimensions,
@@ -116,9 +117,11 @@
     function loadDashboard() {
         var chartFollowers = echarts.init(document.getElementById("stat_followers"), null, {renderer: 'canvas'});
         chartFollowers.setOption(option);
+        chartFollowers.showLoading(loading);
 
         var chartFollowers24 = echarts.init(document.getElementById("stat_followers_24"), null, {renderer: 'canvas'});
         chartFollowers24.setOption(option);
+        chartFollowers24.showLoading(loading);
 
         chartFollowers.on('click', function(event) {
             updateChartFollowersHourly(event.value[0]);
@@ -126,6 +129,7 @@
 
         var chartFollowings = echarts.init(document.getElementById("stat_followings"), null, {renderer: 'canvas'});
         chartFollowings.setOption(option);
+        chartFollowings.showLoading(loading);
 
         chartFollowings.on('click', function(event) {
             updateChartFollowingsHourly(event.value[0]);
@@ -133,9 +137,11 @@
 
         var chartFollowings24 = echarts.init(document.getElementById("stat_followings_24"), null, {renderer: 'canvas'});
         chartFollowings24.setOption(option);
+        chartFollowings24.showLoading(loading);
 
         var chartCoverage = echarts.init(document.getElementById("stat_coverage"), null, {renderer: 'canvas'});
         chartCoverage.setOption(option);
+        chartCoverage.showLoading(loading);
 
         function updateChartFollowersHourly(endTime = (new Date()).getTime()) {
             updateChart(chartFollowers24, [
@@ -179,6 +185,7 @@
 
             var splitSolutions = rangeSplit(data.data, [1, 3], [50, 0.5], [false, false]);
 
+            chartCoverage.hideLoading();
             chartCoverage.setOption({
                 dataset: {
                     dimensions: data.dimensions,

@@ -22,7 +22,9 @@ import java.util.stream.Collectors;
 @Service
 public class IgProfileStatsDTOAssembler {
 
-    public IgProfileStatsDTO assemble(List<IgMetric> metrics, StatGranularity granInstance, Map<IgDataSource, List<? extends IgStat>> sourceMap) {
+    public IgProfileStatsDTO assemble(List<IgMetric> metrics,
+                                      StatGranularity granInstance,
+                                      Map<IgDataSource, List<? extends IgStat>> sourceMap) {
 
         IgProfileStatsDTO target = new IgProfileStatsDTO();
 
@@ -37,8 +39,11 @@ public class IgProfileStatsDTOAssembler {
         for (IgMetric metric : metrics) {
 
             @SuppressWarnings("unchecked")
-            Map metricResult = metric.calculate(granInstance, (List<List<? extends IgStat>>) metric.getSources(granInstance).stream().map(sourceMap::get).collect(Collectors.toList()));
+            Map metricResult = metric.calculate(granInstance,
+                    // Fetch the metric's IgDataSource list, get the data source from sourceMap by name, and return them as a list
+                    (List<List<? extends IgStat>>) metric.getSources(granInstance).stream().map(sourceMap::get).collect(Collectors.toList()));
             for (Object key : metricResult.keySet()) {
+                // a map for each data item from dimension name to the calculated value
                 Map<String, Object> dataItem = dataMap.get(key);
                 if (null == dataItem) {
                     dataItem = new HashMap<>(dimensions.size() - 1);
@@ -49,18 +54,46 @@ public class IgProfileStatsDTOAssembler {
             }
         }
 
-        List<List<Object>> resultDataSet = new ArrayList<>(dataMap.size());
+        List<List<Object>> resultDataList = new ArrayList<>(dataMap.size());
         for (Map<String, Object> dataEntry : dataMap.values()) {
+            // Shrink each data item map to a list, by the order of dimensions.
             List<Object> resultDataItem = dimensions.stream().map(dataEntry::get).collect(Collectors.toList());
-            resultDataSet.add(resultDataItem);
+            resultDataList.add(resultDataItem);
         }
 
-        resultDataSet.sort(
+        // sort the result list by dimension "time"
+        resultDataList.sort(
                 (dataSet1, dataSet2) -> (int)(((Date)dataSet1.get(0)).getTime() - ((Date)dataSet2.get(0)).getTime()));
 
-        target.setData(resultDataSet);
+        target.setData(resultDataList);
 
         return target;
+    }
+
+    private void populateDateItemsForEmptyDates(List<String> dimensions,
+                                                List<List<Object>> dataList,
+                                                StatGranularity gran,
+                                                Date since, Date until) {
+        long gapMillis = 3600000;
+        if (StatGranularity.DAILY == gran) {
+            gapMillis = 86400000;
+        }
+
+        long earliestTime = until.getTime();
+
+        if (dataList.size() > 0) {
+            earliestTime = ((Date) dataList.get(0).get(0)).getTime();
+        }
+
+        while (earliestTime - since.getTime() >= gapMillis) {
+            long populatedRecordTime = earliestTime - gapMillis;
+            List<Object> filler = new ArrayList<>(dimensions.size());
+            filler.add(new Date(populatedRecordTime));
+            dimensions.stream().skip(1).forEach(dimension -> filler.add(null));
+            dataList.add(filler);
+
+            earliestTime = populatedRecordTime;
+        }
     }
 
     public IgProfileStatsDTO assemble(String granularity, List<IgOnlineFollowers> onlineFollowers) {

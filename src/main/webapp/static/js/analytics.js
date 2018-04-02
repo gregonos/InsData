@@ -4,6 +4,15 @@ var PREFERRED_SPLITS = [6, 5, 4, 7, 3, 8, 2, 9, 10];
 
 var WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+var chartColors = ['#3d92d4', '#ffc107', '#48c0d4', '#45aef9', '#f28595'];
+
+var loading = {
+    text: '',
+    color: 'rgba(70, 179, 255, 0.54)',
+    textColor: '#999',
+    maskColor: 'rgba(255, 255, 255, 0.8)'
+};
+
 var xAxisBase = {
     type: 'category',
     axisTick: {
@@ -11,7 +20,7 @@ var xAxisBase = {
     },
     axisLabel: {
         interval: 6,
-        formatter: function (value, index) {
+        formatter: function (value) {
             return moment(value).format('MM/DD');
         }
     },
@@ -81,8 +90,6 @@ var seriesLineBase = {
     }
 };
 
-var chartColors = ['#3d92d4', '#ffc107', '#48c0d4', '#45aef9'];
-
 var option = {
     color: chartColors,
     textStyle: {
@@ -131,20 +138,30 @@ function weekdayIndexToName(index) {
 function rangeSplit(data, indexes, minIntervals, scale = [true, true]) {
     var results = [];
 
-    data.forEach(function(row, rowId) {
+    data.forEach(function (row) {
         indexes.forEach(function(index, indexId) {
+
+            var minIndex, maxIndex;
+            if (index instanceof Array) {
+                minIndex = index[0];
+                maxIndex = index[1];
+            } else {
+                minIndex = index;
+                maxIndex = index;
+            }
+
             var result = results[indexId];
             if (undefined === result) {
                 result = {min: Number.MAX_SAFE_INTEGER, max: 0, interval: minIntervals[indexId]};
                 results.push(result);
             }
 
-            if (row[index] != null && row[index] < result.min) {
-                result.min = scale[indexId] ? row[index] : 0;
+            if (row[minIndex] != null && row[minIndex] < result.min) {
+                result.min = scale[indexId] ? row[minIndex] : 0;
             }
 
-            if (row[index] != null && row[index] > result.max) {
-                result.max = row[index];
+            if (row[maxIndex] != null && row[maxIndex] > result.max) {
+                result.max = row[maxIndex];
             }
         });
     });
@@ -170,7 +187,7 @@ function rangeSplit(data, indexes, minIntervals, scale = [true, true]) {
     var splitPools = [];
     var solutionRatings = {};
 
-    results.forEach(function(result, rId) {
+    results.forEach(function (result) {
         var interval = result.interval;
 
         var splitPool = {};
@@ -239,4 +256,33 @@ function rangeSplit(data, indexes, minIntervals, scale = [true, true]) {
     }
 
     return results;
+}
+
+/**
+ *
+ * @param data Object
+ * @param gran string
+ * @param since long
+ * @param until long
+ */
+function populateDateForEmptyDates(data, gran, since, until) {
+    var earliest = until;
+    var gap = 3600000;
+    if ('daily' === gran) {
+        gap = 86400000;
+    }
+    if (data.data.length > 0) {
+        var countDim = data.dimensions.length;
+        earliest = data.data[0][0];
+
+        while (earliest - since > gap) {
+            earliest -= gap;
+            var filler = [earliest];
+            for (var i = 1; i < countDim; i++) {
+                filler.push(null);
+            }
+            data.data.splice(0, 0, filler);
+        }
+    }
+    return data;
 }

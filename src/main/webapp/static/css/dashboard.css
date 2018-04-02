@@ -198,3 +198,12 @@ h3 {
 .color4 {
   color: #45aef9;
 }
+
+.color5 {
+  color: #f28595;
+  /*f28595*/
+}
+
+.color-spinner {
+  color: rgba(70, 179, 255, 0.54);
+}

@@ -1,18 +1,32 @@
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
     <h2>AUDIENCE</h2>
+    <div class="btn-group btn-group-sm btn-group-toggle gran-switch" data-toggle="buttons">
+        <label class="btn btn-light">
+            <input type="radio" name="coverage-granularity" data-gran="coverage" id="coverage-hourly" value="hourly" autocomplete="off"/> Hourly
+        </label>
+        <label class="btn btn-light active">
+            <input type="radio" name="coverage-granularity" data-gran="coverage" id="coverage-daily" value="daily" autocomplete="off" checked/> Daily
+        </label>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3>Followers</h3>
+    </div>
+    <div id="stat_followers" class="chartWrapper card-body"></div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3>Followings</h3>
+    </div>
+    <div id="stat_followings" class="chartWrapper card-body"></div>
 </div>
 
 <div class="card">
     <div class="card-header">
         <h3>Online Followers</h3>
-        <div class="btn-group btn-group-sm btn-group-toggle gran-switch" data-toggle="buttons">
-            <label class="btn btn-light">
-                <input type="radio" name="coverage-granularity" data-gran="coverage" id="coverage-hourly" value="hourly" autocomplete="off"/> Hourly
-            </label>
-            <label class="btn btn-light active">
-                <input type="radio" name="coverage-granularity" data-gran="coverage" id="coverage-daily" value="daily" autocomplete="off" checked/> Daily
-            </label>
-        </div>
     </div>
     <div id="stat_online_followers_daily" class="card-body chartWrapper"></div>
 </div>
@@ -35,6 +49,12 @@
 </div>
 
 <script>
+    var chartFollowers = echarts.init(document.getElementById("stat_followers"), null, {renderer: 'canvas'});
+    chartFollowers.setOption(option);
+
+    var chartFollowings = echarts.init(document.getElementById("stat_followings"), null, {renderer: 'canvas'});
+    chartFollowings.setOption(option);
+
     var chartOnlineFollowersDaily = echarts.init(document.getElementById("stat_online_followers_daily"), null, {renderer: 'canvas'});
     chartOnlineFollowersDaily.setOption(option);
 
@@ -47,10 +67,187 @@
     var chartOnlineFollowersHeat = echarts.init(document.getElementById("stat_online_followers_heat"), null, {renderer: 'canvas'});
     chartOnlineFollowersHeat.setOption(option);
 
+    $('.gran-switch input[type=radio]').change(function (ele){
+        loadFollows(this.value);
+        loadOnlineFollowers(this.value, chartOnlineFollowersDaily);
+    });
+
+    function showLoadingSpinners() {
+        chartFollowers.showLoading(loading);
+        chartFollowings.showLoading(loading);
+        chartOnlineFollowersDaily.showLoading(loading);
+        chartOnlineFollowersHour.showLoading(loading);
+        chartOnlineFollowersWeekday.showLoading(loading);
+        chartOnlineFollowersHeat.showLoading(loading);
+    }
+
+    function loadAudience() {
+        showLoadingSpinners();
+        loadFollows();
+        loadOnlineFollowers('daily', chartOnlineFollowersDaily);
+        loadOnlineFollowers('aggregate_hour', chartOnlineFollowersHour);
+        loadOnlineFollowers('aggregate_weekday', chartOnlineFollowersWeekday);
+        loadOnlineFollowersHeat();
+    }
+
+    function loadFollows(gran = 'daily') {
+        var until = encodeURIComponent(moment().format(ISO_DATE_FORMAT));
+        var startTime;
+        if ('daily' == gran) {
+            startTime = moment().subtract(30, 'day').startOf('day');
+        } else {
+            startTime = moment().subtract(3, 'day');
+        }
+        var start = encodeURIComponent(startTime.format(ISO_DATE_FORMAT));
+
+        // 0 - followers
+        // 1 - followers_diff
+        // 2 - followings
+        // 3 - followings_diff
+        // 4 - followers_gain
+        // 5 - followers_loss
+
+        var followsUrl =
+                '/api/profiles/1/stats/ig?metrics=followers,followers_diff,followings,followings_diff,followers_gain,followers_loss' +
+                '&granularity=' + gran + '&since=' + start + '&until=' + until;
+        $.getJSON(followsUrl, function(data) {
+
+            var splitSolutions;
+
+            splitSolutions = rangeSplit(data.data, [1, [6, 5]], 'daily' == gran ? [50, 10] : [5, 2]);
+
+            chartFollowers.hideLoading();
+            chartFollowers.setOption({
+                dataset: {
+                    dimensions: data.dimensions,
+                    source: data.data
+                },
+                grid: {
+                    top: 24
+                },
+                legend: {
+                    show: true,
+                    data: ['Followers', 'Followers Change', 'New Followers', 'Un-followers']
+                },
+                tooltip: {
+                    formatter: function (params) {
+                        var html = moment(params[0].axisValue).format('YYYY/MM/DD HH:mm');
+
+                        html += '<br/>' + params[3].marker + ' ' + params[3].seriesName + ': ' + params[3].data[1];
+                        html += '<br/>' + params[2].marker + ' ' + params[2].seriesName + ': ' + params[2].data[2];
+                        html += '<br/>' + params[0].marker + ' ' + params[0].seriesName + ': ' + params[0].data[5];
+                        html += '<br/>' + params[1].marker + ' ' + params[1].seriesName + ': ' + params[1].data[6];
+
+                        return html;
+                    }
+                },
+                xAxis: [{
+                    axisLabel: {
+                        interval: 'daily' == gran ? 6 : 11,
+                        formatter: function (value, index) {
+                            return moment(value).format('daily' == gran ? 'MM/DD' : 'MM/DD HH:mm');
+                        }
+                    }
+                }],
+                yAxis: [
+                    splitSolutions[0],
+                    splitSolutions[1]
+                ],
+                series: [
+                    $.extend({}, seriesBarBase, {
+                        name: 'New Followers',
+                        color: chartColors[3],
+                        stack: 'loss_gain',
+                        yAxisIndex: 1,
+                        encode: {
+                            y: 'followers_gain'
+                        }
+                    }),
+                    $.extend({}, seriesBarBase, {
+                        name: 'Un-followers',
+                        color: chartColors[4],
+                        stack: 'loss_gain',
+                        yAxisIndex: 1,
+                        barGap: '-100%',
+                        encode: {
+                            y: 'followers_loss'
+                        }
+                    }),
+                    $.extend({}, seriesBarBase, {
+                        name: 'Followers Change',
+                        yAxisIndex: 1,
+                        encode: {
+                            y: 'followers_diff'
+                        }
+                    }),
+                    $.extend({}, seriesLineBase, {
+                        name: 'Followers',
+                        yAxisIndex: 0,
+                        encode: {
+                            y: 'followers'
+                        }
+                    })
+                ]
+            });
+
+            splitSolutions = rangeSplit(data.data, [3, 4], 'daily' == gran ? [50, 20] : [5, 2]);
+
+            chartFollowings.hideLoading();
+            chartFollowings.setOption({
+                dataset: {
+                    dimensions: data.dimensions,
+                    source: data.data
+                },
+                grid: {
+                    top: 6
+                },
+                tooltip: {
+                    formatter: function (params) {
+                        var html = moment(params[0].axisValue).format('YYYY/MM/DD HH:mm');
+
+                        html += '<br/>' + params[1].marker + ' ' + params[1].seriesName + ': ' + params[1].data[3];
+                        html += '<br/>' + params[0].marker + ' ' + params[0].seriesName + ': ' + params[0].data[4];
+
+                        return html;
+                    }
+                },
+                xAxis: [{
+                    axisLabel: {
+                        interval: 'daily' == gran ? 6 : 11,
+                        formatter: function (value, index) {
+                            return moment(value).format('daily' == gran ? 'MM/DD' : 'MM/DD HH:mm');
+                        }
+                    }
+                }],
+                yAxis: [
+                    splitSolutions[0],
+                    splitSolutions[1]
+                ],
+                series: [
+                    $.extend({}, seriesBarBase, {
+                        name: 'Followings Change',
+                        yAxisIndex: 1,
+                        encode: {
+                            y: 'followings_diff'
+                        }
+                    }),
+                    $.extend({}, seriesLineBase, {
+                        name: 'Followings',
+                        yAxisIndex: 0,
+                        encode: {
+                            y: 'followings'
+                        }
+                    })
+                ]
+            });
+        });
+    }
+
     function loadOnlineFollowersHeat() {
         var onlineFollowersUrl = '/api/profiles/1/stats/ig/online-followers?granularity=aggregate_hour_weekday';
         $.getJSON(onlineFollowersUrl, function(data) {
 
+            chartOnlineFollowersHeat.hideLoading();
             chartOnlineFollowersHeat.setOption({
                 dataset: {
                     dimensions: data.dimensions,
@@ -58,7 +255,7 @@
                 },
                 grid: {
                     top: 20,
-                    left: 5
+                    left: 0
                 },
                 tooltip: {
                     trigger: 'item',
@@ -133,7 +330,7 @@
                             if (p2 < 0) {
                                 p2 = 0;
                             }
-                            return p2 * 300;
+                            return p2 * 400;
                         },
                         encode: {
                             x: 'date',
@@ -146,15 +343,22 @@
     }
 
     function loadOnlineFollowers(granularity = 'daily', target) {
-        var endOfToday = encodeURIComponent(moment().endOf('day').format(ISO_DATE_FORMAT));
-        var startOf5Days = encodeURIComponent(moment().subtract(20, 'day').startOf('day').format(ISO_DATE_FORMAT));
+        var until = encodeURIComponent(moment().endOf('day').format(ISO_DATE_FORMAT));
+        var startTime;
+        if ('hourly' === granularity) {
+            startTime = moment().subtract(7, 'day');
+        } else {
+            startTime = moment().subtract(20, 'day').startOf('day');
+        }
 
+        var since = encodeURIComponent(startTime.format(ISO_DATE_FORMAT));
 
-        var onlineFollowersUrl = '/api/profiles/1/stats/ig/online-followers?granularity=' + granularity + '&since=' + startOf5Days + '&until=' + endOfToday;
+        var onlineFollowersUrl = '/api/profiles/1/stats/ig/online-followers?granularity=' + granularity + '&since=' + since + '&until=' + until;
         $.getJSON(onlineFollowersUrl, function(data) {
 
             var splitSolutions = rangeSplit(data.data, [2, 3], [50, 0.01], [false, true]);
 
+            target.hideLoading();
             target.setOption({
                 dataset: {
                     dimensions: data.dimensions,
@@ -178,7 +382,7 @@
                 },
                 xAxis: [{
                     axisLabel: {
-                        interval: 0,
+                        interval: 'hourly' === granularity ? 11 : 0,
                         formatter: function (value, index) {
                             if ('daily' === granularity) {
                                 return moment(value).format('MM-DD');
@@ -220,12 +424,5 @@
                 ]
             });
         });
-    }
-
-    function loadAudience() {
-        loadOnlineFollowers('daily', chartOnlineFollowersDaily);
-        loadOnlineFollowers('aggregate_hour', chartOnlineFollowersHour);
-        loadOnlineFollowers('aggregate_weekday', chartOnlineFollowersWeekday);
-        loadOnlineFollowersHeat();
     }
 </script>

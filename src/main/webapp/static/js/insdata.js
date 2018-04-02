@@ -1,5 +1,7 @@
-
 function retrieveUser() {
+    /**
+     * @param {{profiles:Object,igProfile:Object,pictureUrl:string}} data
+     */
     $.getJSON("/api/users/me/profiles", function(data) {
         var profile = data.profiles[0];
 

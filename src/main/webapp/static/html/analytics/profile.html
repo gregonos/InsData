@@ -1,27 +1,13 @@
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
     <h2>PROFILE</h2>
     <div class="btn-group btn-group-sm btn-group-toggle gran-switch" data-toggle="buttons">
-        <label class="btn btn-light">
-            <input type="radio" name="profile-granularity" data-gran="profile" id="profile-hourly" value="hourly" autocomplete="off"/> Hourly
-        </label>
         <label class="btn btn-light active">
             <input type="radio" name="profile-granularity" data-gran="profile" id="profile-daily" value="daily" autocomplete="off" checked/> Daily
         </label>
+        <label class="btn btn-light">
+            <input type="radio" name="profile-granularity" data-gran="profile" id="profile-hourly" value="hourly" autocomplete="off"/> Hourly
+        </label>
     </div>
-</div>
-
-<div class="card">
-    <div class="card-header">
-        <h3>Coverage</h3>
-    </div>
-    <div id="stat_coverage" class="chartWrapper card-body"></div>
-</div>
-
-<div class="card">
-    <div class="card-header">
-        <h3>Content Popularity - Impressions per 1K Followers</h3>
-    </div>
-    <div id="stat_popularity" class="chartWrapper card-body"></div>
 </div>
 
 <div class="card">
@@ -36,6 +22,20 @@
         <h3>Profile Views</h3>
     </div>
     <div id="stat_profile_views" class="card-body chartWrapper"></div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3>Content Popularity - Impressions per 1K Followers</h3>
+    </div>
+    <div id="stat_popularity" class="chartWrapper card-body"></div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3>Coverage</h3>
+    </div>
+    <div id="stat_coverage" class="chartWrapper card-body"></div>
 </div>
 
 <script>
@@ -60,7 +60,15 @@
 //        }
     });
 
+    function showLoadingSpinners() {
+        chartCoverage.showLoading(loading);
+        chartPopularity.showLoading(loading);
+        chartProfileViews.showLoading(loading);
+        chartEngagement.showLoading(loading);
+    }
+
     function loadProfile() {
+        showLoadingSpinners();
         loadProfileChart();
         loadEngagement();
     }
@@ -83,7 +91,7 @@
         // 5 - impressions_per_reach
         // 6 - impressions_per_k_followers
 
-        var followingsCoverageUrl = '' +
+        var followingsCoverageUrl =
                 '/api/profiles/1/stats/ig?metrics=impressions,impressions_post_new,impressions_post_existing,reach,profile_views,impressions_per_reach,impressions_per_k_followers' +
                 '&granularity=' + gran + '&since=' + start + '&until=' + until;
         $.getJSON(followingsCoverageUrl, function(data) {
@@ -92,6 +100,7 @@
 
             splitSolutions = rangeSplit(data.data, [1, 6], ['daily' == gran ? 50 : 10, 0.5], [false, false]);
 
+            chartCoverage.hideLoading();
             chartCoverage.setOption({
                 dataset: {
                     dimensions: data.dimensions,
@@ -172,6 +181,7 @@
 
             splitSolutions = rangeSplit(data.data, [7], ['daily' == gran ? 50 : 5], [false]);
 
+            chartPopularity.hideLoading();
             chartPopularity.setOption({
                 dataset: {
                     dimensions: data.dimensions,
@@ -190,9 +200,6 @@
                         formatter: function (value, index) {
                             return moment(value).format('daily' == gran ? 'MM/DD' : 'MM/DD HH:mm');
                         }
-                    },
-                    axisPointer: {
-                        type: 'line'
                     }
                 }],
                 yAxis: [
@@ -209,8 +216,9 @@
                 ]
             });
 
-            splitSolutions = rangeSplit(data.data, [5], ['daily' == gran ? 20 : 5], [false]);
+            splitSolutions = rangeSplit(data.data, [5], ['daily' == gran ? 20 : 2], [false]);
 
+            chartProfileViews.hideLoading();
             chartProfileViews.setOption({
                 dataset: {
                     dimensions: data.dimensions,
@@ -222,9 +230,6 @@
                         formatter: function (value, index) {
                             return moment(value).format('daily' == gran ? 'MM/DD' : 'MM/DD HH:mm');
                         }
-                    },
-                    axisPointer: {
-                        type: 'line'
                     }
                 }],
                 yAxis: [
@@ -251,7 +256,7 @@
         } else {
             startTime = moment().subtract(3, 'day');
         }
-        var start = encodeURIComponent(startTime.format(ISO_DATE_FORMAT));
+        var since = encodeURIComponent(startTime.format(ISO_DATE_FORMAT));
 
         // 0 - engagements
         // 1 - likes
@@ -263,13 +268,16 @@
 
         var followingsEngUrl = '' +
                 '/api/profiles/1/stats/ig?metrics=engagements,likes,comments,saves,video_views,engagements_per_k_followers,engagements_per_k_reach' +
-                '&granularity=' + gran + '&since=' + start + '&until=' + until;
+                '&granularity=' + gran + '&since=' + since + '&until=' + until;
         $.getJSON(followingsEngUrl, function(data) {
+
+            populateDateForEmptyDates(data, gran, startTime.valueOf(), until);
 
             var splitSolutions;
 
             splitSolutions = rangeSplit(data.data, [1, 7], ['daily' == gran ? 10 : 1, 10], [false, false]);
 
+            chartEngagement.hideLoading();
             chartEngagement.setOption({
                 dataset: {
                     dimensions: data.dimensions,
@@ -303,9 +311,6 @@
                         formatter: function (value, index) {
                             return moment(value).format('daily' == gran ? 'MM/DD' : 'MM/DD HH:mm');
                         }
-                    },
-                    axisPointer: {
-                        type: 'shadow'
                     }
                 }],
                 yAxis: [
@@ -358,7 +363,7 @@
                         }
                     }),
                     $.extend({}, seriesLineBase, {
-                        color: chartColors[3],
+                        color: chartColors[1],
                         name: 'Engagements per K Reach',
                         smooth: true,
                         yAxisIndex: 1,
