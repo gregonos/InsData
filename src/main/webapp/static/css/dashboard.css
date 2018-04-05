@@ -179,6 +179,17 @@ h3 {
   height: 220px;
 }
 
+.switch-wrapper .col-form-label {
+  font-size: 0.8rem;
+  margin-right: 0.38rem;
+}
+
+.switch .btn-light.active {
+  background-color: #236ca3 !important;
+  border-color: #236ca3 !important;
+  color: white !important;
+}
+
 #stat_online_followers_heat {
   height: 280px;
 }

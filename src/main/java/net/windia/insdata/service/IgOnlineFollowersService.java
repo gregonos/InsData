@@ -68,7 +68,7 @@ public class IgOnlineFollowersService {
             Integer hour = Integer.parseInt(hourStr);
 
             Calendar recordTime = (Calendar) baseTime.clone();
-            recordTime.add(Calendar.HOUR, hour);
+            recordTime.add(Calendar.HOUR_OF_DAY, hour);
 
             IgOnlineFollowers onlineFollowers = new IgOnlineFollowers();
             onlineFollowers.setIgProfile(myProfile);

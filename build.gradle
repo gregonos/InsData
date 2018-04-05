@@ -1,5 +1,5 @@
 group 'net.windia.app'
-version '1.0.12-RELEASE'
+version '1.0.13-RELEASE'
 
 buildscript {
     repositories {

@@ -49,7 +49,7 @@
 <script>
     feather.replace();
 
-    function updateChart(echartsObj, attrs, granularity, endTimestamps, minIntervals) {
+    function updateChart(echartsObj, attrs, granularity, endTimestamps) {
 
         var fields = [];
         attrs.forEach(function(attr) {
@@ -68,7 +68,7 @@
                 return;
             }
 
-            var splitSolutions = rangeSplit(data.data, [1, 2], minIntervals);
+            var splitSolutions = rangeSplit(data.data, [1, 2]);
 
             echartsObj.hideLoading();
             echartsObj.setOption({
@@ -147,28 +147,28 @@
             updateChart(chartFollowers24, [
                 {name: "Followers", field: "followers"},
                 {name: "Followers Change", field: "followers_diff"}
-            ], 'hourly', endTime, [5, 2]);
+            ], 'hourly', endTime);
         }
 
         function updateChartFollowingsHourly(endTime = (new Date()).getTime()) {
             updateChart(chartFollowings24, [
                 {name: "Followings", field: "followings"},
                 {name: "Followings Change", field: "followings_diff"}
-            ], 'hourly', endTime, [10, 2]);
+            ], 'hourly', endTime);
         }
 
         function updateChartFollowersDaily(endTime = (new Date()).getTime()) {
             updateChart(chartFollowers, [
                 {name: "Followers", field: "followers"},
                 {name: "Followers Change", field: "followers_diff"}
-            ], 'daily', endTime, [50, 10]);
+            ], 'daily', endTime);
         }
 
         function updateChartFollowingsDaily(endTime = (new Date()).getTime()) {
             updateChart(chartFollowings, [
                 {name: "Followings", field: "followings"},
                 {name: "Followings Change", field: "followings_diff"}
-            ], 'daily', endTime, [100, 100]);
+            ], 'daily', endTime);
         }
 
         // load followers
@@ -183,7 +183,7 @@
         var followingsCoverageUrl = '/api/profiles/1/stats/ig?metrics=impressions,reach,impressions_per_reach&granularity=daily&since=' + startOf30Days + '&until=' + endOfToday;
         $.getJSON(followingsCoverageUrl, function(data) {
 
-            var splitSolutions = rangeSplit(data.data, [1, 3], [50, 0.5], [false, false]);
+            var splitSolutions = rangeSplit(data.data, [1, 3], [false, false]);
 
             chartCoverage.hideLoading();
             chartCoverage.setOption({

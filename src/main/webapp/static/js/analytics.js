@@ -2,6 +2,8 @@ var ISO_DATE_FORMAT = 'YYYY-MM-DDTHH:mm:ss.SSSZ';
 
 var PREFERRED_SPLITS = [6, 5, 4, 7, 3, 8, 2, 9, 10];
 
+var SPLITS = 6;
+
 var WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 var chartColors = ['#3d92d4', '#ffc107', '#48c0d4', '#45aef9', '#f28595'];
@@ -128,14 +130,14 @@ var option = {
 };
 
 function floatToPercentage(value) {
-    return (Math.round(value * 1000)) / 10 + '%';
+    return (value * 100).toFixed(1) + '%';
 }
 
 function weekdayIndexToName(index) {
     return WEEKDAYS[index - 1];
 }
 
-function rangeSplit(data, indexes, minIntervals, scale = [true, true]) {
+function rangeSplit(data, indexes, scale = [true, true]) {
     var results = [];
 
     data.forEach(function (row) {
@@ -152,7 +154,7 @@ function rangeSplit(data, indexes, minIntervals, scale = [true, true]) {
 
             var result = results[indexId];
             if (undefined === result) {
-                result = {min: Number.MAX_SAFE_INTEGER, max: 0, interval: minIntervals[indexId]};
+                result = {min: Number.MAX_SAFE_INTEGER, max: 0, interval: 0, scale: 1};
                 results.push(result);
             }
 
@@ -166,96 +168,145 @@ function rangeSplit(data, indexes, minIntervals, scale = [true, true]) {
         });
     });
 
-    var minimumReached = 0;
-
     results.forEach(function(result, rId) {
         if (result.min == Number.MAX_SAFE_INTEGER) {
             result.min = 0;
         }
 
-        if (result.interval >= result.max - result.min) {
-            result.interval = result.max - result.min;
-            results[rId] = result;
-            minimumReached++;
+        // detect float numbers
+        if (result.min % 1 !== 0 || result.max % 1 !== 0) {
+            var decLen = Math.max(decimalLength(result.min), decimalLength(result.max));
+            result.scale = Math.pow(10, decLen);
+            result.min *= result.scale;
+            result.max *= result.scale;
         }
+
+        result.interval = findInterval(result.min, result.max, SPLITS);
+
+        if (result.min == 0 || result.max == 0) {
+            result.min = Math.floor(result.min / result.interval) * result.interval;
+            result.max = Math.ceil(result.max / result.interval) * result.interval;
+        } else if (result.min < 0 && result.max > 0) {
+            var diff = result.max - result.min;
+            result.min = Math.round(result.min / diff * SPLITS) * result.interval;
+            result.max = Math.round(result.max / diff * SPLITS) * result.interval;
+        } else {
+            result.min = Math.floor(result.min / result.interval * 5) * result.interval / 5;
+            // decLen = decimalLength(result.interval);
+            // if (decLen > 0) {
+            //     result.min = parseFloat(result.min.toFixed(decLen));
+            // }
+            result.max = result.min + result.interval * SPLITS;
+        }
+
+        result.interval /= result.scale;
+        result.min /= result.scale;
+        result.max /= result.scale;
+
+        results[rId] = result;
     });
-
-    if (minimumReached == indexes.length) {
-        return results;
-    }
-
-    var splitPools = [];
-    var solutionRatings = {};
-
-    results.forEach(function (result) {
-        var interval = result.interval;
-
-        var splitPool = {};
-        for (; interval < result.max - result.min; interval += result.interval) {
-            var lowerBound = Math.floor(result.min / interval) * interval;
-            var upperBound = Math.ceil(result.max / interval) * interval;
-            var diff = upperBound - lowerBound;
-
-            for (var subInterval = result.interval; subInterval < diff; subInterval += result.interval) {
-
-                if (0 == diff % subInterval) {
-
-                    var split = diff / subInterval;
-                    var solutionsPerSplit = splitPool[split];
-                    var solution = {min: lowerBound, max: upperBound, interval: subInterval};
-                    if (undefined == solutionsPerSplit) {
-                        if (undefined == solutionRatings[split]) {
-                            solutionRatings[split] = 1;
-                        } else {
-                            solutionRatings[split]++;
-                        }
-
-                        splitPool[split] = solution;
-                    } else if (result.min > 0) {
-                        if (subInterval < solutionsPerSplit.interval) {
-                            splitPool[split] = solution;
-                        }
-                    } else {
-                        if (0 != solutionsPerSplit.max % solutionsPerSplit.interval) {
-                            if (0 == upperBound % subInterval || subInterval < solutionsPerSplit.interval) {
-                                splitPool[split] = solution;
-                            }
-                        } else if (0 == upperBound % subInterval && subInterval < solutionsPerSplit.interval) {
-                            splitPool[split] = solution;
-                        }
-                    }
-                }
-            }
-        }
-
-        splitPools.push(splitPool);
-    });
-
-    var splitSolution = 0;
-
-    for (var i = 0; i < PREFERRED_SPLITS.length; i++) {
-        if (solutionRatings[PREFERRED_SPLITS[i]] == indexes.length) {
-            splitSolution = PREFERRED_SPLITS[i];
-            break;
-        }
-    }
-
-    if (splitSolution > 0) {
-        results.forEach(function(result, rId) {
-            results[rId] = splitPools[rId][splitSolution];
-        });
-    } else {
-        splitPools.forEach(function(pool, rId) {
-            for (i = 0; i < PREFERRED_SPLITS.length; i++) {
-                if (pool[PREFERRED_SPLITS[i]]) {
-                    results[rId] = pool[PREFERRED_SPLITS[i]];
-                    break;
-                }
-            }
-        });
-    }
+    //
+    // var splitPools = [];
+    // var solutionRatings = {};
+    //
+    // results.forEach(function (result) {
+    //     var interval = result.interval;
+    //
+    //     var splitPool = {};
+    //     for (; interval < result.max - result.min; interval += result.interval) {
+    //         var lowerBound = Math.floor(result.min / interval) * interval;
+    //         var upperBound = Math.ceil(result.max / interval) * interval;
+    //         var diff = upperBound - lowerBound;
+    //
+    //         for (var subInterval = result.interval; subInterval < diff; subInterval += result.interval) {
+    //
+    //             if (0 == diff % subInterval || diff % subInterval < 1e-10) {
+    //
+    //                 var split = diff / subInterval;
+    //                 var solutionsPerSplit = splitPool[split];
+    //                 var solution = {min: lowerBound, max: upperBound, interval: subInterval, scale: result.scale};
+    //                 if (undefined == solutionsPerSplit) {
+    //                     if (undefined == solutionRatings[split]) {
+    //                         solutionRatings[split] = 1;
+    //                     } else {
+    //                         solutionRatings[split]++;
+    //                     }
+    //
+    //                     splitPool[split] = solution;
+    //                 } else if (result.min > 0) {
+    //                     if (subInterval < solutionsPerSplit.interval) {
+    //                         splitPool[split] = solution;
+    //                     }
+    //                 } else {
+    //                     if (0 != solutionsPerSplit.max % solutionsPerSplit.interval) {
+    //                         if (0 == upperBound % subInterval || subInterval < solutionsPerSplit.interval) {
+    //                             splitPool[split] = solution;
+    //                         }
+    //                     } else if (0 == upperBound % subInterval && subInterval < solutionsPerSplit.interval) {
+    //                         splitPool[split] = solution;
+    //                     }
+    //                 }
+    //                 if (solution.scale > 1) {
+    //                     solution.min = solution.min / solution.scale;
+    //                     solution.max = solution.max / solution.scale;
+    //                     solution.interval = solution.interval / solution.scale;
+    //                 }
+    //             }
+    //         }
+    //     }
+    //
+    //     splitPools.push(splitPool);
+    // });
+    //
+    // var splitSolution = 0;
+    //
+    // for (var i = 0; i < PREFERRED_SPLITS.length; i++) {
+    //     if (solutionRatings[PREFERRED_SPLITS[i]] == indexes.length) {
+    //         splitSolution = PREFERRED_SPLITS[i];
+    //         break;
+    //     }
+    // }
+    //
+    // if (splitSolution > 0) {
+    //     results.forEach(function(result, rId) {
+    //         results[rId] = splitPools[rId][splitSolution];
+    //     });
+    // } else {
+    //     splitPools.forEach(function(pool, rId) {
+    //         for (i = 0; i < PREFERRED_SPLITS.length; i++) {
+    //             if (pool[PREFERRED_SPLITS[i]]) {
+    //                 results[rId] = pool[PREFERRED_SPLITS[i]];
+    //                 break;
+    //             }
+    //         }
+    //     });
+    // }
 
     return results;
+}
+
+function decimalLength(f) {
+    return f % 1 === 0 ? 0 : f.toString().split('.')[1].length;
+}
+
+function findInterval(min, max, splits) {
+    if (min == max) {
+        return 0;
+    }
+
+    var rawInterval = (max - min) / splits;
+    var scale = Math.pow(10, Math.floor(Math.log10(rawInterval)));
+
+    var intervalStep = Math.ceil(rawInterval / scale);
+
+    if (min % 1 !== 0 || max % 1 !== 0 || scale > 1) {
+        for (; intervalStep / rawInterval * scale - 1 > 1 / (splits - 1); intervalStep -= 0.1) {
+        }
+    }
+
+    intervalStep = parseFloat(intervalStep.toFixed(1));
+
+    return intervalStep * scale;
 }
 
 /**

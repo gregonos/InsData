@@ -137,6 +137,28 @@ public class IgMetric<S extends IgStat, I, V> {
                                 null == p || 0 == p.getReach() ? 0D : m.getEngagement().doubleValue() / p.getReach() * 1000
                         )));
 
+        allMetricsMap.put("ENGAGEMENTS_POST_NEW", new IgMetric<>("ENGAGEMENTS_POST_NEW", POST_DIFF,
+                // daily calculator
+                IgMetricCalculators.conditionalAggregator(
+                        (IgMediaDiff diff) -> diff.getComparedTo().equals(diff.getMedia().getCreatedAt()),
+                        IgMediaDiff::getEngagementSum),
+                // hourly calculator
+                IgMetricCalculators.conditionalAggregator(
+                        (IgMediaDiff diff) -> diff.getCapturedAt().getTime() - diff.getMedia().getCreatedAt().getTime() < 3600000 * 8,
+                        IgMediaDiff::getEngagementSum)
+        ));
+
+        allMetricsMap.put("ENGAGEMENTS_POST_EXISTING", new IgMetric<>("ENGAGEMENTS_POST_EXISTING", POST_DIFF,
+                // daily calculator
+                IgMetricCalculators.conditionalAggregator(
+                        (IgMediaDiff diff) -> !diff.getComparedTo().equals(diff.getMedia().getCreatedAt()),
+                        IgMediaDiff::getEngagementSum),
+                // hourly calculator
+                IgMetricCalculators.conditionalAggregator(
+                        (IgMediaDiff diff) -> diff.getCapturedAt().getTime() - diff.getMedia().getCreatedAt().getTime() >= 3600000 * 8,
+                        IgMediaDiff::getEngagementSum)
+        ));
+
     }
 //
 //    protected <SSS extends IgStat, I, V> void initForSameHourlyAndDaily(IgDataSource source, IgMetricCalculator<SSS, I, V> calculator) {
