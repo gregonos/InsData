@@ -348,7 +348,7 @@
         if ('hourly' === granularity) {
             startTime = moment().subtract(7, 'day');
         } else {
-            startTime = moment().subtract(20, 'day').startOf('day');
+            startTime = moment().subtract(21, 'day').startOf('day');
         }
 
         var since = encodeURIComponent(startTime.format(ISO_DATE_FORMAT));

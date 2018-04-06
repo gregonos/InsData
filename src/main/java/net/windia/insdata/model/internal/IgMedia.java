@@ -1,6 +1,6 @@
 package net.windia.insdata.model.internal;
 
-import java.util.Date;
+import java.time.OffsetDateTime;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -39,7 +39,7 @@ public class IgMedia {
     private String url;
 
     @Column(nullable = false)
-    private Date createdAt;
+    private OffsetDateTime createdAt;
 
     public IgMedia() {}
 
@@ -47,7 +47,7 @@ public class IgMedia {
         this.id = id;
     }
 
-    public IgMedia(String id, Date createdAt) {
+    public IgMedia(String id, OffsetDateTime createdAt) {
         this.id = id;
         this.createdAt = createdAt;
     }
@@ -124,11 +124,11 @@ public class IgMedia {
         this.url = url;
     }
 
-    public Date getCreatedAt() {
+    public OffsetDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(Date createdAt) {
+    public void setCreatedAt(OffsetDateTime createdAt) {
         this.createdAt = createdAt;
     }
 }

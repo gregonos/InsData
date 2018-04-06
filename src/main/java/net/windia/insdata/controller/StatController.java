@@ -1,7 +1,7 @@
 package net.windia.insdata.controller;
 
 import lombok.extern.slf4j.Slf4j;
-import net.windia.insdata.constants.*;
+import net.windia.insdata.constants.InsDataConstants;
 import net.windia.insdata.exception.UnsupportedGranularityException;
 import net.windia.insdata.exception.UnsupportedMetricException;
 import net.windia.insdata.metric.IgDataSource;
@@ -11,16 +11,29 @@ import net.windia.insdata.metric.StatGranularity;
 import net.windia.insdata.model.assembler.IgProfileStatsDTOAssembler;
 import net.windia.insdata.model.dto.IgProfileStatsDTO;
 import net.windia.insdata.model.internal.IgOnlineFollowers;
+import net.windia.insdata.model.internal.IgProfile;
 import net.windia.insdata.model.internal.IgStat;
 import net.windia.insdata.service.IgOnlineFollowersService;
 import net.windia.insdata.service.IgProfileDataService;
+import net.windia.insdata.service.IgProfileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @Slf4j
 @RestController
@@ -37,13 +50,16 @@ public class StatController {
     @Autowired
     private IgProfileStatsDTOAssembler igProfileStatsAssembler;
 
+    @Autowired
+    private IgProfileService igProfileService;
+
 
     @RequestMapping(value = "/{profileId}/stats/ig", method = RequestMethod.GET)
     public IgProfileStatsDTO getIgProfileStats(@PathVariable("profileId") Long profileId,
                                                @RequestParam("metrics") String metricsStr,
                                                @RequestParam("granularity") String granularity,
-                                               @RequestParam("since") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Date since,
-                                               @RequestParam("until") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Date until)
+                                               @RequestParam("since") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime since,
+                                               @RequestParam("until") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime until)
 
             throws UnsupportedGranularityException, UnsupportedMetricException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
 
@@ -81,7 +97,7 @@ public class StatController {
         Map<IgDataSource, List<? extends IgStat>> sourceMap = new EnumMap<>(IgDataSource.class);
         for (IgDataSource source : requiredSources) {
             Method sourceGetter = igProfileDataService.getClass().getMethod(
-                    "get" + source.getName(), Long.class, StatGranularity.class, Date.class, Date.class);
+                    "get" + source.getName(), Long.class, StatGranularity.class, OffsetDateTime.class, OffsetDateTime.class);
 
             StatGranularity sourceGran = source.getGranularity();
             if (null == sourceGran) {
@@ -95,21 +111,26 @@ public class StatController {
             sourceMap.put(source, sourceCollection);
         }
 
-        return igProfileStatsAssembler.assemble(metrics, gran, sourceMap);
+        IgProfile profile = igProfileService.getIgProfile(profileId);
+
+        return igProfileStatsAssembler.assemble(profile, metrics, gran, sourceMap);
     }
 
     @RequestMapping(value = "/{profileId}/stats/ig/online-followers", method = RequestMethod.GET)
     public IgProfileStatsDTO getIgProfileOnlineFollowers(@PathVariable("profileId") Long profileId,
                                                          @RequestParam("granularity") String granularity,
-                                                         @RequestParam(value = "since", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Date since,
-                                                         @RequestParam(value = "until", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Date until) {
+                                                         @RequestParam(value = "since", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime since,
+                                                         @RequestParam(value = "until", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime until) {
 
+        IgOnlineFollowersGranularity granInstance = IgOnlineFollowersGranularity.forName(granularity);
         List<IgOnlineFollowers> onlineFollowers =
                 igOnlineFollowersService.getOnlineFollowers(
                         profileId,
-                        IgOnlineFollowersGranularity.forName(granularity),
+                        granInstance,
                         since, until);
 
-        return igProfileStatsAssembler.assemble(granularity, onlineFollowers);
+        IgProfile profile = igProfileService.getIgProfile(profileId);
+
+        return igProfileStatsAssembler.assemble(profile, granInstance, onlineFollowers);
     }
 }

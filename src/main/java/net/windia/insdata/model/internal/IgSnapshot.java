@@ -1,12 +1,14 @@
 package net.windia.insdata.model.internal;
 
-import java.util.Date;
+import java.time.DayOfWeek;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 
 public interface IgSnapshot {
 
-    void setCapturedAt(Date capturedAt);
+    void setCapturedAt(OffsetDateTime capturedAt);
 
-    Date getCapturedAt();
+    OffsetDateTime getCapturedAt();
 
-    void realizeCapturedAt(Date capturedAt, String timeZone);
+    void realizeCapturedAt(OffsetDateTime capturedAt, ZoneId zoneId, DayOfWeek dayOfWeek);
 }

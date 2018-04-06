@@ -5,19 +5,19 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
 
-import java.util.Date;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 public interface IgOnlineFollowersRepository extends CrudRepository<IgOnlineFollowers, Long> {
 
-    List<IgOnlineFollowers> findByIgProfileIdAndDateBetweenOrderByDateAscHourAsc(Long profileId, Date since, Date until);
+    List<IgOnlineFollowers> findByIgProfileIdAndDateTimeBetweenOrderByDateTimeAsc(Long profileId, OffsetDateTime since, OffsetDateTime until);
 
     @Query("SELECT new IgOnlineFollowers(o.date, 0, o.weekday, AVG(o.count), AVG(o.percentage)) FROM IgOnlineFollowers o " +
-            "WHERE o.igProfile.id = :profileId AND o.date BETWEEN :since AND :until " +
+            "WHERE o.igProfile.id = :profileId AND o.dateTime BETWEEN :since AND :until " +
             "GROUP BY o.date HAVING COUNT(o.date) = 24 ORDER BY o.date ASC")
     List<IgOnlineFollowers> findDailyByIgProfileIdAndDateRange(@Param("profileId") Long profileId,
-                                                               @Param("since") Date since,
-                                                               @Param("until") Date until);
+                                                               @Param("since") OffsetDateTime since,
+                                                               @Param("until") OffsetDateTime until);
 
     @Query("SELECT new IgOnlineFollowers(o.date, o.hour, o.weekday, AVG(o.count), AVG(o.percentage)) FROM IgOnlineFollowers  o " +
             "WHERE o.igProfile.id = :profileId AND o.percentage IS NOT NULL " +

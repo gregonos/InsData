@@ -1,6 +1,8 @@
 package net.windia.insdata.model.internal;
 
-import java.util.Date;
+import java.time.DayOfWeek;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
@@ -10,7 +12,7 @@ import javax.persistence.Table;
 public class IgProfileAudienceDaily extends IgStatBase implements IgSnapshot {
 
     @Column(nullable = false)
-    private Date capturedAt;
+    private OffsetDateTime capturedAt;
 
     @Column(nullable = false)
     private String type;
@@ -24,21 +26,21 @@ public class IgProfileAudienceDaily extends IgStatBase implements IgSnapshot {
     @Column
     private Integer diff;
 
-    public Date getCapturedAt() {
+    public OffsetDateTime getCapturedAt() {
         return capturedAt;
     }
 
-    public void setCapturedAt(Date capturedAt) {
+    public void setCapturedAt(OffsetDateTime capturedAt) {
         this.capturedAt = capturedAt;
     }
 
     @Override
-    public void realizeCapturedAt(Date capturedAt, String timeZone) {
+    public void realizeCapturedAt(OffsetDateTime capturedAt, ZoneId zoneId, DayOfWeek firstDayOfWeek) {
         this.setCapturedAt(capturedAt);
     }
 
     @Override
-    public Date getIndicativeDate() {
+    public OffsetDateTime getIndicativeDate() {
         return getCapturedAt();
     }
 

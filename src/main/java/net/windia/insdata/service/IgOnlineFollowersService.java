@@ -12,6 +12,8 @@ import net.windia.insdata.repository.IgProfileSnapshotHourlyRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -25,14 +27,11 @@ public class IgOnlineFollowersService {
     @Autowired
     private IgProfileSnapshotHourlyRepository igProfileSnapshotHourlyRepo;
 
-    public void enrichPercentage(IgProfile igProfile, List<IgOnlineFollowers> onlineFollowersRecords, Date baseTime) {
+    public void enrichPercentage(IgProfile igProfile, List<IgOnlineFollowers> onlineFollowersRecords, OffsetDateTime baseTime) {
 
-        Calendar endTimeCal = Calendar.getInstance(TimeZone.getTimeZone(igProfile.getUser().getTimeZone()));
-        endTimeCal.setTime(baseTime);
-        endTimeCal.add(Calendar.DATE, 1);
 
         List<IgProfileSnapshotHourly> igProfileSnapshotHourlyList =
-                igProfileSnapshotHourlyRepo.findFollowersByDay(igProfile, baseTime, endTimeCal.getTime());
+                igProfileSnapshotHourlyRepo.findFollowersByDay(igProfile, baseTime, baseTime.plusDays(1));
 
         Map<Byte, Integer> hourToFollowersMap =
                 igProfileSnapshotHourlyList.stream().collect(
@@ -57,35 +56,34 @@ public class IgOnlineFollowersService {
 
         IgAPIClientDataEntry<Map<String, Integer>> dataEntry = igOnlineFollowersRaw.getData().get(0).getValues().get(0);
 
-        Calendar baseTime = Calendar.getInstance(TimeZone.getTimeZone(myProfile.getUser().getTimeZone()));
-        baseTime.setTime(dataEntry.getEndTime());
-        baseTime.add(Calendar.DATE, -1);
+        ZonedDateTime baseTime = dataEntry.getEndTime()
+                .atZoneSameInstant(myProfile.getUser().getZoneId())
+                .minusDays(1);
 
         List<IgOnlineFollowers> onlineFollowersRecords = new ArrayList<>(24);
 
         Map<String, Integer> keyValuePairs = dataEntry.getValue();
         for (String hourStr : keyValuePairs.keySet()) {
-            Integer hour = Integer.parseInt(hourStr);
-
-            Calendar recordTime = (Calendar) baseTime.clone();
-            recordTime.add(Calendar.HOUR_OF_DAY, hour);
+            ZonedDateTime recordTime = baseTime.plusHours(Integer.parseInt(hourStr));
 
             IgOnlineFollowers onlineFollowers = new IgOnlineFollowers();
             onlineFollowers.setIgProfile(myProfile);
-            onlineFollowers.setDate(recordTime.getTime());
-            onlineFollowers.setHour((byte) recordTime.get(Calendar.HOUR_OF_DAY));
-            onlineFollowers.setWeekday((byte) recordTime.get(Calendar.DAY_OF_WEEK));
+            onlineFollowers.setDateTime(recordTime.toOffsetDateTime());
+            onlineFollowers.setDate(recordTime.toLocalDate());
+            onlineFollowers.setHour((byte) recordTime.getHour());
+            onlineFollowers.setWeekday((byte) recordTime.getDayOfWeek().getValue());
 
             onlineFollowers.setCount(keyValuePairs.get(hourStr));
 
             onlineFollowersRecords.add(onlineFollowers);
         }
 
-        enrichPercentage(myProfile, onlineFollowersRecords, baseTime.getTime());
+        enrichPercentage(myProfile, onlineFollowersRecords, baseTime.toOffsetDateTime());
         igOnlineFollowersRepo.saveAll(onlineFollowersRecords);
     }
 
-    public List<IgOnlineFollowers> getOnlineFollowers(Long profileId, IgOnlineFollowersGranularity granularity, Date since, Date until) {
+    public List<IgOnlineFollowers> getOnlineFollowers(Long profileId, IgOnlineFollowersGranularity granularity,
+                                                      OffsetDateTime since, OffsetDateTime until) {
 
         if (null == granularity) {
             return null;

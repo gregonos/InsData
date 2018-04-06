@@ -6,6 +6,7 @@ import net.windia.insdata.model.internal.IgProfileDiff;
 import net.windia.insdata.model.internal.IgProfileSnapshot;
 import net.windia.insdata.model.internal.IgStat;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -89,7 +90,7 @@ public class IgMetric<S extends IgStat, I, V> {
                         IgMediaDiff::getImpressions),
                 // hourly calculator
                 IgMetricCalculators.conditionalAggregator(
-                        (IgMediaDiff diff) -> diff.getCapturedAt().getTime() - diff.getMedia().getCreatedAt().getTime() < 3600000 * 8,
+                        (IgMediaDiff diff) -> Duration.between(diff.getMedia().getCreatedAt(), diff.getCapturedAt()).getSeconds() < 3600 * 8,
                         IgMediaDiff::getImpressions)
                 ));
 
@@ -100,7 +101,7 @@ public class IgMetric<S extends IgStat, I, V> {
                         IgMediaDiff::getImpressions),
                 // hourly calculator
                 IgMetricCalculators.conditionalAggregator(
-                        (IgMediaDiff diff) -> diff.getCapturedAt().getTime() - diff.getMedia().getCreatedAt().getTime() >= 3600000 * 8,
+                        (IgMediaDiff diff) -> Duration.between(diff.getMedia().getCreatedAt(), diff.getCapturedAt()).getSeconds() >= 3600 * 8,
                         IgMediaDiff::getImpressions)
         ));
 
@@ -127,9 +128,9 @@ public class IgMetric<S extends IgStat, I, V> {
 
         allMetricsMap.put("ENGAGEMENTS_PER_K_FOLLOWERS",
                 new IgMetric<>("ENGAGEMENTS_PER_K_FOLLOWERS", new IgDataSource[] {POST_DIFF, SNAPSHOT},
-                IgMetricCalculators.biSourceAggregator((IgMediaDiff diff, IgProfileSnapshot snapshot) ->
-                        null == snapshot || 0 == snapshot.getFollowers() ? 0D : diff.getEngagementSum().doubleValue() / snapshot.getFollowers() * 1000
-                )));
+                        IgMetricCalculators.biSourceAggregator((IgMediaDiff diff, IgProfileSnapshot snapshot) ->
+                                null == snapshot || 0 == snapshot.getFollowers() ? 0D : diff.getEngagementSum().doubleValue() / snapshot.getFollowers() * 1000
+                        )));
 
         allMetricsMap.put("ENGAGEMENTS_PER_K_REACH",
                 new IgMetric<>("ENGAGEMENTS_PER_K_REACH", new IgDataSource[] {POST_DIFF, DIFF},
@@ -144,7 +145,7 @@ public class IgMetric<S extends IgStat, I, V> {
                         IgMediaDiff::getEngagementSum),
                 // hourly calculator
                 IgMetricCalculators.conditionalAggregator(
-                        (IgMediaDiff diff) -> diff.getCapturedAt().getTime() - diff.getMedia().getCreatedAt().getTime() < 3600000 * 8,
+                        (IgMediaDiff diff) -> Duration.between(diff.getMedia().getCreatedAt(), diff.getCapturedAt()).getSeconds() < 3600 * 8,
                         IgMediaDiff::getEngagementSum)
         ));
 
@@ -155,7 +156,7 @@ public class IgMetric<S extends IgStat, I, V> {
                         IgMediaDiff::getEngagementSum),
                 // hourly calculator
                 IgMetricCalculators.conditionalAggregator(
-                        (IgMediaDiff diff) -> diff.getCapturedAt().getTime() - diff.getMedia().getCreatedAt().getTime() >= 3600000 * 8,
+                        (IgMediaDiff diff) -> Duration.between(diff.getMedia().getCreatedAt(), diff.getCapturedAt()).getSeconds() >= 3600 * 8,
                         IgMediaDiff::getEngagementSum)
         ));
 

@@ -1,6 +1,9 @@
 package net.windia.insdata.model.internal;
 
-import java.util.Date;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
@@ -10,10 +13,10 @@ import javax.persistence.Table;
 public class IgMediaDiffDaily extends IgMediaStatImpl implements IgMediaDiff, IgStatDaily {
 
     @Column(nullable = false)
-    private Date comparedTo;
+    private OffsetDateTime comparedTo;
 
     @Column(nullable = false)
-    private Date week;
+    private LocalDate week;
 
     @Column(nullable = false)
     private Byte month;
@@ -21,30 +24,30 @@ public class IgMediaDiffDaily extends IgMediaStatImpl implements IgMediaDiff, Ig
     @Column(nullable = false)
     private Byte weekday;
 
-    public Date getComparedTo() {
+    public OffsetDateTime getComparedTo() {
         return comparedTo;
     }
 
-    public void setComparedTo(Date comparedTo) {
+    public void setComparedTo(OffsetDateTime comparedTo) {
         this.comparedTo = comparedTo;
     }
 
     @Override
-    public void realizeCapturedAt(Date capturedAt, String timeZone) {
+    public void realizeCapturedAt(OffsetDateTime capturedAt, ZoneId zoneId, DayOfWeek firstDayOfWeek) {
         this.setCapturedAt(capturedAt);
-        calcDaily(timeZone, this, capturedAt);
+        calcDaily(zoneId, this, capturedAt, firstDayOfWeek);
     }
 
     @Override
-    public Date getIndicativeDate() {
+    public OffsetDateTime getIndicativeDate() {
         return getCapturedAt();
     }
 
-    public Date getWeek() {
+    public LocalDate getWeek() {
         return week;
     }
 
-    public void setWeek(Date week) {
+    public void setWeek(LocalDate week) {
         this.week = week;
     }
 

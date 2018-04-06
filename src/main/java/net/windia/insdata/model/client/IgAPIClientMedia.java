@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.util.Date;
+import java.time.OffsetDateTime;
 
 @Data
 public class IgAPIClientMedia implements Serializable {
@@ -29,7 +29,7 @@ public class IgAPIClientMedia implements Serializable {
 
     private String shortcode;
 
-    private Date timestamp;
+    private OffsetDateTime timestamp;
 
     @JsonProperty("like_count")
     private Integer likeCount;

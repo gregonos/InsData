@@ -1,6 +1,6 @@
 package net.windia.insdata.model.internal;
 
-import java.util.Date;
+import java.time.OffsetDateTime;
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
 
@@ -8,7 +8,7 @@ import javax.persistence.MappedSuperclass;
 public abstract class IgProfileStatImpl extends IgStatBase implements IgProfileStat {
 
     @Column(nullable = false)
-    private Date capturedAt;
+    private OffsetDateTime capturedAt;
 
     @Column(nullable = false)
     private Integer mediaCount;
@@ -43,11 +43,11 @@ public abstract class IgProfileStatImpl extends IgStatBase implements IgProfileS
     @Column(nullable = false)
     private Integer websiteClicks;
 
-    public Date getCapturedAt() {
+    public OffsetDateTime getCapturedAt() {
         return capturedAt;
     }
 
-    public void setCapturedAt(Date capturedAt) {
+    public void setCapturedAt(OffsetDateTime capturedAt) {
         this.capturedAt = capturedAt;
     }
 

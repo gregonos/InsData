@@ -1,6 +1,6 @@
 package net.windia.insdata.model.internal;
 
-import java.util.Date;
+import java.time.OffsetDateTime;
 import javax.persistence.Column;
 import javax.persistence.ManyToOne;
 import javax.persistence.MappedSuperclass;
@@ -37,10 +37,10 @@ public abstract class IgMediaStatImpl extends IgStatBase implements IgMediaStat 
     private String mediaType;
 
     @Transient
-    private Date createdAt;
+    private OffsetDateTime createdAt;
 
     @Column(nullable = false)
-    private Date capturedAt;
+    private OffsetDateTime capturedAt;
 
     public IgMedia getMedia() {
         return media;
@@ -120,19 +120,19 @@ public abstract class IgMediaStatImpl extends IgStatBase implements IgMediaStat 
     }
 
     @Transient
-    public Date getCreatedAt() {
+    public OffsetDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(Date createdAt) {
+    public void setCreatedAt(OffsetDateTime createdAt) {
         this.createdAt = createdAt;
     }
 
-    public Date getCapturedAt() {
+    public OffsetDateTime getCapturedAt() {
         return capturedAt;
     }
 
-    public void setCapturedAt(Date capturedAt) {
+    public void setCapturedAt(OffsetDateTime capturedAt) {
         this.capturedAt = capturedAt;
     }
 }

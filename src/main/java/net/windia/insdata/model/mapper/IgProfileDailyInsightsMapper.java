@@ -7,13 +7,13 @@ import net.windia.insdata.model.client.IgAPIClientIgProfile;
 import net.windia.insdata.model.client.IgAPIClientInsight;
 import net.windia.insdata.model.internal.IgProfile;
 import net.windia.insdata.model.internal.IgProfileSnapshotDaily;
+import net.windia.insdata.model.internal.InsDataUser;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
 @Slf4j
@@ -34,11 +34,9 @@ public class IgProfileDailyInsightsMapper extends ResourceMapper<IgAPIClientIgPr
 
             IgProfileSnapshotDaily snapshot = new IgProfileSnapshotDaily();
             IgProfile profile = (IgProfile) getExtraField(IgProfileSnapshotMapper.FIELD_IG_PROFILE);
-            Date endTime = insightEntrySample.getEndTime();
-            Calendar endTimeCal = Calendar.getInstance();
-            endTimeCal.setTime(endTime);
-            endTimeCal.add(Calendar.DATE, 1);
-            snapshot.realizeCapturedAt(endTimeCal.getTime(), profile.getUser().getTimeZone());
+            OffsetDateTime endTime = insightEntrySample.getEndTime();
+            InsDataUser user = profile.getUser();
+            snapshot.realizeCapturedAt(endTime, user.getZoneId(), user.getFirstDayOfWeekInstance());
             snapshot.setIgProfile(profile);
             snapshot.setFollowers(0);
             snapshot.setFollows(0);

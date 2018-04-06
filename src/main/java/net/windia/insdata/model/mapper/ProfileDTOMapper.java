@@ -6,6 +6,8 @@ import net.windia.insdata.model.internal.IgProfile;
 import net.windia.insdata.model.internal.Profile;
 import org.springframework.stereotype.Service;
 
+import java.time.ZoneId;
+
 @Service
 public class ProfileDTOMapper extends ResourceMapper<Profile, ProfileDTO> {
 
@@ -16,8 +18,9 @@ public class ProfileDTOMapper extends ResourceMapper<Profile, ProfileDTO> {
 
         target.setId(source.getId());
         target.setType(source.getType());
-        target.setCreatedAt(source.getCreatedAt());
-        target.setLastUpdatedAt(source.getLastUpdatedAt());
+        ZoneId userTimeZone = ZoneId.of(source.getUser().getTimeZone());
+        target.setCreatedAt(source.getCreatedAt().atZoneSameInstant(userTimeZone));
+        target.setLastUpdatedAt(source.getLastUpdatedAt().atZoneSameInstant(userTimeZone));
 
         if (source instanceof IgProfile) {
             IgProfileDTO igProfileDTO = new IgProfileDTO();

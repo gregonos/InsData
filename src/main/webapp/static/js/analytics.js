@@ -4,7 +4,7 @@ var PREFERRED_SPLITS = [6, 5, 4, 7, 3, 8, 2, 9, 10];
 
 var SPLITS = 6;
 
-var WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+var WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 var chartColors = ['#3d92d4', '#ffc107', '#48c0d4', '#45aef9', '#f28595'];
 

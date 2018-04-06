@@ -4,14 +4,15 @@ import lombok.extern.slf4j.Slf4j;
 import net.windia.insdata.model.internal.IgMediaDiffHourly;
 import net.windia.insdata.model.internal.IgMediaSnapshotHourly;
 import net.windia.insdata.model.internal.IgProfile;
+import net.windia.insdata.model.internal.InsDataUser;
 import net.windia.insdata.repository.IgMediaDiffHourlyRepository;
 import net.windia.insdata.repository.IgMediaSnapshotHourlyRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.Calendar;
-import java.util.Date;
+import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 
@@ -32,7 +33,7 @@ public class IgMediaDiffHourlyService extends IgMediaDiffService<IgMediaSnapshot
 
     @Override
     protected boolean isEligibleToCreateDiff(IgMediaSnapshotHourly newSnapshot) {
-        return (new Date()).getTime() - newSnapshot.getCreatedAt().getTime() <= 3600000 * 2;
+        return newSnapshot.getCapturedAt().until(OffsetDateTime.now(), ChronoUnit.HOURS) <= 2;
     }
 
     @Override
@@ -43,11 +44,8 @@ public class IgMediaDiffHourlyService extends IgMediaDiffService<IgMediaSnapshot
     @Override
     protected IgMediaSnapshotHourly newSnapshotInstance(IgMediaSnapshotHourly reference) {
         IgMediaSnapshotHourly snapshot = new IgMediaSnapshotHourly();
-        Date capturedAt = reference.getCapturedAt();
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(capturedAt);
-        cal.add(Calendar.HOUR, -1);
-        snapshot.realizeCapturedAt(cal.getTime(), reference.getIgProfile().getUser().getTimeZone());
+        InsDataUser user = reference.getIgProfile().getUser();
+        snapshot.realizeCapturedAt(reference.getCapturedAt().minusHours(1), user.getZoneId(), user.getFirstDayOfWeekInstance());
 
         return snapshot;
     }

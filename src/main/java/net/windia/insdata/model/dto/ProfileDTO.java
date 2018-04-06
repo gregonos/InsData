@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.util.Date;
+import java.time.ZonedDateTime;
 
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -14,9 +14,9 @@ public class ProfileDTO implements Serializable {
 
     private String type;
 
-    private Date createdAt;
+    private ZonedDateTime createdAt;
 
-    private Date lastUpdatedAt;
+    private ZonedDateTime lastUpdatedAt;
 
     private IgProfileDTO igProfile;
 }

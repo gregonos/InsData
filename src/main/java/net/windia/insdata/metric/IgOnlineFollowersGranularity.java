@@ -3,6 +3,7 @@ package net.windia.insdata.metric;
 import net.windia.insdata.model.internal.IgOnlineFollowers;
 import net.windia.insdata.repository.IgOnlineFollowersRepository;
 
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -24,7 +25,7 @@ public enum IgOnlineFollowersGranularity {
                         Collectors.toMap(IgOnlineFollowersGranularity::getValue, Function.identity()));
 
     static {
-        HOURLY.extractor = IgOnlineFollowersRepository::findByIgProfileIdAndDateBetweenOrderByDateAscHourAsc;
+        HOURLY.extractor = IgOnlineFollowersRepository::findByIgProfileIdAndDateTimeBetweenOrderByDateTimeAsc;
         DAILY.extractor = IgOnlineFollowersRepository::findDailyByIgProfileIdAndDateRange;
         AGGREGATE_HOUR.extractor = (repo, profileId, since, until) -> repo.findAggregateHourByProfileId(profileId);
         AGGREGATE_WEEKDAY.extractor = (repo, profileId, since, until) -> repo.findAggregateWeekdayByProfileId(profileId);
@@ -39,7 +40,7 @@ public enum IgOnlineFollowersGranularity {
         return value;
     }
 
-    public List<IgOnlineFollowers> extractData(IgOnlineFollowersRepository repo, Long igProfileId, Date since, Date until) {
+    public List<IgOnlineFollowers> extractData(IgOnlineFollowersRepository repo, Long igProfileId, OffsetDateTime since, OffsetDateTime until) {
         return extractor.extract(repo, igProfileId, since, until);
     }
 
@@ -52,6 +53,6 @@ public enum IgOnlineFollowersGranularity {
     }
 
     interface DataExtractor {
-        List<IgOnlineFollowers> extract(IgOnlineFollowersRepository repo, Long igProfileId, Date since, Date until);
+        List<IgOnlineFollowers> extract(IgOnlineFollowersRepository repo, Long igProfileId, OffsetDateTime since, OffsetDateTime until);
     }
 }

@@ -1,7 +1,7 @@
 package net.windia.insdata.model.internal;
 
-import java.util.Calendar;
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
@@ -13,11 +13,11 @@ public class IgOnlineFollowers extends IgStatBase {
     public IgOnlineFollowers() {
     }
 
-    public IgOnlineFollowers(Date date, int hour, byte weekday, double count, double percentage) {
+    public IgOnlineFollowers(LocalDate date, int hour, byte weekday, double count, double percentage) {
         this(date, (byte) hour, weekday, count, percentage);
     }
 
-    public IgOnlineFollowers(Date date, byte hour, byte weekday, double count, double percentage) {
+    public IgOnlineFollowers(LocalDate date, byte hour, byte weekday, double count, double percentage) {
         this.date = date;
         this.hour = hour;
         this.weekday = weekday;
@@ -26,7 +26,10 @@ public class IgOnlineFollowers extends IgStatBase {
     }
 
     @Column(nullable = false)
-    private Date date;
+    private OffsetDateTime dateTime;
+
+    @Column(nullable = false)
+    private LocalDate date;
 
     @Column(nullable = false)
     private Byte hour;
@@ -40,21 +43,25 @@ public class IgOnlineFollowers extends IgStatBase {
     @Column(nullable = false)
     private Float percentage;
 
-    public Date getDate() {
+    public OffsetDateTime getDateTime() {
+        return dateTime;
+    }
+
+    public void setDateTime(OffsetDateTime dateTime) {
+        this.dateTime = dateTime;
+    }
+
+    public LocalDate getDate() {
         return date;
     }
 
-    public void setDate(Date date) {
+    public void setDate(LocalDate date) {
         this.date = date;
     }
 
     @Override
-    public Date getIndicativeDate() {
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(getDate());
-        cal.set(Calendar.HOUR, getHour());
-
-        return cal.getTime();
+    public OffsetDateTime getIndicativeDate() {
+        return getDateTime();
     }
 
     public Byte getHour() {

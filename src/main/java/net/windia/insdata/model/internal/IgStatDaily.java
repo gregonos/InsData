@@ -1,12 +1,12 @@
 package net.windia.insdata.model.internal;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 public interface IgStatDaily {
 
-    Date getWeek();
+    LocalDate getWeek();
 
-    void setWeek(Date week);
+    void setWeek(LocalDate week);
 
     Byte getMonth();
 

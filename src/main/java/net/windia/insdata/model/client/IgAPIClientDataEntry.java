@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.util.Date;
+import java.time.OffsetDateTime;
 
 @Data
 public class IgAPIClientDataEntry<EntryType> implements Serializable {
@@ -14,5 +14,5 @@ public class IgAPIClientDataEntry<EntryType> implements Serializable {
 
     @JsonProperty("end_time")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssZ")
-    private Date endTime;
+    private OffsetDateTime endTime;
 }

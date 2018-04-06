@@ -14,6 +14,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
+import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.List;
 
@@ -54,7 +55,7 @@ public class ScheduledTaskService {
     private class IgRawMediaMetaHandler implements IgRawMediaHandler {
 
         @Override
-        public boolean processRawMedia(IgProfile profile, List<IgAPIClientMedia> rawMediaList, Date capturedAt) {
+        public boolean processRawMedia(IgProfile profile, List<IgAPIClientMedia> rawMediaList, OffsetDateTime capturedAt) {
 
             mediaService.saveMediaMeta(profile, rawMediaList);
             return true;
@@ -64,7 +65,7 @@ public class ScheduledTaskService {
     private class IgRawMediaStatHandler implements IgRawMediaHandler {
 
         @Override
-        public boolean processRawMedia(IgProfile profile, List<IgAPIClientMedia> rawMediaList, Date capturedAt) {
+        public boolean processRawMedia(IgProfile profile, List<IgAPIClientMedia> rawMediaList, OffsetDateTime capturedAt) {
 
             igMediaSnapshotHourlyService.saveMediaStat(profile, rawMediaList, capturedAt);
 

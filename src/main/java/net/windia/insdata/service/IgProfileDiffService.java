@@ -6,6 +6,7 @@ import net.windia.insdata.model.internal.IgProfileDiff;
 import net.windia.insdata.model.internal.IgProfileSnapshot;
 import net.windia.insdata.model.internal.IgProfileSnapshotDaily;
 import net.windia.insdata.model.internal.IgProfileSnapshotHourly;
+import net.windia.insdata.model.internal.InsDataUser;
 import net.windia.insdata.util.DateTimeUtils;
 import org.springframework.data.repository.CrudRepository;
 
@@ -40,7 +41,7 @@ public abstract class IgProfileDiffService<Diff extends IgProfileDiff, Snapshot 
         if (lastSnapshot == null) {
             log.info("No previous snapshot found. Diff calculation is cancelled.");
             return null;
-        } else if (newSnapshot.getCapturedAt().before(lastSnapshot.getCapturedAt())) {
+        } else if (newSnapshot.getCapturedAt().isBefore(lastSnapshot.getCapturedAt())) {
             log.warn("A newer snapshot already exists. Diff calculation is cancelled.");
             return null;
         }
@@ -72,7 +73,8 @@ public abstract class IgProfileDiffService<Diff extends IgProfileDiff, Snapshot 
         Diff diff = newDiffInstance();
         diff.setIgProfile(newSnapshot.getIgProfile());
 
-        diff.realizeCapturedAt(newSnapshot.getCapturedAt(), newSnapshot.getIgProfile().getUser().getTimeZone());
+        InsDataUser user = newSnapshot.getIgProfile().getUser();
+        diff.realizeCapturedAt(newSnapshot.getCapturedAt(), user.getZoneId(), user.getFirstDayOfWeekInstance());
         diff.setComparedTo(lastSnapshot.getCapturedAt());
 
         diff.setMediaCount(newSnapshot.getMediaCount() - lastSnapshot.getMediaCount());

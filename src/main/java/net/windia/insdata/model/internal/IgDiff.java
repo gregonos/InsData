@@ -1,18 +1,21 @@
 package net.windia.insdata.model.internal;
 
-import java.util.Date;
+
+import java.time.DayOfWeek;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 
 public interface IgDiff {
 
-    void setCapturedAt(Date capturedAt);
+    void setCapturedAt(OffsetDateTime capturedAt);
 
-    Date getCapturedAt();
+    OffsetDateTime getCapturedAt();
 
-    void realizeCapturedAt(Date capturedAt, String timeZone);
+    void realizeCapturedAt(OffsetDateTime capturedAt, ZoneId zoneId, DayOfWeek firstDayOfWeek);
 
-    void setComparedTo(Date comparedTo);
+    void setComparedTo(OffsetDateTime comparedTo);
 
-    Date getComparedTo();
+    OffsetDateTime getComparedTo();
 
-//    void realizeComparedTo(Date comparedTo, String timeZone);
+//    void realizeComparedTo(OffsetDateTime comparedTo, String timeZone);
 }

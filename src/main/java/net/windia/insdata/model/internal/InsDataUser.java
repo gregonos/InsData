@@ -1,6 +1,14 @@
 package net.windia.insdata.model.internal;
 
-import javax.persistence.*;
+import java.time.DayOfWeek;
+import java.time.ZoneId;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.Transient;
 
 @Entity
 @Table(name = "user")
@@ -21,6 +29,9 @@ public class InsDataUser {
 
     @Column
     private String timeZone;
+
+    @Column(nullable = false)
+    private Byte firstDayOfWeek;
 
     @Column
     private String password;
@@ -63,6 +74,24 @@ public class InsDataUser {
 
     public void setTimeZone(String timeZone) {
         this.timeZone = timeZone;
+    }
+
+    @Transient
+    public ZoneId getZoneId() {
+        return ZoneId.of(getTimeZone());
+    }
+
+    public Byte getFirstDayOfWeek() {
+        return firstDayOfWeek;
+    }
+
+    @Transient
+    public DayOfWeek getFirstDayOfWeekInstance() {
+        return DayOfWeek.of(firstDayOfWeek);
+    }
+
+    public void setFirstDayOfWeek(Byte firstDayOfWeek) {
+        this.firstDayOfWeek = firstDayOfWeek;
     }
 
     public String getPassword() {

@@ -9,7 +9,7 @@ import net.windia.insdata.model.mapper.IgProfileSnapshotMapper;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
+import java.time.OffsetDateTime;
 
 @Slf4j
 @Service
@@ -18,7 +18,7 @@ public abstract class IgProfileStatService<Snapshot extends IgProfileSnapshot> {
     public void saveStat(IgProfile owningProfile, IgAPIClientIgProfile statRaw) {
         IgProfileSnapshotMapper<Snapshot> mapper = getMapper();
         mapper.addExtraField(IgProfileSnapshotMapper.FIELD_IG_PROFILE, owningProfile);
-        mapper.addExtraField(IgProfileSnapshotMapper.FIELD_CAPTURED_AT, new Date());
+        mapper.addExtraField(IgProfileSnapshotMapper.FIELD_CAPTURED_AT, OffsetDateTime.now());
 
         Snapshot newSnapshot = mapper.map(statRaw);
         getProfileDiffService().calculateAndSaveDiff(newSnapshot);

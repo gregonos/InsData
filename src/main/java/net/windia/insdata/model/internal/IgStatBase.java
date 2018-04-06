@@ -1,9 +1,16 @@
 package net.windia.insdata.model.internal;
 
-import java.util.Calendar;
-import java.util.Date;
-import java.util.TimeZone;
-import javax.persistence.*;
+import java.time.DayOfWeek;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.temporal.TemporalAdjusters;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+import javax.persistence.MappedSuperclass;
+import javax.persistence.Transient;
 
 @MappedSuperclass
 public abstract class IgStatBase implements IgStat {
@@ -32,30 +39,17 @@ public abstract class IgStatBase implements IgStat {
     }
 
     @Transient
-    public abstract Date getIndicativeDate();
+    public abstract OffsetDateTime getIndicativeDate();
 
-    public static void calcHourly(String timeZone, IgStatHourly hourly, Date time) {
-
-        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone(timeZone));
-        cal.setTime(time);
-
-        hourly.setHour((byte) cal.get(Calendar.HOUR_OF_DAY));
+    public static void calcHourly(ZoneId zoneId, IgStatHourly hourly, OffsetDateTime time) {
+        ZonedDateTime userTime = time.atZoneSameInstant(zoneId);
+        hourly.setHour((byte) userTime.getHour());
     }
 
-    public static void calcDaily(String timeZone, IgStatDaily daily, Date time) {
-        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone(timeZone));
-        cal.setTime(time);
-
-        daily.setMonth((byte) cal.get(Calendar.MONTH));
-        daily.setWeekday((byte) cal.get(Calendar.DAY_OF_WEEK));
-
-        cal.set(Calendar.HOUR_OF_DAY, 0);
-        cal.clear(Calendar.MINUTE);
-        cal.clear(Calendar.SECOND);
-        cal.clear(Calendar.MILLISECOND);
-
-        cal.set(Calendar.DAY_OF_WEEK, cal.getFirstDayOfWeek());
-
-        daily.setWeek(cal.getTime());
+    public static void calcDaily(ZoneId zoneId, IgStatDaily daily, OffsetDateTime time, DayOfWeek dayOfWeek) {
+        ZonedDateTime userTime = time.atZoneSameInstant(zoneId);
+        daily.setMonth((byte) userTime.getMonth().getValue());
+        daily.setWeekday((byte) userTime.getDayOfWeek().getValue());
+        daily.setWeek(userTime.with(TemporalAdjusters.previousOrSame(dayOfWeek)).toLocalDate());
     }
 }

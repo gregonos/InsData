@@ -12,10 +12,9 @@ import net.windia.insdata.service.restclient.IgRestClientService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.CrudRepository;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -45,7 +44,7 @@ public abstract class IgMediaStatService<Snapshot extends IgMediaSnapshot> {
         mediaCache = new HashMap<>(4);
     }
 
-    public void saveMediaStat(IgProfile profile, List<IgAPIClientMedia> mediaListRaw, Date capturedAt) {
+    public void saveMediaStat(IgProfile profile, List<IgAPIClientMedia> mediaListRaw, OffsetDateTime capturedAt) {
 
         // Prepare media id collection
         Set<String> mediaIdSet = mediaIdCache.get(profile.getId());

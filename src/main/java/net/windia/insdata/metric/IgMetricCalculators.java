@@ -3,7 +3,8 @@ package net.windia.insdata.metric;
 import net.windia.insdata.model.internal.IgStat;
 import net.windia.insdata.util.DateTimeUtils;
 
-import java.util.Date;
+import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,7 +18,7 @@ public final class IgMetricCalculators {
 
     private IgMetricCalculators() {}
 
-    static class IgSimpleCalculator<S extends IgStat, V> implements IgMetricCalculator<S, Date, V> {
+    static class IgSimpleCalculator<S extends IgStat, V> implements IgMetricCalculator<S, ZonedDateTime, V> {
 
         private final Function<S, V> extractor;
 
@@ -26,18 +27,19 @@ public final class IgMetricCalculators {
         }
 
         @Override
-        public Map<Date, V> calculate(List<List<S>> dataSources, StatGranularity gran) {
+        public Map<ZonedDateTime, V> calculate(List<List<S>> dataSources, StatGranularity gran) {
             List<S> dataSource = dataSources.get(0);
-            Map<Date, V> resultMap = new LinkedHashMap<>(dataSource.size());
+            Map<ZonedDateTime, V> resultMap = new LinkedHashMap<>(dataSource.size());
 
             dataSource.forEach(sourceRecord -> resultMap.put(
-                    DateTimeUtils.dateTimeOfFacebookServer(sourceRecord.getIndicativeDate(), gran), extractor.apply(sourceRecord)));
+                    DateTimeUtils.dateTimeOfFacebookServer(sourceRecord.getIndicativeDate(), gran),
+                    extractor.apply(sourceRecord)));
 
             return resultMap;
         }
     }
 
-    static class IgSimpleAggregator<S extends IgStat> implements IgMetricCalculator<S, Date, Integer> {
+    static class IgSimpleAggregator<S extends IgStat> implements IgMetricCalculator<S, ZonedDateTime, Integer> {
 
         private final ToIntFunction<S> extractor;
 
@@ -46,7 +48,7 @@ public final class IgMetricCalculators {
         }
 
         @Override
-        public Map<Date, Integer> calculate(List<List<S>> dataSources, StatGranularity gran) {
+        public Map<ZonedDateTime, Integer> calculate(List<List<S>> dataSources, StatGranularity gran) {
             List<S> dataSource = dataSources.get(0);
 
             return dataSource.stream()
@@ -55,7 +57,7 @@ public final class IgMetricCalculators {
         }
     }
 
-    static class IgConditionalAggregator<S extends IgStat> implements IgMetricCalculator<S, Date, Integer> {
+    static class IgConditionalAggregator<S extends IgStat> implements IgMetricCalculator<S, ZonedDateTime, Integer> {
 
         private final Predicate<S> filter;
         private final ToIntFunction<S> extractor;
@@ -66,7 +68,7 @@ public final class IgMetricCalculators {
         }
 
         @Override
-        public Map<Date, Integer> calculate(List<List<S>> dataSources, StatGranularity gran) {
+        public Map<ZonedDateTime, Integer> calculate(List<List<S>> dataSources, StatGranularity gran) {
             List<S> dataSource = dataSources.get(0);
 
             return dataSource.stream()
@@ -76,7 +78,7 @@ public final class IgMetricCalculators {
         }
     }
 
-    static class IgBiSourceCalculator<S extends IgStat, S1 extends S, S2 extends S> implements IgMetricCalculator<S, Date, Double> {
+    static class IgBiSourceCalculator<S extends IgStat, S1 extends S, S2 extends S> implements IgMetricCalculator<S, ZonedDateTime, Double> {
 
         private final ToDoubleBiFunction<S1, S2> extractor;
 
@@ -85,10 +87,10 @@ public final class IgMetricCalculators {
         }
 
         @Override
-        public Map<Date, Double> calculate(List<List<S>> dataSources, StatGranularity gran) {
+        public Map<ZonedDateTime, Double> calculate(List<List<S>> dataSources, StatGranularity gran) {
 
             List<S1> stats1 = (List<S1>) dataSources.get(0);
-            Map<Date, S2> stats2Map = ((List<S2>) dataSources.get(1)).stream().collect(Collectors.toMap(IgStat::getIndicativeDate, Function.identity()));
+            Map<OffsetDateTime, S2> stats2Map = ((List<S2>) dataSources.get(1)).stream().collect(Collectors.toMap(IgStat::getIndicativeDate, Function.identity()));
 
             return stats1.stream()
                     .collect(Collectors.toMap(stat1 -> DateTimeUtils.dateTimeOfFacebookServer(stat1.getIndicativeDate(), gran),
@@ -96,7 +98,7 @@ public final class IgMetricCalculators {
         }
     }
 
-    static class IgBiSourceAggregator<S extends IgStat, S1 extends S, S2 extends S> implements IgMetricCalculator<S, Date, Double> {
+    static class IgBiSourceAggregator<S extends IgStat, S1 extends S, S2 extends S> implements IgMetricCalculator<S, ZonedDateTime, Double> {
 
         private final ToDoubleBiFunction<S1, S2> extractor;
 
@@ -105,10 +107,10 @@ public final class IgMetricCalculators {
         }
 
         @Override
-        public Map<Date, Double> calculate(List<List<S>> dataSources, StatGranularity gran) {
+        public Map<ZonedDateTime, Double> calculate(List<List<S>> dataSources, StatGranularity gran) {
 
             List<S1> stats1 = (List<S1>) dataSources.get(0);
-            Map<Date, S2> stats2Map = ((List<S2>) dataSources.get(1)).stream().collect(
+            Map<ZonedDateTime, S2> stats2Map = ((List<S2>) dataSources.get(1)).stream().collect(
                     Collectors.toMap(stat -> DateTimeUtils.dateTimeOfFacebookServer(stat.getIndicativeDate(), gran), Function.identity()));
 
             return stats1.stream()

@@ -4,14 +4,15 @@ import lombok.extern.slf4j.Slf4j;
 import net.windia.insdata.model.internal.IgMediaDiffDaily;
 import net.windia.insdata.model.internal.IgMediaSnapshotDaily;
 import net.windia.insdata.model.internal.IgProfile;
+import net.windia.insdata.model.internal.InsDataUser;
 import net.windia.insdata.repository.IgMediaDiffDailyRepository;
 import net.windia.insdata.repository.IgMediaSnapshotDailyRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.Calendar;
-import java.util.Date;
+import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 
@@ -32,7 +33,7 @@ public class IgMediaDiffDailyService extends IgMediaDiffService<IgMediaSnapshotD
 
     @Override
     protected boolean isEligibleToCreateDiff(IgMediaSnapshotDaily newSnapshot) {
-        return (new Date()).getTime() - newSnapshot.getCreatedAt().getTime() <= 3600000 * 25;
+        return newSnapshot.getCapturedAt().until(OffsetDateTime.now(), ChronoUnit.HOURS) <= 24;
     }
 
     @Override
@@ -43,7 +44,8 @@ public class IgMediaDiffDailyService extends IgMediaDiffService<IgMediaSnapshotD
     @Override
     protected IgMediaSnapshotDaily newSnapshotInstance(IgMediaSnapshotDaily reference) {
         IgMediaSnapshotDaily instance = new IgMediaSnapshotDaily();
-        instance.realizeCapturedAt(reference.getMedia().getCreatedAt(), reference.getIgProfile().getUser().getTimeZone());
+        InsDataUser user = reference.getIgProfile().getUser();
+        instance.realizeCapturedAt(reference.getMedia().getCreatedAt(), user.getZoneId(), user.getFirstDayOfWeekInstance());
 
         return instance;
     }

@@ -1,6 +1,6 @@
 package net.windia.insdata.model.internal;
 
-import java.util.Date;
+import java.time.OffsetDateTime;
 import javax.persistence.Transient;
 
 public interface IgMediaStat extends IgStat {
@@ -45,9 +45,9 @@ public interface IgMediaStat extends IgStat {
 
     void setMediaType(String mediaType);
 
-    Date getCreatedAt();
+    OffsetDateTime getCreatedAt();
 
-    void setCreatedAt(Date createdAt);
+    void setCreatedAt(OffsetDateTime createdAt);
 
     @Transient
     Integer getEngagementSum();

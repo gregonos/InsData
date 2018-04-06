@@ -9,8 +9,8 @@ import net.windia.insdata.repository.IgProfileAudienceDailyRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -111,7 +111,7 @@ public class IgProfileAudienceService {
         }
 
         List<IgProfileAudienceDaily> audienceRecords = new ArrayList<>(32);
-        Date now = new Date();
+        OffsetDateTime now = OffsetDateTime.now();
 
         for (IgAPIClientInsight<Map<String, Integer>> insightRaw : igProfileAudienceRaw.getData()) {
             String type = insightRaw.getName().substring(9);

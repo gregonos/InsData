@@ -2,7 +2,11 @@ package net.windia.insdata.service.restclient;
 
 import com.google.common.io.CharStreams;
 import lombok.extern.slf4j.Slf4j;
-import net.windia.insdata.model.client.*;
+import net.windia.insdata.model.client.IgAPIClientIgProfile;
+import net.windia.insdata.model.client.IgAPIClientMedia;
+import net.windia.insdata.model.client.IgAPIClientMediaSet;
+import net.windia.insdata.model.client.IgAPIClientPaging;
+import net.windia.insdata.model.client.IgAPIClientProfileAudience;
 import net.windia.insdata.model.internal.IgProfile;
 import net.windia.insdata.service.IgRawMediaHandler;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,8 +21,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import javax.annotation.PostConstruct;
 
@@ -122,7 +128,7 @@ public class IgRestClientService {
 
     public IgAPIClientProfileAudience retrieveProfileOnlineFollowers(IgProfile profile) {
 
-        long since = ((new Date()).getTime() - 86400000 * 3 - 7200000) / 1000;
+        long since = LocalDateTime.now().minusDays(3).minusHours(2).toEpochSecond(ZoneOffset.UTC);
         long until = since + 86400;
 //
 //            since = 1520665261;
@@ -179,7 +185,7 @@ public class IgRestClientService {
 
         log.debug(mediaCountInThisBatch + " entries of media received from Facebook response payload.");
 
-        Date now = new Date();
+        OffsetDateTime now = OffsetDateTime.now();
 
         rawMediaHandler.processRawMedia(profile, mediasRaw.getData(), now);
 

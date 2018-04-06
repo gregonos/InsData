@@ -1,7 +1,17 @@
 package net.windia.insdata.model.internal;
 
-import javax.persistence.*;
-import java.util.Date;
+import java.time.OffsetDateTime;
+import javax.persistence.Column;
+import javax.persistence.DiscriminatorColumn;
+import javax.persistence.DiscriminatorType;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 
 @Entity
 @Table(name = "profile")
@@ -23,10 +33,10 @@ public class Profile {
     private String token;
 
     @Column
-    private Date createdAt;
+    private OffsetDateTime createdAt;
 
     @Column
-    private Date lastUpdatedAt;
+    private OffsetDateTime lastUpdatedAt;
 
 
     public Long getId() {
@@ -61,19 +71,19 @@ public class Profile {
         this.token = token;
     }
 
-    public Date getCreatedAt() {
+    public OffsetDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(Date createdAt) {
+    public void setCreatedAt(OffsetDateTime createdAt) {
         this.createdAt = createdAt;
     }
 
-    public Date getLastUpdatedAt() {
+    public OffsetDateTime getLastUpdatedAt() {
         return lastUpdatedAt;
     }
 
-    public void setLastUpdatedAt(Date lastUpdatedAt) {
+    public void setLastUpdatedAt(OffsetDateTime lastUpdatedAt) {
         this.lastUpdatedAt = lastUpdatedAt;
     }
 }

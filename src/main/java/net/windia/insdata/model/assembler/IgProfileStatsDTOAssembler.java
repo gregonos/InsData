@@ -7,11 +7,14 @@ import net.windia.insdata.metric.IgOnlineFollowersGranularity;
 import net.windia.insdata.metric.StatGranularity;
 import net.windia.insdata.model.dto.IgProfileStatsDTO;
 import net.windia.insdata.model.internal.IgOnlineFollowers;
+import net.windia.insdata.model.internal.IgProfile;
 import net.windia.insdata.model.internal.IgStat;
+import net.windia.insdata.model.internal.InsDataUser;
 import org.springframework.stereotype.Service;
 
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -22,7 +25,8 @@ import java.util.stream.Collectors;
 @Service
 public class IgProfileStatsDTOAssembler {
 
-    public IgProfileStatsDTO assemble(List<IgMetric> metrics,
+    public IgProfileStatsDTO assemble(IgProfile igProfile,
+                                      List<IgMetric> metrics,
                                       StatGranularity granInstance,
                                       Map<IgDataSource, List<? extends IgStat>> sourceMap) {
 
@@ -39,15 +43,16 @@ public class IgProfileStatsDTOAssembler {
         for (IgMetric metric : metrics) {
 
             @SuppressWarnings("unchecked")
-            Map metricResult = metric.calculate(granInstance,
+            Map<ZonedDateTime, Object> metricResult = metric.calculate(granInstance,
                     // Fetch the metric's IgDataSource list, get the data source from sourceMap by name, and return them as a list
                     (List<List<? extends IgStat>>) metric.getSources(granInstance).stream().map(sourceMap::get).collect(Collectors.toList()));
-            for (Object key : metricResult.keySet()) {
+            for (ZonedDateTime key : metricResult.keySet()) {
                 // a map for each data item from dimension name to the calculated value
                 Map<String, Object> dataItem = dataMap.get(key);
                 if (null == dataItem) {
                     dataItem = new HashMap<>(dimensions.size() - 1);
-                    dataItem.put(IgProfileStatsDTO.DIMENSION_TIME, key);
+                    dataItem.put(IgProfileStatsDTO.DIMENSION_TIME,
+                            key.withZoneSameInstant(igProfile.getUser().getZoneId()).toInstant().toEpochMilli());
                     dataMap.put(key, dataItem);
                 }
                 dataItem.put(metric.getName().toLowerCase(), metricResult.get(key));
@@ -62,41 +67,16 @@ public class IgProfileStatsDTOAssembler {
         }
 
         // sort the result list by dimension "time"
+        // Date)dataSet1.get(0)).getTime() - ((Date)dataSet2.get(0)).getTime()
         resultDataList.sort(
-                (dataSet1, dataSet2) -> (int)(((Date)dataSet1.get(0)).getTime() - ((Date)dataSet2.get(0)).getTime()));
+                (dataSet1, dataSet2) -> (int)((long) dataSet1.get(0) - (long) dataSet2.get(0)));
 
         target.setData(resultDataList);
 
         return target;
     }
 
-    private void populateDateItemsForEmptyDates(List<String> dimensions,
-                                                List<List<Object>> dataList,
-                                                StatGranularity gran,
-                                                Date since, Date until) {
-        long gapMillis = 3600000;
-        if (StatGranularity.DAILY == gran) {
-            gapMillis = 86400000;
-        }
-
-        long earliestTime = until.getTime();
-
-        if (dataList.size() > 0) {
-            earliestTime = ((Date) dataList.get(0).get(0)).getTime();
-        }
-
-        while (earliestTime - since.getTime() >= gapMillis) {
-            long populatedRecordTime = earliestTime - gapMillis;
-            List<Object> filler = new ArrayList<>(dimensions.size());
-            filler.add(new Date(populatedRecordTime));
-            dimensions.stream().skip(1).forEach(dimension -> filler.add(null));
-            dataList.add(filler);
-
-            earliestTime = populatedRecordTime;
-        }
-    }
-
-    public IgProfileStatsDTO assemble(String granularity, List<IgOnlineFollowers> onlineFollowers) {
+    public IgProfileStatsDTO assemble(IgProfile profile, IgOnlineFollowersGranularity granularity, List<IgOnlineFollowers> onlineFollowers) {
         IgProfileStatsDTO target = new IgProfileStatsDTO();
 
         // Dimensions
@@ -107,14 +87,18 @@ public class IgProfileStatsDTOAssembler {
         dimensions.add(IgProfileStatsDTO.DIMENSION_PERCENTAGE);
 
         List<List<Object>> data = new ArrayList<>(onlineFollowers.size());
+        InsDataUser user = profile.getUser();
         for (IgOnlineFollowers onlineFollower : onlineFollowers) {
             List<Object> row = new ArrayList<>(4);
 
-            if (IgOnlineFollowersGranularity.AGGREGATE_HOUR.getValue().equals(granularity) ||
-                    IgOnlineFollowersGranularity.AGGREGATE_HOUR_WEEKDAY.getValue().equals(granularity)) {
+            if (IgOnlineFollowersGranularity.AGGREGATE_HOUR == granularity ||
+                    IgOnlineFollowersGranularity.AGGREGATE_HOUR_WEEKDAY == granularity) {
                 row.add(onlineFollower.getHour());
+            } else if (IgOnlineFollowersGranularity.DAILY == granularity ||
+                    IgOnlineFollowersGranularity.AGGREGATE_WEEKDAY == granularity) {
+                row.add(onlineFollower.getDate().format(DateTimeFormatter.ISO_DATE));
             } else {
-                row.add(onlineFollower.getDate().getTime() + 3600000 * onlineFollower.getHour());
+                row.add(onlineFollower.getDateTime().atZoneSameInstant(user.getZoneId()).toInstant().toEpochMilli());
             }
             row.add(onlineFollower.getWeekday());
             row.add(onlineFollower.getCount());

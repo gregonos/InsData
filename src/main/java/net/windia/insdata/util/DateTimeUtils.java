@@ -4,6 +4,10 @@ import net.windia.insdata.metric.StatGranularity;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
@@ -12,10 +16,12 @@ import java.util.TimeZone;
 public class DateTimeUtils {
 
     private static String facebookServerTimeZone;
+    private static ZoneId facebookServerZoneId;
 
     @Value("${insdata.facebook.server-timezone-name}")
     public void setFacebookServerTimeZone(String timeZone) {
         facebookServerTimeZone = timeZone;
+        facebookServerZoneId = ZoneId.of(timeZone);
     }
 
     public static String getFacebookServerTimeZone() {
@@ -26,17 +32,13 @@ public class DateTimeUtils {
         return hourInTimeZone(facebookServerTimeZone);
     }
 
-    public static Date dateTimeOfFacebookServer(Date time, StatGranularity gran) {
-        Calendar instance = Calendar.getInstance(TimeZone.getTimeZone(facebookServerTimeZone));
-        instance.setTime(time);
+    public static ZonedDateTime dateTimeOfFacebookServer(OffsetDateTime time, StatGranularity gran) {
+        ZonedDateTime zoned = time.atZoneSameInstant(facebookServerZoneId);
         if (StatGranularity.DAILY == gran) {
-            instance.set(Calendar.HOUR_OF_DAY, 0);
+            return zoned.truncatedTo(ChronoUnit.DAYS);
+        } else {
+            return zoned.truncatedTo(ChronoUnit.HOURS);
         }
-        instance.clear(Calendar.MINUTE);
-        instance.clear(Calendar.SECOND);
-        instance.clear(Calendar.MILLISECOND);
-
-        return instance.getTime();
     }
 
     public static int hourInTimeZone(String timeZoneId, Date time) {
@@ -51,6 +53,6 @@ public class DateTimeUtils {
     }
 
     public static int hourInTimeZone(String timeZoneId) {
-        return Calendar.getInstance(TimeZone.getTimeZone(timeZoneId)).get(Calendar.HOUR_OF_DAY);
+        return ZonedDateTime.now(ZoneId.of(timeZoneId)).getHour();
     }
 }

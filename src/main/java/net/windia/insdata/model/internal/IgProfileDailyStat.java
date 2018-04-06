@@ -1,6 +1,6 @@
 package net.windia.insdata.model.internal;
 
-import java.util.Date;
+import java.time.LocalDate;
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
 
@@ -8,7 +8,7 @@ import javax.persistence.MappedSuperclass;
 public abstract class IgProfileDailyStat extends IgProfileStatImpl implements IgStatDaily {
 
     @Column(nullable = false)
-    private Date week;
+    private LocalDate week;
 
     @Column(nullable = false)
     private Byte month;
@@ -16,11 +16,11 @@ public abstract class IgProfileDailyStat extends IgProfileStatImpl implements Ig
     @Column(nullable = false)
     private Byte weekday;
 
-    public Date getWeek() {
+    public LocalDate getWeek() {
         return week;
     }
 
-    public void setWeek(Date week) {
+    public void setWeek(LocalDate week) {
         this.week = week;
     }
 

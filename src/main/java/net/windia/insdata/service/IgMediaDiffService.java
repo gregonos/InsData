@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.windia.insdata.model.internal.IgMediaDiff;
 import net.windia.insdata.model.internal.IgMediaSnapshot;
 import net.windia.insdata.model.internal.IgProfile;
+import net.windia.insdata.model.internal.InsDataUser;
 import org.springframework.data.repository.CrudRepository;
 
 import java.util.ArrayList;
@@ -99,7 +100,8 @@ public abstract class IgMediaDiffService<Snapshot extends IgMediaSnapshot, Diff 
             diff.setMediaType(newSnapshot.getMediaType());
             diff.setMedia(newSnapshot.getMedia());
 
-            diff.realizeCapturedAt(newSnapshot.getCapturedAt(), profile.getUser().getTimeZone());
+            InsDataUser user = profile.getUser();
+            diff.realizeCapturedAt(newSnapshot.getCapturedAt(), user.getZoneId(), user.getFirstDayOfWeekInstance());
             diff.setComparedTo(lastSnapshot.getCapturedAt());
 
             diff.setLikes(newSnapshot.getLikes() - lastSnapshot.getLikes());
@@ -113,7 +115,7 @@ public abstract class IgMediaDiffService<Snapshot extends IgMediaSnapshot, Diff 
             if (!diff.isChanged()) {
                 // Media snapshot shows no change
                 // replace the last snapshot time. Diff won't be generated
-                lastSnapshot.realizeCapturedAt(newSnapshot.getCapturedAt(), profile.getUser().getTimeZone());
+                lastSnapshot.realizeCapturedAt(newSnapshot.getCapturedAt(), user.getZoneId(), user.getFirstDayOfWeekInstance());
 
                 // Put the updated lastSnapshot in new snapshot list so that it'll be updated when saving
                 snapshotList.set(snapshotList.indexOf(newSnapshot), lastSnapshot);

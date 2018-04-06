@@ -1,6 +1,6 @@
 package net.windia.insdata.model.internal;
 
-import java.util.Date;
+import java.time.OffsetDateTime;
 
 public interface IgStat {
 
@@ -12,5 +12,5 @@ public interface IgStat {
 
     void setIgProfile(IgProfile igProfile);
 
-    Date getIndicativeDate();
+    OffsetDateTime getIndicativeDate();
 }
