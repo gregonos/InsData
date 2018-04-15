@@ -1,3 +1,124 @@
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
     <h2>POSTS</h2>
 </div>
+
+
+<div class="card">
+    <div class="card-header">
+        <h3>Posting & Deleting</h3>
+    </div>
+    <div id="stat_count" class="card-body chartWrapper"></div>
+</div>
+
+
+<script>
+    var chartCount = echarts.init(document.getElementById("stat_count"), null, {renderer: 'canvas'});
+    chartCount.setOption(option);
+
+    function showLoadingSpinners() {
+        chartCount.showLoading(loading);
+    }
+
+    function loadPosts() {
+        showLoadingSpinners();
+        loadCounts();
+    }
+
+    function loadCounts(gran = 'daily') {
+        var until = encodeURIComponent(moment().format(ISO_DATE_FORMAT));
+        var startTime;
+        if ('daily' == gran) {
+            startTime = moment().subtract(30, 'day').startOf('day');
+        } else {
+            startTime = moment().subtract(3, 'day');
+        }
+        var start = encodeURIComponent(startTime.format(ISO_DATE_FORMAT));
+
+        // 0 - posts
+        // 1 - posts_add
+        // 2 - posts_del
+
+        var countsUrl =
+                '/api/profiles/1/stats/ig?metrics=posts,posts_add,posts_del' +
+                '&granularity=' + gran + '&since=' + start + '&until=' + until;
+        $.getJSON(countsUrl, function(data) {
+
+            var splitSolutions;
+
+            splitSolutions = rangeSplit(data.data, [1, [3, 2]]);
+
+            chartCount.hideLoading();
+            chartCount.setOption({
+                dataset: {
+                    dimensions: data.dimensions,
+                    source: data.data
+                },
+                grid: {
+                    top: 24
+                },
+                tooltip: {
+                    formatter: function (params) {
+                        var html = moment(params[0].axisValue).format('YYYY/MM/DD HH:mm');
+
+                        html += '<br/>' + params[0].marker + ' ' + params[0].seriesName + ': ' + params[0].data[1];
+                        html += '<br/>' + params[1].marker + ' ' + params[1].seriesName + ': ' + params[1].data[2];
+                        html += '<br/>' + params[2].marker + ' ' + params[2].seriesName + ': ' + params[2].data[3];
+
+
+                        return html;
+                    }
+                },
+                legend: {
+                    show: true,
+                    top: -5
+                },
+                xAxis: [{
+                    axisLabel: {
+                        interval: 'daily' == gran ? 6 : 11,
+                        formatter: function (value) {
+                            return moment(value).format('daily' == gran ? 'MM/DD' : 'MM/DD HH:mm');
+                        }
+                    },
+                    axisPointer: {
+                        type: 'shadow'
+                    }
+                }],
+                yAxis: [
+                    splitSolutions[0],
+//                    splitSolutions[1]
+                    {min: -3, max: 3, interval: 1}
+                ],
+                series: [
+                    $.extend({}, seriesLineBase, {
+                        color: chartColors[1],
+                        name: 'Number of Posts',
+                        yAxisIndex: 0,
+                        encode: {
+                            y: 'posts'
+                        }
+                    }),
+                    $.extend({}, seriesBarBase, {
+                        name: 'Posts Added',
+                        barWidth: 'auto',
+                        stack: 'posts',
+                        yAxisIndex: 1,
+                        encode: {
+                            y: 'posts_add'
+                        }
+                    }),
+                    $.extend({}, seriesBarBase, {
+                        color: chartColors[4],
+                        name: 'Posts Deleted',
+                        barWidth: 'auto',
+                        stack: 'posts',
+                        yAxisIndex: 1,
+                        encode: {
+                            y: 'posts_del'
+                        }
+                    })
+                ]
+            });
+        });
+    }
+
+</script>

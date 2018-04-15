@@ -6,10 +6,11 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 @Entity
 @Table
-public class IgMedia {
+public class IgMedia implements IgStat {
 
     @Id
     private String id;
@@ -130,5 +131,11 @@ public class IgMedia {
 
     public void setCreatedAt(OffsetDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    @Override
+    @Transient
+    public OffsetDateTime getIndicativeDate() {
+        return getCreatedAt();
     }
 }

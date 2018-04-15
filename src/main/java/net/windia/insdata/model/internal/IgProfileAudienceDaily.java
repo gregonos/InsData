@@ -26,6 +26,13 @@ public class IgProfileAudienceDaily extends IgStatBase implements IgSnapshot {
     @Column
     private Integer diff;
 
+    public IgProfileAudienceDaily() {}
+
+    public IgProfileAudienceDaily(OffsetDateTime capturedAt, String type) {
+        this.capturedAt = capturedAt;
+        this.type = type;
+    }
+
     public OffsetDateTime getCapturedAt() {
         return capturedAt;
     }

@@ -26,6 +26,84 @@
 
 <div class="card">
     <div class="card-header">
+        <h3>Geographical Distribution of Followers</h3>
+    </div>
+    <div class="card-body card-geo">
+        <div id="stat_world" class="chartWrapper chartWorld"></div>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card-long-list" id="card-stat-country">
+                    <div class="card-header">
+                        <h3>Countries</h3>
+                        <span>Last updated @ <span class="stat-last-seen"></span></span>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-viewport">
+                            <div class="chartWrapper chartWrapper-high" id="stat_country"></div>
+                            <div class="stat-labels" id="stat_country_list">
+                                <div class="stat-label-item d-flex justify-content-between flex-wrap">
+                                    <span class="stat-label-key">United States</span>
+                                    <span class="stat-label-value"><span class="count">0</span><span class="diff"></span></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card-long-list" id="card-stat-city">
+                    <div class="card-header">
+                        <h3>Cities</h3>
+                        <span>Last updated @ <span class="stat-last-seen"></span></span>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-viewport">
+                            <div class="chartWrapper chartWrapper-high" id="stat_city"></div>
+                            <div class="stat-labels" id="stat_city_list">
+                                <div class="stat-label-item d-flex justify-content-between flex-wrap">
+                                    <span class="stat-label-key">United States</span>
+                                    <span class="stat-label-value"><span class="count">0</span><span class="diff"></span></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card-long-list" id="card-stat-locale">
+                    <div class="card-header">
+                        <h3>Locales</h3>
+                        <span>Last updated @ <span class="stat-last-seen"></span></span>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-viewport">
+                            <div class="chartWrapper chartWrapper-high" id="stat_locale"></div>
+                            <div class="stat-labels" id="stat_locale_list">
+                                <div class="stat-label-item d-flex justify-content-between flex-wrap">
+                                    <span class="stat-label-key">United States</span>
+                                    <span class="stat-label-value"><span class="count">0</span><span class="diff"></span></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="text-center">
+            <button class="btn btn-sm btn-outline-secondary" id="btn_show_all_geo">Show All</button>
+        </div>
+    </div>
+</div>
+
+<div class="card" id="card-stat-gender-age">
+    <div class="card-header">
+        <h3>Followers by Gender and Age</h3>
+    </div>
+    <div id="stat_gender_age" class="card-body chartWrapper"></div>
+</div>
+
+<div class="card">
+    <div class="card-header">
         <h3>Online Followers</h3>
     </div>
     <div id="stat_online_followers_daily" class="card-body chartWrapper"></div>
@@ -55,6 +133,19 @@
     var chartFollowings = echarts.init(document.getElementById("stat_followings"), null, {renderer: 'canvas'});
     chartFollowings.setOption(option);
 
+    var chartWorld = echarts.init(document.getElementById('stat_world'));
+
+    var chartGenderAge = echarts.init(document.getElementById('stat_gender_age'));
+
+    var chartCountry = echarts.init(document.getElementById("stat_country"), null, {renderer: 'canvas'});
+    chartCountry.setOption(option);
+
+    var chartCity = echarts.init(document.getElementById("stat_city"), null, {renderer: 'canvas'});
+    chartCity.setOption(option);
+
+    var chartLocale = echarts.init(document.getElementById("stat_locale"), null, {renderer: 'canvas'});
+    chartLocale.setOption(option);
+
     var chartOnlineFollowersDaily = echarts.init(document.getElementById("stat_online_followers_daily"), null, {renderer: 'canvas'});
     chartOnlineFollowersDaily.setOption(option);
 
@@ -72,9 +163,16 @@
         loadOnlineFollowers(this.value, chartOnlineFollowersDaily);
     });
 
+    $('#btn_show_all_geo').click(function (ele) {
+        $('.card-geo .card-viewport').css('height', '100%');
+        $(this).detach();
+    });
+
     function showLoadingSpinners() {
         chartFollowers.showLoading(loading);
         chartFollowings.showLoading(loading);
+        chartCountry.showLoading(loading);
+        chartCity.showLoading(loading);
         chartOnlineFollowersDaily.showLoading(loading);
         chartOnlineFollowersHour.showLoading(loading);
         chartOnlineFollowersWeekday.showLoading(loading);
@@ -84,10 +182,27 @@
     function loadAudience() {
         showLoadingSpinners();
         loadFollows();
+        loadWorld();
         loadOnlineFollowers('daily', chartOnlineFollowersDaily);
         loadOnlineFollowers('aggregate_hour', chartOnlineFollowersHour);
         loadOnlineFollowers('aggregate_weekday', chartOnlineFollowersWeekday);
         loadOnlineFollowersHeat();
+    }
+
+    function loadWorld() {
+        $.get('/static/js/world.json', function (worldmap) {
+            echarts.registerMap('world', worldmap);
+            chartWorld.setOption({
+                grid: {
+                    top: 0,
+                    bottom: 0,
+                    left: 0,
+                    right: 0
+                }
+            });
+
+            loadAudienceStats();
+        });
     }
 
     function loadFollows(gran = 'daily') {
@@ -243,6 +358,323 @@
         });
     }
 
+    function loadAudienceStatType(chartObj, data, cardIdLabel) {
+
+        chartObj.hideLoading();
+        chartObj.setOption({
+            dataset: {
+                dimensions: data.dimensions,
+                source: data.data
+            },
+            grid: {
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0
+            },
+            tooltip: {
+                show: false
+            },
+            xAxis: [{
+                boundaryGap: false,
+                type: 'value',
+                show: false,
+                axisLabel: {
+                    show: false
+                }
+            }],
+            yAxis: [{
+                type: 'category',
+                inverse: true,
+                show: false,
+                axisLabel: {
+                    show: false
+                }
+            }],
+            series: [
+                {
+                    type: 'bar',
+                    color: chartColors[5],
+                    encode: {
+                        x: 'count',
+                        y: 'section'
+                    }
+                }
+            ]
+        });
+
+        $(cardIdLabel + ' .stat-last-seen').text(moment(data.seenAt * 1000).format('YYYY-MM-DD HH:mm'));
+
+        var countryList = $(cardIdLabel + ' .stat-labels');
+        var item = countryList.find('.stat-label-item').detach();
+        data.data.forEach(function (countryRec) {
+            var newItem = item.clone(false);
+            newItem.find('.stat-label-key').text(countryRec[0]);
+            newItem.find('.count').text(countryRec[1]);
+            var diffEle = newItem.find('.diff');
+            if (countryRec[2] < 0) {
+                diffEle.append('<span data-feather="arrow-down" class="red"></span>');
+                diffEle.append(Math.abs(countryRec[2]));
+            } else if (countryRec[2] > 0) {
+                diffEle.append('<span data-feather="arrow-up" class="green"></span>');
+                diffEle.append(countryRec[2]);
+            } else {
+                diffEle.append('<span data-feather="minus"></span>');
+            }
+            countryList.append(newItem);
+        });
+
+        feather.replace();
+
+        if ('#card-stat-country' === cardIdLabel) {
+            setWorldMapData(data);
+        } else if ('#card-stat-gender-age' === cardIdLabel) {
+            setGenderAgeData(data);
+        }
+    }
+
+    function sortByFirstCol(a, b) {
+        var aName = a[0];
+        var bName = b[0];
+        return ((aName < bName) ? -1 : ((aName > bName) ? 1 : 0));
+    }
+
+    function setGenderAgeData(data) {
+        var genderAgeDataMap = {
+            'M': [],
+            'F': [],
+            'U': []
+        };
+
+        var genderSplit = {
+            'M': 0,
+            'F': 0,
+            'U': 0
+        };
+
+        data.data.forEach(function (d) {
+            var nameStr = d[0].split('.');
+            d[0] = nameStr[1];
+            genderSplit[nameStr[0]] += d[1];
+            genderAgeDataMap[nameStr[0]].push(d);
+        });
+
+        var genderSplitData = [];
+        genderSplitData.push({
+            name: 'Male',
+            value: genderSplit.M,
+            itemStyle: {
+                color: chartColors[0]
+            }
+        });
+        genderSplitData.push({
+            name: 'Female',
+            value: genderSplit.F,
+            itemStyle: {
+                color: chartColors[4]
+            }
+        });
+        genderSplitData.push({
+            name: 'Unknown',
+            value: genderSplit.U,
+            itemStyle: {
+                color: chartColors[6]
+            }
+        });
+
+        genderAgeDataMap.M.sort(sortByFirstCol);
+        genderAgeDataMap.F.sort(sortByFirstCol);
+        genderAgeDataMap.U.sort(sortByFirstCol);
+
+        var splitSolutions = rangeSplit(data.data, [1], [false]);
+
+        var xAxis = $.extend({}, splitSolutions[0], {
+            show: true,
+            position: 'top',
+            type: 'value',
+            axisLine: {
+                show: false
+            },
+            axisTick: {
+                show: false
+            },
+            axisLabel: {
+                show: true
+            }
+        });
+
+        var yAxis = {
+            type: 'category',
+            axisLine: {
+                show: false
+            },
+            axisTick: {
+                show: false
+            },
+            axisLabel: {
+                color: '#eee',
+                align: 'center',
+                margin: 0
+            },
+            z: 10
+        };
+
+        chartGenderAge.setOption({
+            grid: [
+                {left: 0, top: 0, width: '40%', height: '100%'},
+                {left: '40%', top: 20, width: '30%', bottom: 0},
+                {left: '70%', top: 20, right: 10, bottom: 0}
+            ],
+            tooltip: {
+                show: true,
+                trigger: 'item',
+                formatter: function(params) {
+                    var html = params.seriesName + '<br/>';
+                    html += params.marker;
+                    html += 'Age ' + params.name + ': ' + params.data[1];
+
+                    return html;
+                }
+            },
+            xAxis: [
+                $.extend({}, xAxis,
+                {
+                    gridIndex: 1,
+                    inverse: true
+                }),
+                $.extend({}, xAxis,
+                {
+                    gridIndex: 2
+                })
+            ],
+            yAxis: [
+                $.extend({}, yAxis,
+                {
+                    gridIndex: 1
+                }),
+                $.extend({}, yAxis,
+                {
+                    gridIndex: 2,
+                    inverse: true
+                })
+            ],
+            series: [
+                {
+                    type: 'bar',
+                    name: "Male Followers",
+                    color: chartColors[0],
+                    dimensions: data.dimensions,
+                    data: genderAgeDataMap.M,
+                    xAxisIndex: 0,
+                    yAxisIndex: 0,
+                    encode: {
+                        x: 'count',
+                        y: 'section'
+                    }
+                },
+                {
+                    type: 'bar',
+                    name: "Female Followers",
+                    color: chartColors[4],
+                    dimensions: data.dimensions,
+                    data: genderAgeDataMap.F,
+                    xAxisIndex: 1,
+                    yAxisIndex: 1,
+                    encode: {
+                        x: 'count',
+                        y: 'section'
+                    }
+                },
+                {
+                    type: 'pie',
+                    name: 'Followers per Gender',
+                    data: genderSplitData,
+                    center: ['20%', '50%'],
+                    radius: ['50%', '80%'],
+                    minAngle: 5,
+                    startAngle: 60,
+                    label: {
+                        formatter: '{b}: {d}%'
+                    },
+                    tooltip: {
+                        formatter: function(params) {
+                            var html = params.marker;
+
+                            html += params.name + ': ';
+                            html += params.value;
+                            html += ' (' + params.percent + '%)';
+
+                            return html;
+                        }
+                    }
+                }
+            ]
+        });
+
+    }
+
+    function getValueOfAgeLabel(label) {
+        return parseInt(label.split('-')[0]);
+    }
+
+    function setWorldMapData(data) {
+
+        var mapData = [];
+
+        data.data.forEach(function(d) {
+            var mapItem = {
+                name: d[0],
+                value: d[1]
+            };
+
+            if (mapItem.name === 'United States') {
+                mapItem.name = 'United States of America';
+            }
+
+            mapData.push(mapItem);
+        });
+
+        chartWorld.setOption({
+            tooltip: {
+                trigger: 'item'
+            },
+            visualMap: {
+                left: 'left',
+                min: 0,
+                max: 300,
+                inRange: {
+                    color: ['#d5e7f4', '#3d92d4']
+                },
+                text:['High','Low'],           // 文本，默认为数值文本
+                calculable: true
+            },
+            series: [{
+                name: 'Followers',
+                type: 'map',
+                map: 'world',
+                data: mapData,
+                emphasis: {
+                    label: {
+                        color: '#444'
+                    }
+                },
+                aspectScale: 0.88,
+                left: 5,
+                right: 5
+            }]
+        });
+    }
+
+    function loadAudienceStats() {
+        var audienceUrl = '/api/profiles/1/stats/ig/audiences?types=country,city,locale,gender_age';
+        $.getJSON(audienceUrl, function(data) {
+            loadAudienceStatType(chartCountry, data.country, '#card-stat-country');
+            loadAudienceStatType(chartCity, data.city, '#card-stat-city');
+            loadAudienceStatType(chartLocale, data.locale, '#card-stat-locale');
+            loadAudienceStatType(chartGenderAge, data.gender_age, '#card-stat-gender-age');
+        });
+    }
+
     function loadOnlineFollowersHeat() {
         var onlineFollowersUrl = '/api/profiles/1/stats/ig/online-followers?granularity=aggregate_hour_weekday';
         $.getJSON(onlineFollowersUrl, function(data) {
@@ -348,13 +780,14 @@
         if ('hourly' === granularity) {
             startTime = moment().subtract(7, 'day');
         } else {
-            startTime = moment().subtract(21, 'day').startOf('day');
+            startTime = moment().subtract(28, 'day').startOf('day');
         }
 
         var since = encodeURIComponent(startTime.format(ISO_DATE_FORMAT));
 
         var onlineFollowersUrl = '/api/profiles/1/stats/ig/online-followers?granularity=' + granularity + '&since=' + since + '&until=' + until;
         $.getJSON(onlineFollowersUrl, function(data) {
+            populateDateForEmptyDates(data, granularity, startTime.valueOf(), moment().valueOf());
 
             var splitSolutions = rangeSplit(data.data, [2, 3], [false, true]);
 
@@ -382,10 +815,10 @@
                 },
                 xAxis: [{
                     axisLabel: {
-                        interval: 'hourly' === granularity ? 11 : 0,
+                        interval: 'hourly' === granularity ? 11 : 6,
                         formatter: function (value, index) {
                             if ('daily' === granularity) {
-                                return moment(value).format('MM-DD');
+                                return moment(value).format('MM/DD');
                             } else if ('hourly' === granularity) {
                                 return moment(value).format('HH:mm');
                             } else if ('aggregate_weekday' === granularity) {

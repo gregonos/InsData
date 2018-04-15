@@ -10,7 +10,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.MappedSuperclass;
-import javax.persistence.Transient;
 
 @MappedSuperclass
 public abstract class IgStatBase implements IgStat {
@@ -37,9 +36,6 @@ public abstract class IgStatBase implements IgStat {
     public void setIgProfile(IgProfile igProfile) {
         this.igProfile = igProfile;
     }
-
-    @Transient
-    public abstract OffsetDateTime getIndicativeDate();
 
     public static void calcHourly(ZoneId zoneId, IgStatHourly hourly, OffsetDateTime time) {
         ZonedDateTime userTime = time.atZoneSameInstant(zoneId);

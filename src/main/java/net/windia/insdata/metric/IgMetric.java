@@ -1,6 +1,7 @@
 package net.windia.insdata.metric;
 
 import net.windia.insdata.exception.UnsupportedGranularityException;
+import net.windia.insdata.model.internal.IgMedia;
 import net.windia.insdata.model.internal.IgMediaDiff;
 import net.windia.insdata.model.internal.IgProfileDiff;
 import net.windia.insdata.model.internal.IgProfileSnapshot;
@@ -17,6 +18,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static net.windia.insdata.metric.IgDataSource.DIFF;
+import static net.windia.insdata.metric.IgDataSource.POSTS;
 import static net.windia.insdata.metric.IgDataSource.POST_DIFF;
 import static net.windia.insdata.metric.IgDataSource.SNAPSHOT;
 import static net.windia.insdata.metric.StatGranularity.DAILY;
@@ -128,13 +130,13 @@ public class IgMetric<S extends IgStat, I, V> {
 
         allMetricsMap.put("ENGAGEMENTS_PER_K_FOLLOWERS",
                 new IgMetric<>("ENGAGEMENTS_PER_K_FOLLOWERS", new IgDataSource[] {POST_DIFF, SNAPSHOT},
-                        IgMetricCalculators.biSourceAggregator((IgMediaDiff diff, IgProfileSnapshot snapshot) ->
+                        IgMetricCalculators.biSourceLeftDoubleAggregator((IgMediaDiff diff, IgProfileSnapshot snapshot) ->
                                 null == snapshot || 0 == snapshot.getFollowers() ? 0D : diff.getEngagementSum().doubleValue() / snapshot.getFollowers() * 1000
                         )));
 
         allMetricsMap.put("ENGAGEMENTS_PER_K_REACH",
                 new IgMetric<>("ENGAGEMENTS_PER_K_REACH", new IgDataSource[] {POST_DIFF, DIFF},
-                        IgMetricCalculators.biSourceAggregator((IgMediaDiff m, IgProfileDiff p) ->
+                        IgMetricCalculators.biSourceLeftDoubleAggregator((IgMediaDiff m, IgProfileDiff p) ->
                                 null == p || 0 == p.getReach() ? 0D : m.getEngagement().doubleValue() / p.getReach() * 1000
                         )));
 
@@ -159,6 +161,16 @@ public class IgMetric<S extends IgStat, I, V> {
                         (IgMediaDiff diff) -> Duration.between(diff.getMedia().getCreatedAt(), diff.getCapturedAt()).getSeconds() >= 3600 * 8,
                         IgMediaDiff::getEngagementSum)
         ));
+
+        allMetricsMap.put("POSTS_ADD", new IgMetric<>("POSTS_ADD", POSTS,
+                IgMetricCalculators.simpleAggregator((IgMedia media) -> 1, 1)));
+
+        allMetricsMap.put("POSTS", new IgMetric<>("POSTS", SNAPSHOT,
+                IgMetricCalculators.simpleCalculator(IgProfileSnapshot::getMediaCount)));
+
+        allMetricsMap.put("POSTS_DEL", new IgMetric<>("POSTS_DEL", new IgDataSource[]{DIFF, POSTS},
+                IgMetricCalculators.biSourceRightIntAggregator(
+                        (IgProfileDiff diff, Integer postsAdd) -> diff.getMediaCount() - (null == postsAdd ? 0 : postsAdd))));
 
     }
 //

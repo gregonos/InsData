@@ -33,11 +33,15 @@ public class DateTimeUtils {
     }
 
     public static ZonedDateTime dateTimeOfFacebookServer(OffsetDateTime time, StatGranularity gran) {
+        return dateTimeOfFacebookServer(time, gran, 0);
+    }
+
+    public static ZonedDateTime dateTimeOfFacebookServer(OffsetDateTime time, StatGranularity gran, Integer shift) {
         ZonedDateTime zoned = time.atZoneSameInstant(facebookServerZoneId);
         if (StatGranularity.DAILY == gran) {
-            return zoned.truncatedTo(ChronoUnit.DAYS);
+            return zoned.truncatedTo(ChronoUnit.DAYS).plus(shift, ChronoUnit.DAYS);
         } else {
-            return zoned.truncatedTo(ChronoUnit.HOURS);
+            return zoned.truncatedTo(ChronoUnit.HOURS).plus(shift, ChronoUnit.HOURS);
         }
     }
 

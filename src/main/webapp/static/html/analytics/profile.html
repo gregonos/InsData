@@ -16,11 +16,14 @@
         <div class="switch-wrapper">
             <span class="col-form-label">Split by</span>
             <div class="btn-group btn-group-sm btn-group-toggle switch eng-split-switch" data-toggle="buttons">
-                <label class="btn btn-light active" title="Post Type">
-                    <input type="radio" name="engagement-split" data-gran="profile" value="post" autocomplete="off" checked/> <span data-feather="image"></span>
+                <label class="btn btn-light" title="None">
+                    <input type="radio" name="engagement-split" value="none" autocomplete="off"/> <span data-feather="slash"></span>
+                </label>
+                <label class="btn btn-light active" title="Post Age">
+                    <input type="radio" name="engagement-split" value="age" autocomplete="off" checked/> <span data-feather="clock"></span>
                 </label>
                 <label class="btn btn-light" title="Engagement Type">
-                    <input type="radio" name="engagement-split" data-gran="profile" value="engagement" autocomplete="off"/> <span data-feather="thumbs-up"></span>
+                    <input type="radio" name="engagement-split" value="engagement" autocomplete="off"/> <span data-feather="thumbs-up"></span>
                 </label>
             </div>
         </div>
@@ -45,6 +48,17 @@
 <div class="card">
     <div class="card-header">
         <h3>Coverage</h3>
+        <div class="switch-wrapper">
+            <span class="col-form-label">Split by</span>
+            <div class="btn-group btn-group-sm btn-group-toggle switch cov-split-switch" data-toggle="buttons">
+                <label class="btn btn-light" title="None">
+                    <input type="radio" name="coverage-split" value="none" autocomplete="off"/> <span data-feather="slash"></span>
+                </label>
+                <label class="btn btn-light active" title="Post Age">
+                    <input type="radio" name="coverage-split" value="age" autocomplete="off" checked/> <span data-feather="clock"></span>
+                </label>
+            </div>
+        </div>
     </div>
     <div id="stat_coverage" class="chartWrapper card-body"></div>
 </div>
@@ -63,12 +77,20 @@
     chartEngagement.setOption(option);
 
     $('.gran-switch input[type=radio]').change(function (ele) {
-        loadProfileChart(this.value);
+        showLoadingSpinners();
         loadEngagement(this.value);
+        loadProfileChart(this.value);
+        loadCoverage(this.value);
     });
 
     $('.eng-split-switch input[type=radio]').change(function () {
+        chartEngagement.showLoading(loading);
         loadEngagement($('.gran-switch input:radio:checked').val(), this.value);
+    });
+
+    $('.cov-split-switch input[type=radio]').change(function () {
+        chartCoverage.showLoading(loading);
+        loadCoverage($('.gran-switch input:radio:checked').val(), this.value);
     });
 
     function showLoadingSpinners() {
@@ -82,6 +104,7 @@
         showLoadingSpinners();
         loadEngagement();
         loadProfileChart();
+        loadCoverage();
     }
 
     function loadProfileChart(gran = 'daily') {
@@ -94,103 +117,17 @@
         }
         var start = encodeURIComponent(startTime.format(ISO_DATE_FORMAT));
 
-        // 0 - impressions
-        // 1 - impressions_post_new
-        // 2 - impressions_post_existing
-        // 3 - reach
-        // 4 - profile_views
-        // 5 - impressions_per_reach
-        // 6 - impressions_per_k_followers
+        // 0 - profile_views
+        // 1 - impressions_per_k_followers
 
         var followingsCoverageUrl =
-                '/api/profiles/1/stats/ig?metrics=impressions,impressions_post_new,impressions_post_existing,reach,profile_views,impressions_per_reach,impressions_per_k_followers' +
+                '/api/profiles/1/stats/ig?metrics=profile_views,impressions_per_k_followers' +
                 '&granularity=' + gran + '&since=' + start + '&until=' + until;
         $.getJSON(followingsCoverageUrl, function(data) {
 
             var splitSolutions;
 
-            splitSolutions = rangeSplit(data.data, [1, 6], [false, false]);
-
-            chartCoverage.hideLoading();
-            chartCoverage.setOption({
-                dataset: {
-                    dimensions: data.dimensions,
-                    source: data.data
-                },
-                grid: {
-                    top: 24
-                },
-                tooltip: {
-                    formatter: function(params) {
-                        var html = moment(params[0].axisValue).format('YYYY/MM/DD HH:mm');
-
-                        html += '<br/>' + params[0].marker + ' ' + params[0].seriesName + ': ' + params[0].data[2];
-                        html += '<br/>' + params[1].marker + ' ' + params[1].seriesName + ': ' + params[1].data[3];
-                        html += '<br/>' + params[2].marker + ' ' + params[2].seriesName + ': ' + params[2].data[4];
-                        html += '<br/>' + params[3].marker + ' ' + params[3].seriesName + ': ' + (Math.round(params[3].data[6] * 100) / 100);
-
-
-                        return html;
-                    }
-                },
-                legend: {
-                    show: true,
-                    top: -5
-                },
-                xAxis: [{
-                    axisLabel: {
-                        interval: 'daily' == gran ? 6 : 11,
-                        formatter: function (value, index) {
-                            return moment(value).format('daily' == gran ? 'MM/DD' : 'MM/DD HH:mm');
-                        }
-                    },
-                    axisPointer: {
-                        type: 'shadow'
-                    }
-                }],
-                yAxis: [
-                    splitSolutions[0],
-                    splitSolutions[1]
-                ],
-                series: [
-                    $.extend({}, seriesBarBase, {
-                        name: 'Impressions Existing Post',
-                        barWidth: 'auto',
-                        stack: 'impressions',
-                        encode: {
-                            y: 'impressions_post_existing'
-                        }
-                    }),
-                    $.extend({}, seriesBarBase, {
-                        color: chartColors[3],
-                        name: 'Impressions New Post',
-                        barWidth: 'auto',
-                        stack: 'impressions',
-                        encode: {
-                            y: 'impressions_post_new'
-                        }
-                    }),
-                    $.extend({}, seriesBarBase, {
-                        color: chartColors[1],
-                        name: 'Accounts Reached',
-                        barWidth: 'auto',
-                        encode: {
-                            y: 'reach'
-                        }
-                    }),
-                    $.extend({}, seriesLineBase, {
-                        color: chartColors[2],
-                        name: 'Impressions per Reach',
-                        smooth: true,
-                        yAxisIndex: 1,
-                        encode: {
-                            y: 'impressions_per_reach'
-                        }
-                    })
-                ]
-            });
-
-            splitSolutions = rangeSplit(data.data, [7], [false]);
+            splitSolutions = rangeSplit(data.data, [2], [false]);
 
             chartPopularity.hideLoading();
             chartPopularity.setOption({
@@ -201,7 +138,7 @@
                 tooltip: {
                     formatter: function(params) {
                         var html = moment(params[0].axisValue).format('YYYY/MM/DD HH:mm');
-                        html += '<br/>' + params[0].marker + ' ' + params[0].seriesName + ': ' + (Math.round(params[0].data[7] * 100) / 100);
+                        html += '<br/>' + params[0].marker + ' ' + params[0].seriesName + ': ' + (Math.round(params[0].data[2] * 100) / 100);
                         return html;
                     }
                 },
@@ -227,7 +164,7 @@
                 ]
             });
 
-            splitSolutions = rangeSplit(data.data, [5], [false]);
+            splitSolutions = rangeSplit(data.data, [1], [false]);
 
             chartProfileViews.hideLoading();
             chartProfileViews.setOption({
@@ -259,8 +196,171 @@
         });
     }
 
+    var coverageSettings = {
+        "none": {
+            metrics: '',
+            legends: ['Impressions', 'Accounts Reached', 'Impressions per Reach'],
+            series: [
+                $.extend({}, seriesBarBase, {
+                    name: 'Impressions',
+                    barWidth: 'auto',
+                    encode: {
+                        y: 'impressions'
+                    }
+                })
+            ],
+            tooltipFormatter: function(html, params) {
+                html += '<br/>' + params[0].marker + ' ' + params[0].seriesName + ': ' + params[0].data[1];
+                html += '<br/>' + params[1].marker + ' ' + params[1].seriesName + ': ' + params[1].data[2];
+                html += '<br/>' + params[2].marker + ' ' + params[2].seriesName + ': ' + (Math.round(params[2].data[3] * 100) / 100);
+                return html;
+            }
+        },
+        "age": {
+            metrics: 'impressions_post_new,impressions_post_existing',
+            legends: ['Impressions New Post', 'Impressions Existing Post', 'Accounts Reached', 'Impressions per Reach'],
+            series: [
+                $.extend({}, seriesBarBase, {
+                    name: 'Impressions New Post',
+                    color: chartColors[3],
+                    barWidth: 'auto',
+                    stack: 'impressions',
+                    encode: {
+                        y: 'impressions_post_new'
+                    }
+                }),
+                $.extend({}, seriesBarBase, {
+                    name: 'Impressions Existing Post',
+                    barWidth: 'auto',
+                    stack: 'impressions',
+                    encode: {
+                        y: 'impressions_post_existing'
+                    }
+                })
+            ],
+            tooltipFormatter: function(html, params) {
+                html += '<br/>' + params[0].marker + ' ' + params[0].seriesName + ': ' + params[0].data[4];
+                html += '<br/>' + params[1].marker + ' ' + params[1].seriesName + ': ' + params[1].data[5];
+                html += '<br/>' + params[2].marker + ' ' + params[2].seriesName + ': ' + params[2].data[2];
+                html += '<br/>' + params[3].marker + ' ' + params[3].seriesName + ': ' + (Math.round(params[3].data[3] * 100) / 100);
+
+                return html;
+            }
+        }
+    };
+
+    function loadCoverage(gran = 'daily', split = 'age') {
+        var until = encodeURIComponent(moment().format(ISO_DATE_FORMAT));
+        var startTime;
+        if ('daily' == gran) {
+            startTime = moment().subtract(30, 'day').startOf('day');
+        } else {
+            startTime = moment().subtract(3, 'day');
+        }
+        var start = encodeURIComponent(startTime.format(ISO_DATE_FORMAT));
+
+        // 0 - impressions
+        // 1 - reach
+        // 2 - impressions_per_reach
+        // 3 - impressions_post_new
+        // 4 - impressions_post_existing
+
+        var series = [
+            $.extend({}, seriesBarBase, {
+                color: chartColors[1],
+                name: 'Accounts Reached',
+                barWidth: 'auto',
+                encode: {
+                    y: 'reach'
+                }
+            }),
+            $.extend({}, seriesLineBase, {
+                color: chartColors[2],
+                name: 'Impressions per Reach',
+                smooth: true,
+                yAxisIndex: 1,
+                encode: {
+                    y: 'impressions_per_reach'
+                }
+            })
+        ];
+
+        coverageSettings[split].series.forEach(function(seriesSetting) {
+            series.splice(0, 0, seriesSetting);
+        });
+
+        var followingsCoverageUrl =
+                '/api/profiles/1/stats/ig?metrics=impressions,reach,impressions_per_reach,' + coverageSettings[split].metrics +
+                '&granularity=' + gran + '&since=' + start + '&until=' + until;
+        $.getJSON(followingsCoverageUrl, function(data) {
+
+            var splitSolutions;
+
+            splitSolutions = rangeSplit(data.data, [1, 3], [false, false]);
+
+            chartCoverage.hideLoading();
+            chartCoverage.setOption(option, true);
+            chartCoverage.setOption({
+                dataset: {
+                    dimensions: data.dimensions,
+                    source: data.data
+                },
+                grid: {
+                    top: 24
+                },
+                tooltip: {
+                    formatter: function(params) {
+                        var html = moment(params[0].axisValue).format('YYYY/MM/DD HH:mm');
+
+                        html += coverageSettings[split].tooltipFormatter(html, params);
+
+                        return html;
+                    }
+                },
+                legend: {
+                    show: true,
+                    top: -5,
+                    data: coverageSettings[split].legends
+                },
+                xAxis: [{
+                    axisLabel: {
+                        interval: 'daily' == gran ? 6 : 11,
+                        formatter: function (value) {
+                            return moment(value).format('daily' == gran ? 'MM/DD' : 'MM/DD HH:mm');
+                        }
+                    },
+                    axisPointer: {
+                        type: 'shadow'
+                    }
+                }],
+                yAxis: [
+                    splitSolutions[0],
+                    splitSolutions[1]
+                ],
+                series: series
+            });
+        });
+    }
+
     var engagementSettings = {
-        "post": {
+        "none": {
+            metrics: '',
+            legends: ['Engagements', 'Engagements per K Followers', 'Engagements per K Reach'],
+            series: [
+                $.extend({}, seriesBarBase, {
+                    name: 'Engagements',
+                    barWidth: 'auto',
+                    encode: {
+                        y: 'engagements'
+                    }
+                })
+            ],
+            tooltipFormatter: function(html, params) {
+                html += '<br/>' + params[2].marker + ' ' + params[2].seriesName + ': ' + params[2].data[1];
+                return html;
+            }
+        },
+        "age": {
             metrics: 'engagements_post_new,engagements_post_existing',
             legends: ['Engagements New Post', 'Engagements Existing Post', 'Engagements per K Followers', 'Engagements per K Reach'],
             series: [
@@ -281,7 +381,13 @@
                         y: 'engagements_post_new'
                     }
                 })
-            ]
+            ],
+            tooltipFormatter: function(html, params) {
+                html += '<br/>' + params[3].marker + ' ' + params[3].seriesName + ': ' + params[3].data[4];
+                html += '<br/>' + params[2].marker + ' ' + params[2].seriesName + ': ' + params[2].data[5];
+
+                return html;
+            }
         },
         "engagement": {
             metrics: 'likes,comments,saves,video_views',
@@ -321,11 +427,19 @@
                         y: 'video_views'
                     }
                 })
-            ]
+            ],
+            tooltipFormatter: function(html, params) {
+                html += '<br/>' + params[2].marker + ' ' + params[2].seriesName + ': ' + params[2].data[4];
+                html += '<br/>' + params[3].marker + ' ' + params[3].seriesName + ': ' + params[3].data[5];
+                html += '<br/>' + params[4].marker + ' ' + params[4].seriesName + ': ' + params[4].data[6];
+                html += '<br/>' + params[5].marker + ' ' + params[5].seriesName + ': ' + params[5].data[7];
+
+                return html;
+            }
         }
     };
 
-    function loadEngagement(gran = 'daily', split = 'post') {
+    function loadEngagement(gran = 'daily', split = 'age') {
         var until = encodeURIComponent(moment().format(ISO_DATE_FORMAT));
         var startTime;
         if ('daily' == gran) {
@@ -375,7 +489,7 @@
                 '&granularity=' + gran + '&since=' + since + '&until=' + until;
         $.getJSON(followingsEngUrl, function(data) {
 
-            populateDateForEmptyDates(data, gran, startTime.valueOf(), until);
+            populateDateForEmptyDates(data, gran, startTime.valueOf(), moment().valueOf());
 
             var splitSolutions;
 
@@ -395,15 +509,7 @@
                     formatter: function(params) {
                         var html = moment(params[0].axisValue).format('YYYY/MM/DD HH:mm');
 
-                        if ('post' === split) {
-                            html += '<br/>' + params[3].marker + ' ' + params[3].seriesName + ': ' + params[3].data[4];
-                            html += '<br/>' + params[2].marker + ' ' + params[2].seriesName + ': ' + params[2].data[5];
-                        } else {
-                            html += '<br/>' + params[2].marker + ' ' + params[2].seriesName + ': ' + params[2].data[4];
-                            html += '<br/>' + params[3].marker + ' ' + params[3].seriesName + ': ' + params[3].data[5];
-                            html += '<br/>' + params[4].marker + ' ' + params[4].seriesName + ': ' + params[4].data[6];
-                            html += '<br/>' + params[5].marker + ' ' + params[5].seriesName + ': ' + params[5].data[7];
-                        }
+                        html += engagementSettings[split].tooltipFormatter(html, params);
                         html += '<br/>' + params[0].marker + ' ' + params[0].seriesName + ': ' + (Math.round(params[0].data[2] * 100) / 100);
                         html += '<br/>' + params[1].marker + ' ' + params[1].seriesName + ': ' + (Math.round(params[1].data[3] * 100) / 100);
 

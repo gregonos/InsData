@@ -4,11 +4,14 @@ import lombok.extern.slf4j.Slf4j;
 import net.windia.insdata.constants.InsDataConstants;
 import net.windia.insdata.exception.UnsupportedGranularityException;
 import net.windia.insdata.exception.UnsupportedMetricException;
+import net.windia.insdata.metric.IgAudienceStatType;
 import net.windia.insdata.metric.IgDataSource;
 import net.windia.insdata.metric.IgMetric;
 import net.windia.insdata.metric.IgOnlineFollowersGranularity;
 import net.windia.insdata.metric.StatGranularity;
+import net.windia.insdata.model.assembler.IgProfileAudienceDTOAssembler;
 import net.windia.insdata.model.assembler.IgProfileStatsDTOAssembler;
+import net.windia.insdata.model.dto.IgProfileAudienceStatsDTO;
 import net.windia.insdata.model.dto.IgProfileStatsDTO;
 import net.windia.insdata.model.internal.IgOnlineFollowers;
 import net.windia.insdata.model.internal.IgProfile;
@@ -34,6 +37,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -49,6 +53,9 @@ public class StatController {
 
     @Autowired
     private IgProfileStatsDTOAssembler igProfileStatsAssembler;
+
+    @Autowired
+    private IgProfileAudienceDTOAssembler igProfileAudienceAssembler;
 
     @Autowired
     private IgProfileService igProfileService;
@@ -132,5 +139,22 @@ public class StatController {
         IgProfile profile = igProfileService.getIgProfile(profileId);
 
         return igProfileStatsAssembler.assemble(profile, granInstance, onlineFollowers);
+    }
+
+    @RequestMapping(value = "/{profileId}/stats/ig/audiences", method = RequestMethod.GET)
+    public Map<String, IgProfileAudienceStatsDTO> getIgProfileAudience(@PathVariable("profileId") Long profileId,
+                                                                       @RequestParam("types") String types) {
+        String[] typesStr = types.split(",");
+        List<IgAudienceStatType> typesList = new ArrayList<>(typesStr.length);
+        for (String s : typesStr) {
+            typesList.add(Enum.valueOf(IgAudienceStatType.class, s.toUpperCase()));
+        }
+
+        IgProfile profile = igProfileService.getIgProfile(profileId);
+
+        return typesList.stream().collect(
+                Collectors.toMap(
+                        type -> type.name().toLowerCase(),
+                        type -> igProfileAudienceAssembler.assemble(profile, type, igProfileDataService.getAudiences(profile, type))));
     }
 }

@@ -131,13 +131,13 @@ h2 {
 /*
  * Charts
  */
+#mainContainer>.row {
+  padding: 0 0 0 15px;
+}
 
 #mainContainer .row>div {
   padding-left: 0;
-}
-
-#mainContainer .row>div:first-child {
-  padding-left: 15px;
+  padding-right: 15px;
 }
 
 #mainContainer .card {
@@ -159,12 +159,35 @@ h2 {
   justify-content: space-between;
 }
 
+#mainContainer .card-header span {
+  font-size: 12px;
+  color: #666;
+}
+
 #mainContainer .card-body {
   padding: 0 20px 15px;
 }
 
-.statCard .row {
-  padding: 0 15px;
+#mainContainer .card-body .row {
+  margin-right: 5px;
+}
+
+#mainContainer .card-body .row>div {
+  padding: 0;
+}
+
+#mainContainer .card-body .row .card-header, #mainContainer .card-body .row .card-body {
+  padding-right: 0;
+}
+
+.card-long-list .card-viewport {
+  height: 220px;
+  overflow: hidden;
+  position: relative;
+}
+
+.chartWrapper, .stat-labels {
+  overflow: hidden;
 }
 
 h3 {
@@ -179,6 +202,18 @@ h3 {
   height: 220px;
 }
 
+.chartWrapper-high {
+  height: 990px;
+}
+
+.chartWorld {
+  height: 420px;
+}
+
+.chartWrapper-gender-age {
+  height: 400px;
+}
+
 .switch-wrapper .col-form-label {
   font-size: 0.8rem;
   margin-right: 0.38rem;
@@ -190,8 +225,39 @@ h3 {
   color: white !important;
 }
 
+.stat-labels {
+  position: absolute;
+  width: 100%;
+  top: 2px;
+  left: 8px;
+}
+
+.stat-label-item {
+  font-size: 12px;
+  height: 22px;
+}
+
+.stat-label-value span {
+  display: inline-block;
+  text-align: right;
+  margin-left: 0.5rem;
+}
+
+.stat-label-value span.diff {
+  width: 30px;
+  text-align: left;
+}
+
 #stat_online_followers_heat {
   height: 280px;
+}
+
+.red {
+  color: #c00000;
+}
+
+.green {
+  color: #20c020;
 }
 
 .color1 {
@@ -212,7 +278,10 @@ h3 {
 
 .color5 {
   color: #f28595;
-  /*f28595*/
+}
+
+.color6 {
+  color: #c2def2;
 }
 
 .color-spinner {

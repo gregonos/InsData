@@ -6,7 +6,7 @@ var SPLITS = 6;
 
 var WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-var chartColors = ['#3d92d4', '#ffc107', '#48c0d4', '#45aef9', '#f28595'];
+var chartColors = ['#3d92d4', '#ffc107', '#48c0d4', '#45aef9', '#f28595', '#c2def2', '#aaaaaa'];
 
 var loading = {
     text: '',
@@ -159,7 +159,7 @@ function rangeSplit(data, indexes, scale = [true, true]) {
             }
 
             if (row[minIndex] != null && row[minIndex] < result.min) {
-                result.min = scale[indexId] ? row[minIndex] : 0;
+                result.min = scale[indexId] || row[minIndex] < 0 ? row[minIndex] : 0;
             }
 
             if (row[maxIndex] != null && row[maxIndex] > result.max) {
@@ -322,18 +322,19 @@ function populateDateForEmptyDates(data, gran, since, until) {
     if ('daily' === gran) {
         gap = 86400000;
     }
+    earliest = Math.ceil(earliest / gap) * gap;
+    var countDim = data.dimensions.length;
     if (data.data.length > 0) {
-        var countDim = data.dimensions.length;
         earliest = data.data[0][0];
 
-        while (earliest - since > gap) {
-            earliest -= gap;
-            var filler = [earliest];
-            for (var i = 1; i < countDim; i++) {
-                filler.push(null);
-            }
-            data.data.splice(0, 0, filler);
+    }
+    while (earliest - since > gap) {
+        earliest -= gap;
+        var filler = [earliest];
+        for (var i = 1; i < countDim; i++) {
+            filler.push(null);
         }
+        data.data.splice(0, 0, filler);
     }
     return data;
 }

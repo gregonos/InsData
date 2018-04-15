@@ -9,6 +9,7 @@ public enum IgDataSource {
     POST_SNAPSHOT("PostSnapshots"),
     POST_DIFF("PostDiffs"),
     POST_DIFF_BY_DATE("PostDiffsByDate"),
+    POSTS("Posts"),
     ;
 
     private String name;
