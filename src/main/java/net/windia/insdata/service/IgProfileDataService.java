@@ -92,8 +92,14 @@ public class IgProfileDataService {
     }
 
     public List<IgMedia> getPosts(Long igProfileId, StatGranularity granularity, OffsetDateTime since, OffsetDateTime until) {
-        return mediaRepo.findIdByIgProfileIdAndCreatedAtBetween(igProfileId,
-                since.minus(1, DAILY == granularity ? ChronoUnit.DAYS: ChronoUnit.HOURS), until);
+        List<IgMedia> igMedias = mediaRepo.findIdByIgProfileIdAndCreatedAtBetween(igProfileId,
+                since.minus(1, DAILY == granularity ? ChronoUnit.DAYS : ChronoUnit.HOURS), until);
+
+        if (HOURLY == granularity) {
+            igMedias.forEach(igMedia -> igMedia.setGranularity(HOURLY));
+        }
+
+        return igMedias;
     }
 
     public List<IgProfileAudienceDaily> getAudiences(IgProfile igProfile, IgAudienceStatType type) {

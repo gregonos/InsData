@@ -51,6 +51,11 @@ public abstract class IgProfileStatImpl extends IgStatBase implements IgProfileS
         this.capturedAt = capturedAt;
     }
 
+    @Override
+    public OffsetDateTime getIndicativeDate() {
+        return getCapturedAt();
+    }
+
     public Integer getMediaCount() {
         return mediaCount;
     }

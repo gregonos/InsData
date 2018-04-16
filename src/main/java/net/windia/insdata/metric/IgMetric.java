@@ -3,8 +3,10 @@ package net.windia.insdata.metric;
 import net.windia.insdata.exception.UnsupportedGranularityException;
 import net.windia.insdata.model.internal.IgMedia;
 import net.windia.insdata.model.internal.IgMediaDiff;
+import net.windia.insdata.model.internal.IgMediaDiffHourly;
 import net.windia.insdata.model.internal.IgProfileDiff;
 import net.windia.insdata.model.internal.IgProfileSnapshot;
+import net.windia.insdata.model.internal.IgProfileSnapshotHourly;
 import net.windia.insdata.model.internal.IgStat;
 
 import java.time.Duration;
@@ -20,9 +22,12 @@ import java.util.Set;
 import static net.windia.insdata.metric.IgDataSource.DIFF;
 import static net.windia.insdata.metric.IgDataSource.POSTS;
 import static net.windia.insdata.metric.IgDataSource.POST_DIFF;
+import static net.windia.insdata.metric.IgDataSource.POST_DIFF_HOURLY;
 import static net.windia.insdata.metric.IgDataSource.SNAPSHOT;
+import static net.windia.insdata.metric.IgDataSource.SNAPSHOT_HOURLY;
 import static net.windia.insdata.metric.StatGranularity.DAILY;
 import static net.windia.insdata.metric.StatGranularity.HOURLY;
+import static net.windia.insdata.metric.StatGranularity.POST;
 
 public class IgMetric<S extends IgStat, I, V> {
 
@@ -172,16 +177,20 @@ public class IgMetric<S extends IgStat, I, V> {
                 IgMetricCalculators.biSourceRightIntAggregator(
                         (IgProfileDiff diff, Integer postsAdd) -> diff.getMediaCount() - (null == postsAdd ? 0 : postsAdd))));
 
-    }
-//
-//    protected <SSS extends IgStat, I, V> void initForSameHourlyAndDaily(IgDataSource source, IgMetricCalculator<SSS, I, V> calculator) {
-//        this.variantsMap.put(HOURLY, new IgMetricVariant<>(source, calculator));
-//        this.variantsMap.put(DAILY, this.variantsMap.get(HOURLY));
-//    }
+        allMetricsMap.put("POST_ENGAGEMENTS_PER_K_FOLLOWERS",
+                new IgMetric<>("POST_ENGAGEMENTS_PER_K_FOLLOWERS", new IgDataSource[] {POST_DIFF_HOURLY, SNAPSHOT_HOURLY}, POST,
+                IgMetricCalculators.biSourceConditionalLeftDoubleAggregator(
+                        // extractor
+                        (IgMediaDiffHourly diff, IgProfileSnapshotHourly snapshot) ->
+                                null == snapshot || 0 == snapshot.getFollowers() ? 0D : diff.getEngagementSum().doubleValue() / snapshot.getFollowers() * 1000,
+                        // classifier
+                        diff -> diff.getMedia().getId(),
+                        // filter
+                        diff -> true
+                )
+        ));
 
-//    protected Map<StatGranularity, IgMetricVariant<? extends IgStat, ?, ?>> getVariantsMap() {
-//        return variantsMap;
-//    }
+    }
 
     private String name;
     private Map<StatGranularity, IgMetricVariant<S, I, V>> variantsMap = new EnumMap<>(StatGranularity.class);
@@ -190,13 +199,6 @@ public class IgMetric<S extends IgStat, I, V> {
         this.name = name;
         this.variantsMap.put(HOURLY, new IgMetricVariant<>(source, calculator));
         this.variantsMap.put(DAILY, this.variantsMap.get(HOURLY));
-    }
-
-    private IgMetric(String name, IgDataSource source,
-                     IgMetricCalculator<S, I, V> dailyCalculator, IgMetricCalculator<S, I, V> hourlyCalculator) {
-
-        this(name, source, hourlyCalculator);
-        this.variantsMap.put(DAILY, new IgMetricVariant<>(source, dailyCalculator));
     }
 
     private IgMetric(String name, IgDataSource[] dataSources,
@@ -211,6 +213,19 @@ public class IgMetric<S extends IgStat, I, V> {
         this.name = name;
         this.variantsMap.put(HOURLY, new IgMetricVariant<>(dataSources, hourlyCalculator));
         this.variantsMap.put(DAILY, new IgMetricVariant<>(dataSources, dailyCalculator));
+    }
+
+    private IgMetric(String name, IgDataSource[] dataSources, StatGranularity gran,
+                     IgMetricCalculator<S, I, V> calculator) {
+        this.name = name;
+        this.variantsMap.put(gran, new IgMetricVariant<>(dataSources, calculator));
+    }
+
+    private IgMetric(String name, IgDataSource source,
+                     IgMetricCalculator<S, I, V> dailyCalculator, IgMetricCalculator<S, I, V> hourlyCalculator) {
+
+        this(name, source, hourlyCalculator);
+        this.variantsMap.put(DAILY, new IgMetricVariant<>(source, dailyCalculator));
     }
 
     public static IgMetric<? extends IgStat, ?, ?> forName(String name) {

@@ -69,7 +69,7 @@ public class IgProfileStatsDTOAssembler {
         // sort the result list by dimension "time"
         // Date)dataSet1.get(0)).getTime() - ((Date)dataSet2.get(0)).getTime()
         resultDataList.sort(
-                (dataSet1, dataSet2) -> (int)((long) dataSet1.get(0) - (long) dataSet2.get(0)));
+                (dataSet1, dataSet2) -> (int)((((long) dataSet1.get(0) / 1000) - ((long) dataSet2.get(0) / 1000))));
 
         target.setData(resultDataList);
 

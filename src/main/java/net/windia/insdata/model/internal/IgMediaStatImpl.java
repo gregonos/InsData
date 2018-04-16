@@ -135,4 +135,9 @@ public abstract class IgMediaStatImpl extends IgStatBase implements IgMediaStat 
     public void setCapturedAt(OffsetDateTime capturedAt) {
         this.capturedAt = capturedAt;
     }
+
+    @Override
+    public OffsetDateTime getIndicativeDate() {
+        return getCapturedAt();
+    }
 }

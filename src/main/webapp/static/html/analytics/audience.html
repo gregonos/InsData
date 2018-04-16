@@ -31,58 +31,52 @@
     <div class="card-body card-geo">
         <div id="stat_world" class="chartWrapper chartWorld"></div>
         <div class="row">
-            <div class="col-md-4">
-                <div class="card-long-list" id="card-stat-country">
-                    <div class="card-header">
-                        <h3>Countries</h3>
-                        <span>Last updated @ <span class="stat-last-seen"></span></span>
-                    </div>
-                    <div class="card-body">
-                        <div class="card-viewport">
-                            <div class="chartWrapper chartWrapper-high" id="stat_country"></div>
-                            <div class="stat-labels" id="stat_country_list">
-                                <div class="stat-label-item d-flex justify-content-between flex-wrap">
-                                    <span class="stat-label-key">United States</span>
-                                    <span class="stat-label-value"><span class="count">0</span><span class="diff"></span></span>
-                                </div>
+            <div class="col-md-4 card-long-list" id="card-stat-country">
+                <div class="card-header">
+                    <h4>Countries</h4>
+                    <span>Last updated @ <span class="stat-last-seen"></span></span>
+                </div>
+                <div class="card-body">
+                    <div class="card-viewport">
+                        <div class="chartWrapper chartWrapper-high" id="stat_country"></div>
+                        <div class="stat-labels" id="stat_country_list">
+                            <div class="stat-label-item d-flex justify-content-between flex-wrap">
+                                <span class="stat-label-key">United States</span>
+                                <span class="stat-label-value"><span class="count">0</span><span class="diff"></span></span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card-long-list" id="card-stat-city">
-                    <div class="card-header">
-                        <h3>Cities</h3>
-                        <span>Last updated @ <span class="stat-last-seen"></span></span>
-                    </div>
-                    <div class="card-body">
-                        <div class="card-viewport">
-                            <div class="chartWrapper chartWrapper-high" id="stat_city"></div>
-                            <div class="stat-labels" id="stat_city_list">
-                                <div class="stat-label-item d-flex justify-content-between flex-wrap">
-                                    <span class="stat-label-key">United States</span>
-                                    <span class="stat-label-value"><span class="count">0</span><span class="diff"></span></span>
-                                </div>
+            <div class="col-md-4 card-long-list" id="card-stat-city">
+                <div class="card-header">
+                    <h4>Cities</h4>
+                    <span>Last updated @ <span class="stat-last-seen"></span></span>
+                </div>
+                <div class="card-body">
+                    <div class="card-viewport">
+                        <div class="chartWrapper chartWrapper-high" id="stat_city"></div>
+                        <div class="stat-labels" id="stat_city_list">
+                            <div class="stat-label-item d-flex justify-content-between flex-wrap">
+                                <span class="stat-label-key">United States</span>
+                                <span class="stat-label-value"><span class="count">0</span><span class="diff"></span></span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card-long-list" id="card-stat-locale">
-                    <div class="card-header">
-                        <h3>Locales</h3>
-                        <span>Last updated @ <span class="stat-last-seen"></span></span>
-                    </div>
-                    <div class="card-body">
-                        <div class="card-viewport">
-                            <div class="chartWrapper chartWrapper-high" id="stat_locale"></div>
-                            <div class="stat-labels" id="stat_locale_list">
-                                <div class="stat-label-item d-flex justify-content-between flex-wrap">
-                                    <span class="stat-label-key">United States</span>
-                                    <span class="stat-label-value"><span class="count">0</span><span class="diff"></span></span>
-                                </div>
+            <div class="col-md-4 card-long-list" id="card-stat-locale">
+                <div class="card-header">
+                    <h4>Locales</h4>
+                    <span>Last updated @ <span class="stat-last-seen"></span></span>
+                </div>
+                <div class="card-body">
+                    <div class="card-viewport">
+                        <div class="chartWrapper chartWrapper-high" id="stat_locale"></div>
+                        <div class="stat-labels" id="stat_locale_list">
+                            <div class="stat-label-item d-flex justify-content-between flex-wrap">
+                                <span class="stat-label-key">United States</span>
+                                <span class="stat-label-value"><span class="count">0</span><span class="diff"></span></span>
                             </div>
                         </div>
                     </div>
@@ -113,9 +107,15 @@
     <div class="card-header">
         <h3>Online Followers Aggregated 24 Hours and Weekdays</h3>
     </div>
-    <div class="row card-body">
-        <div id="stat_online_followers_aggr_hour" class="chartWrapper col-md-8"></div>
-        <div id="stat_online_followers_aggr_weekday" class="chartWrapper col-md-4"></div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-8 card-body">
+                <div id="stat_online_followers_aggr_hour" class="chartWrapper"></div>
+            </div>
+            <div class="col-md-4 card-body">
+                <div id="stat_online_followers_aggr_weekday" class="chartWrapper"></div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -762,7 +762,7 @@
                             if (p2 < 0) {
                                 p2 = 0;
                             }
-                            return p2 * 400;
+                            return p2 * 480;
                         },
                         encode: {
                             x: 'date',
@@ -780,10 +780,16 @@
         if ('hourly' === granularity) {
             startTime = moment().subtract(7, 'day');
         } else {
-            startTime = moment().subtract(28, 'day').startOf('day');
+            startTime = moment().subtract(30, 'day').startOf('day');
         }
 
         var since = encodeURIComponent(startTime.format(ISO_DATE_FORMAT));
+        var intervalPerGran = {
+            'hourly': 7,
+            'daily': 6,
+            'aggregate_hour': 0,
+            'aggregate_weekday': 0
+        };
 
         var onlineFollowersUrl = '/api/profiles/1/stats/ig/online-followers?granularity=' + granularity + '&since=' + since + '&until=' + until;
         $.getJSON(onlineFollowersUrl, function(data) {
@@ -815,7 +821,7 @@
                 },
                 xAxis: [{
                     axisLabel: {
-                        interval: 'hourly' === granularity ? 11 : 6,
+                        interval: intervalPerGran[granularity],
                         formatter: function (value, index) {
                             if ('daily' === granularity) {
                                 return moment(value).format('MM/DD');

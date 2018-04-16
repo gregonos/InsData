@@ -1,5 +1,7 @@
 package net.windia.insdata.model.internal;
 
+import net.windia.insdata.metric.StatGranularity;
+
 import java.time.DayOfWeek;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
@@ -40,7 +42,7 @@ public class IgProfileDiffHourly extends IgProfileStatImpl implements IgProfileD
     }
 
     @Override
-    public OffsetDateTime getIndicativeDate() {
-        return getCapturedAt();
+    public StatGranularity getGranularity() {
+        return StatGranularity.HOURLY;
     }
 }

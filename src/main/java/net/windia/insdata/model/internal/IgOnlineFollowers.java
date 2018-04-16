@@ -1,5 +1,7 @@
 package net.windia.insdata.model.internal;
 
+import net.windia.insdata.metric.StatGranularity;
+
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import javax.persistence.Column;
@@ -8,7 +10,7 @@ import javax.persistence.Table;
 
 @Entity
 @Table
-public class IgOnlineFollowers extends IgStatBase {
+public class IgOnlineFollowers extends IgStatBase implements IgStatHourly {
 
     public IgOnlineFollowers() {
     }
@@ -62,6 +64,11 @@ public class IgOnlineFollowers extends IgStatBase {
     @Override
     public OffsetDateTime getIndicativeDate() {
         return getDateTime();
+    }
+
+    @Override
+    public StatGranularity getGranularity() {
+        return StatGranularity.HOURLY;
     }
 
     public Byte getHour() {

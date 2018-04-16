@@ -312,7 +312,7 @@
                     formatter: function(params) {
                         var html = moment(params[0].axisValue).format('YYYY/MM/DD HH:mm');
 
-                        html += coverageSettings[split].tooltipFormatter(html, params);
+                        html = coverageSettings[split].tooltipFormatter(html, params);
 
                         return html;
                     }
@@ -508,8 +508,7 @@
                 tooltip: {
                     formatter: function(params) {
                         var html = moment(params[0].axisValue).format('YYYY/MM/DD HH:mm');
-
-                        html += engagementSettings[split].tooltipFormatter(html, params);
+                        html = engagementSettings[split].tooltipFormatter(html, params);
                         html += '<br/>' + params[0].marker + ' ' + params[0].seriesName + ': ' + (Math.round(params[0].data[2] * 100) / 100);
                         html += '<br/>' + params[1].marker + ' ' + params[1].seriesName + ': ' + (Math.round(params[1].data[3] * 100) / 100);
 

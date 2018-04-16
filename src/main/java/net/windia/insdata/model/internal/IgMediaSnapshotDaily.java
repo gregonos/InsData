@@ -1,5 +1,7 @@
 package net.windia.insdata.model.internal;
 
+import net.windia.insdata.metric.StatGranularity;
+
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -28,8 +30,8 @@ public class IgMediaSnapshotDaily extends IgMediaStatImpl implements IgMediaSnap
     }
 
     @Override
-    public OffsetDateTime getIndicativeDate() {
-        return getCapturedAt();
+    public StatGranularity getGranularity() {
+        return StatGranularity.DAILY;
     }
 
     public LocalDate getWeek() {

@@ -8,7 +8,8 @@ import java.util.Map;
 public enum StatGranularity {
 
     HOURLY("hourly"),
-    DAILY("daily");
+    DAILY("daily"),
+    POST("post");
 
     private static final Map<String, StatGranularity> valueToInstanceMap = new HashMap<>();
 

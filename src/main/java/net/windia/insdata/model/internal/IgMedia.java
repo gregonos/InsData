@@ -1,6 +1,10 @@
 package net.windia.insdata.model.internal;
 
+import net.windia.insdata.metric.StatGranularity;
+import net.windia.insdata.util.DateTimeUtils;
+
 import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -41,6 +45,9 @@ public class IgMedia implements IgStat {
 
     @Column(nullable = false)
     private OffsetDateTime createdAt;
+
+    @Transient
+    private StatGranularity granularity = StatGranularity.DAILY;
 
     public IgMedia() {}
 
@@ -137,5 +144,21 @@ public class IgMedia implements IgStat {
     @Transient
     public OffsetDateTime getIndicativeDate() {
         return getCreatedAt();
+    }
+
+    @Override
+    @Transient
+    public ZonedDateTime getAggregatingDate() {
+        return DateTimeUtils.dateTimeOfFacebookServer(getIndicativeDate(), getGranularity(), 1);
+    }
+
+    @Override
+    @Transient
+    public StatGranularity getGranularity() {
+        return this.granularity;
+    }
+
+    public void setGranularity(StatGranularity granularity) {
+        this.granularity = granularity;
     }
 }

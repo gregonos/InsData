@@ -1,5 +1,7 @@
 package net.windia.insdata.model.internal;
 
+import net.windia.insdata.metric.StatGranularity;
+
 import java.time.DayOfWeek;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
@@ -49,6 +51,11 @@ public class IgProfileAudienceDaily extends IgStatBase implements IgSnapshot {
     @Override
     public OffsetDateTime getIndicativeDate() {
         return getCapturedAt();
+    }
+
+    @Override
+    public StatGranularity getGranularity() {
+        return StatGranularity.DAILY;
     }
 
     public String getType() {

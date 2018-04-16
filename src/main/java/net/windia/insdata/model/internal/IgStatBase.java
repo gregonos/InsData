@@ -1,5 +1,7 @@
 package net.windia.insdata.model.internal;
 
+import net.windia.insdata.util.DateTimeUtils;
+
 import java.time.DayOfWeek;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
@@ -35,6 +37,11 @@ public abstract class IgStatBase implements IgStat {
 
     public void setIgProfile(IgProfile igProfile) {
         this.igProfile = igProfile;
+    }
+
+    @Override
+    public ZonedDateTime getAggregatingDate() {
+        return DateTimeUtils.dateTimeOfFacebookServer(getIndicativeDate(), getGranularity());
     }
 
     public static void calcHourly(ZoneId zoneId, IgStatHourly hourly, OffsetDateTime time) {
