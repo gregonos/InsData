@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>BX Fast Response - Notification Console</title>
+
+    <link rel="stylesheet" href="static/css/bootstrap.css" crossorigin="anonymous" />
+    <link rel="stylesheet" href="static/css/dashboard.css" />
+    <link rel="stylesheet" href="static/css/bxfr.css" />
+</head>
+<body>
+
+<div class="container main bxfr">
+    <div class="row">
+        <aside class="col-md-2 d-none d-md-block sidebar">
+            <div class="brand">
+                <h1>BX<br/>Fast Response</h1>
+            </div>
+
+            <div class="user-profile">
+                <div class="user-profile-avatar">
+                    <img src="" width="120" height="120" border="0"/>
+                </div>
+                <div class="user-profile-name" id=""></div>
+                <ul class="nav mt-3">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" title="Account"><span data-feather="user"></span></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" title="Settings"><span data-feather="settings"></span></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" title="Messages"><span data-feather="mail"></span></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" title="Sign out"><span data-feather="log-out"></span></a>
+                    </li>
+                </ul>
+            </div>
+
+            <ul class="nav flex-column side-menu">
+                <li class="nav-item">
+                    <a class="nav-link" href="#dashboard" data-navname="dashboard">
+                        <span data-feather="home"></span>
+                        Dashboard <span class="sr-only">(current)</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#profile" data-navname="profile">
+                        <span data-feather="instagram"></span>
+                        Profile
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#account" data-navname="account">
+                        <span data-feather="users"></span>
+                        Account
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#messages" data-navname="messages">
+                        <span data-feather="file"></span>
+                        Messages
+                    </a>
+                </li>
+            </ul>
+
+        </aside>
+
+        <main role="main" class="col-md-9 ml-sm-auto col-lg-10 pt-3" id="mainContainer">
+
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+                <h2>NOTIFICATION CONSOLE</h2>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3>Mission Details</h3>
+                </div>
+                <div class="row card-body">
+                    <div class="col-lg-2">
+                        Priority
+                    </div>
+                    <div class="col-lg-10">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="dropdownTimeRange" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <span data-feather="alert-circle"></span>
+                            RED
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownTimeRange">
+                            <a class="dropdown-item" href="#">Recent 7 days</a>
+                            <a class="dropdown-item" href="#">Recent 30 days</a>
+                            <a class="dropdown-item" href="#">Last week</a>
+                            <a class="dropdown-item" href="#">Last month</a>
+                            <a class="dropdown-item" href="#">Custom...</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="row card-body">
+                    <div class="col-lg-12">
+                        <textarea></textarea>
+                    </div>
+                    <!--<div id="stat_followers" class="chartWrapper col-lg-7"></div>-->
+                    <!--<div id="stat_followers_24" class="chartWrapper col-lg-5"></div>-->
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3>Mission Code</h3>
+                </div>
+                <div class="card-body row">
+                    <div id="stat_followings" class="chartWrapper col-lg-12">
+                        <input type="text" class="mission-code"/>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3>Notification</h3>
+                </div>
+                <div class="card-body row">
+                    <div class="col-lg-12">
+                        <button class="btn btn-block btn-success" type="button" id="btn-send">
+                            Send Message to All
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body row msg_progress">
+                    <div class="card-viewport col-lg-6 ">
+                        <div id="msg_progress_left" class="chartWrapper">
+
+                        </div>
+                        <div class="stat-labels" id="stat_country_list_left">
+                            <div class="stat-label-item d-flex justify-content-between flex-wrap">
+                                <span class="stat-label-key">Gregory Song</span>
+                            </div>
+                            <div class="stat-label-item d-flex justify-content-between flex-wrap">
+                                <span class="stat-label-key">Stephen Song</span>
+                            </div>
+                            <div class="stat-label-item d-flex justify-content-between flex-wrap">
+                                <span class="stat-label-key">Elly Yang</span>
+                            </div>
+                            <div class="stat-label-item d-flex justify-content-between flex-wrap">
+                                <span class="stat-label-key">Dan Pei</span>
+                            </div>
+                            <div class="stat-label-item d-flex justify-content-between flex-wrap">
+                                <span class="stat-label-key">Tik Gu</span>
+                            </div>
+                            <div class="stat-label-item d-flex justify-content-between flex-wrap">
+                                <span class="stat-label-key">Jesse Wu</span>
+                            </div>
+                            <div class="stat-label-item d-flex justify-content-between flex-wrap">
+                                <span class="stat-label-key">Lin Gan</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-viewport col-lg-6 ">
+                        <div id="msg_progress_right" class="chartWrapper">
+                        </div>
+                        <div class="stat-labels" id="stat_country_list_right">
+                            <div class="stat-label-item d-flex justify-content-between flex-wrap">
+                                <span class="stat-label-key">Shawn Xie</span>
+                            </div>
+                            <div class="stat-label-item d-flex justify-content-between flex-wrap">
+                                <span class="stat-label-key">Yami Cao</span>
+                            </div>
+                            <div class="stat-label-item d-flex justify-content-between flex-wrap">
+                                <span class="stat-label-key">Ada Mu</span>
+                            </div>
+                            <div class="stat-label-item d-flex justify-content-between flex-wrap">
+                                <span class="stat-label-key">Michael Peng</span>
+                            </div>
+                            <div class="stat-label-item d-flex justify-content-between flex-wrap">
+                                <span class="stat-label-key">Wade Fang</span>
+                            </div>
+                            <div class="stat-label-item d-flex justify-content-between flex-wrap">
+                                <span class="stat-label-key">Chris Xia</span>
+                            </div>
+                            <div class="stat-label-item d-flex justify-content-between flex-wrap">
+                                <span class="stat-label-key">Linli Zhang</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+<script src="static/js/jquery-3.2.1.min.js" crossorigin="anonymous"></script>
+<script src="static/js/popper.min.js" crossorigin="anonymous"></script>
+<script src="static/js/bootstrap.min.js"></script>
+<script src="static/js/echarts.min.js"></script>
+<script src="static/js/moment.min.js"></script>
+
+<script src="static/js/insdata.js"></script>
+<script src="static/js/analytics.js"></script>
+
+<!-- Icons -->
+<script src="static/js/feather.min.js"></script>
+<script>
+    feather.replace();
+</script>
+
+<script>
+    function loadAnalyticsTemplate(tempName) {
+
+//        $('.side-menu a[data-navname=' + tempName + ']').addClass('active');
+//
+//        $('#mainContainer').load('/static/html/analytics/' + tempName + '.html?' + (new Date()).getTime(), function() {
+//            onTemplateLoaded(tempName);
+//        })
+//        loadDashboard();
+    }
+
+    function onTemplateLoaded(tempName) {
+//        var tempNameCap = tempName.charAt(0).toUpperCase() + tempName.slice(1);
+//        if (window['load' + tempNameCap]) {
+//            window['load' + tempNameCap]();
+//        }
+        loadDashboard();
+        feather.replace();
+    }
+
+    function retrieveUserBXFR() {
+        $('.user-profile-avatar img').attr('src', 'static/img/avatar-linli.png');
+        $(".user-profile-name").text('Linli Zhang');
+    }
+
+    $('.side-menu a').click(function(event) {
+        $('.side-menu a').removeClass('active');
+        $(event.target).addClass('active');
+        loadAnalyticsTemplate(event.target.dataset.navname);
+    });
+
+    $('#btn-send').click(function() {
+        loadDashboard();
+    });
+
+    $(function() {
+        retrieveUserBXFR();
+
+        var template = 'NotificationConsole';
+        if (location.hash) {
+            template = location.hash.slice(1);
+        }
+
+        loadAnalyticsTemplate(template);
+    });
+
+</script>
+
+<script>
+    feather.replace();
+
+    function showProgressBar(data, divId) {
+
+        var chartMsgProgress = echarts.init(document.getElementById(divId), null, {renderer: 'canvas'});
+
+        chartMsgProgress.setOption({
+            dataset: {
+                dimensions: data.dimensions,
+                source: data.data
+            },
+            grid: {
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0
+            },
+            tooltip: {
+                show: false
+            },
+            xAxis: [{
+                boundaryGap: false,
+                type: 'value',
+                show: false,
+                axisLabel: {
+                    show: false
+                }
+            }],
+            yAxis: [{
+                type: 'category',
+                inverse: true,
+                show: false,
+                axisLabel: {
+                    show: false
+                }
+            }],
+            series: [
+                {
+                    type: 'bar',
+                    color: '#59d475',
+                    encode: {
+                        x: 'count',
+                        y: 'section'
+                    },
+                    animationEasing: 'backOut',
+                    animationDuration: 1500,
+                    animationDelay: function(id) {
+                        return id * 100;
+                    }
+                }
+            ]
+        });
+
+    }
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    async function loadDashboard() {
+
+        var msgDataSet1 = {
+            'data': [
+                ["Gregory Song", 100],
+                ["Stephen Song", 100],
+                ["Elly Yang", 100],
+                ["Dan Pei", 100],
+                ["Tik Gu", 100],
+                ["Jesse Wu", 100],
+                ["Lin Gan", 100]
+            ],
+            'dimensions': ["section", "count"]
+        };
+
+        var msgDataSet2 = {
+            'data': [
+                ["Linli Zhang", 100],
+                ["Yami Cao", 100],
+                ["Ada Mu", 100],
+                ["Michael Peng", 100],
+                ["Shawn Xie", 100],
+                ["Wade Fang", 100],
+                ["Chris Xia", 100]
+            ],
+            'dimensions': ["section", "count"]
+        };
+
+        showProgressBar(msgDataSet1, 'msg_progress_left');
+        await sleep(900);
+        showProgressBar(msgDataSet2, 'msg_progress_right');
+    }
+
+</script>
+
+</body>
+</html>
