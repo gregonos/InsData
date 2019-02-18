@@ -7,5 +7,9 @@ import java.time.OffsetDateTime;
 import java.util.List;
 
 public interface IgMediaDiffHourlyRepository extends CrudRepository<IgMediaDiffHourly, Long> {
-    List<IgMediaDiffHourly> findByIgProfileIdAndCapturedAtBetweenOrderByCapturedAtAsc(Long igProfileId, OffsetDateTime since, OffsetDateTime until);
+    List<IgMediaDiffHourly> findByIgProfileIdAndCapturedAtBetweenOrderByCapturedAtAsc(
+            Long igProfileId, OffsetDateTime since, OffsetDateTime until);
+
+    List<IgMediaDiffHourly> findByIgProfileIdAndMediaCreatedAtBetweenOrderByCapturedAtAsc(
+            Long igProfileId, OffsetDateTime since, OffsetDateTime until);
 }

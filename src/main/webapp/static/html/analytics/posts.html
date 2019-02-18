@@ -10,6 +10,27 @@
     <div id="stat_count" class="card-body chartWrapper"></div>
 </div>
 
+<div class="card">
+    <div class="card-header">
+        <h3>Engagement</h3>
+        <div class="switch-wrapper">
+            <span class="col-form-label">Split by</span>
+            <div class="btn-group btn-group-sm btn-group-toggle switch eng-split-switch" data-toggle="buttons">
+                <label class="btn btn-light" title="None">
+                    <input type="radio" name="engagement-split" value="none" autocomplete="off"/> <span data-feather="slash"></span>
+                </label>
+                <label class="btn btn-light active" title="Post Age">
+                    <input type="radio" name="engagement-split" value="age" autocomplete="off" checked/> <span data-feather="clock"></span>
+                </label>
+                <label class="btn btn-light" title="Engagement Type">
+                    <input type="radio" name="engagement-split" value="engagement" autocomplete="off"/> <span data-feather="thumbs-up"></span>
+                </label>
+            </div>
+        </div>
+    </div>
+    <div id="stat_engagement" class="chartWrapper card-body"></div>
+</div>
+
 
 <script>
     var chartCount = echarts.init(document.getElementById("stat_count"), null, {renderer: 'canvas'});

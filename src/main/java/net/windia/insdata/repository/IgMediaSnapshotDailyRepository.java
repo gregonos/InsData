@@ -12,4 +12,8 @@ public interface IgMediaSnapshotDailyRepository extends CrudRepository<IgMediaSn
     IgMediaSnapshotDaily findFirstByIgProfileOrderByCapturedAtDesc(IgProfile profile);
 
     List<IgMediaSnapshotDaily> findByIgProfileAndCapturedAt(IgProfile profile, OffsetDateTime capturedAt);
+
+    List<IgMediaSnapshotDaily> findByIgProfileIdAndMediaCreatedAtBetweenOrderByCapturedAtDesc(
+            Long igProfileId, OffsetDateTime since, OffsetDateTime until);
+
 }

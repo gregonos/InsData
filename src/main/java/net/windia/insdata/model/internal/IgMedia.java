@@ -60,6 +60,12 @@ public class IgMedia implements IgStat {
         this.createdAt = createdAt;
     }
 
+    public IgMedia(String id, String url, OffsetDateTime createdAt) {
+        this.id = id;
+        this.url = url;
+        this.createdAt = createdAt;
+    }
+
     public String getId() {
         return id;
     }

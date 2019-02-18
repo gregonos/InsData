@@ -14,4 +14,7 @@ public interface IgMediaSnapshotHourlyRepository extends CrudRepository<IgMediaS
 
     List<IgMediaSnapshotHourly> findByIgProfileAndCapturedAt(IgProfile igProfile, OffsetDateTime capturedAt);
 
+    List<IgMediaSnapshotHourly> findByIgProfileIdAndMediaCreatedAtBetweenOrderByCapturedAtDesc(
+            Long igProfileId, OffsetDateTime since, OffsetDateTime until);
+
 }

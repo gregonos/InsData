@@ -8,5 +8,9 @@ import java.util.List;
 
 public interface IgMediaDiffDailyRepository extends CrudRepository<IgMediaDiffDaily, Long> {
 
-    List<IgMediaDiffDaily> findByIgProfileIdAndCapturedAtBetweenOrderByCapturedAtAsc(Long igProfileId, OffsetDateTime since, OffsetDateTime until);
+    List<IgMediaDiffDaily> findByIgProfileIdAndCapturedAtBetweenOrderByCapturedAtAsc(
+            Long igProfileId, OffsetDateTime since, OffsetDateTime until);
+
+    List<IgMediaDiffDaily> findByIgProfileIdAndMediaCreatedAtBetweenOrderByCapturedAtAsc(
+            Long igProfileId, OffsetDateTime since, OffsetDateTime until);
 }

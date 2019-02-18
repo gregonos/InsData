@@ -6,6 +6,8 @@ import net.windia.insdata.metric.IgAudienceStatType;
 import net.windia.insdata.metric.StatGranularity;
 import net.windia.insdata.model.internal.IgMedia;
 import net.windia.insdata.model.internal.IgMediaDiff;
+import net.windia.insdata.model.internal.IgMediaDiffHourly;
+import net.windia.insdata.model.internal.IgMediaSnapshot;
 import net.windia.insdata.model.internal.IgProfile;
 import net.windia.insdata.model.internal.IgProfileAudienceDaily;
 import net.windia.insdata.model.internal.IgProfileDiff;
@@ -13,6 +15,8 @@ import net.windia.insdata.model.internal.IgProfileSnapshot;
 import net.windia.insdata.repository.IgMediaDiffDailyRepository;
 import net.windia.insdata.repository.IgMediaDiffHourlyRepository;
 import net.windia.insdata.repository.IgMediaRepository;
+import net.windia.insdata.repository.IgMediaSnapshotDailyRepository;
+import net.windia.insdata.repository.IgMediaSnapshotHourlyRepository;
 import net.windia.insdata.repository.IgProfileAudienceDailyRepository;
 import net.windia.insdata.repository.IgProfileDiffDailyRepository;
 import net.windia.insdata.repository.IgProfileDiffHourlyRepository;
@@ -21,9 +25,13 @@ import net.windia.insdata.repository.IgProfileSnapshotHourlyRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static net.windia.insdata.metric.StatGranularity.DAILY;
 import static net.windia.insdata.metric.StatGranularity.HOURLY;
@@ -49,6 +57,12 @@ public class IgProfileDataService {
 
     @Autowired
     private IgMediaDiffDailyRepository mediaDiffDailyRepo;
+
+    @Autowired
+    private IgMediaSnapshotHourlyRepository mediaSnapshotHourlyRepo;
+
+    @Autowired
+    private IgMediaSnapshotDailyRepository mediaSnapshotDailyRepo;
 
     @Autowired
     private IgMediaRepository mediaRepo;
@@ -89,6 +103,37 @@ public class IgProfileDataService {
         } else {
             throw new UnsupportedGranularityException(granularity.getValue());
         }
+    }
+
+    public List<IgMediaDiffHourly> getDiffsOfPosts(Long igProfileId, StatGranularity granularity, OffsetDateTime since, OffsetDateTime until) {
+        return mediaDiffHourlyRepo.findByIgProfileIdAndMediaCreatedAtBetweenOrderByCapturedAtAsc(igProfileId, since, until);
+    }
+
+    public List<? extends IgMediaSnapshot> getLatestSnapshotOfPosts(Long igProfileId, StatGranularity granularity, OffsetDateTime since, OffsetDateTime until)
+        throws UnsupportedGranularityException {
+
+        List <? extends IgMediaSnapshot> snapshots;
+
+        if (HOURLY == granularity) {
+            snapshots = mediaSnapshotHourlyRepo.findByIgProfileIdAndMediaCreatedAtBetweenOrderByCapturedAtDesc(igProfileId, since, until);
+        } else if (DAILY == granularity) {
+            snapshots = mediaSnapshotDailyRepo.findByIgProfileIdAndMediaCreatedAtBetweenOrderByCapturedAtDesc(igProfileId, since, until);
+        } else {
+            throw new UnsupportedGranularityException(granularity.getValue());
+        }
+
+        if (0 == snapshots.size()) {
+            return snapshots;
+        }
+
+        Map<String, ? extends Optional<? extends IgMediaSnapshot>> optionals =
+                // group by media id
+                snapshots.stream().collect(Collectors.groupingBy(snapshot -> snapshot.getMedia().getId(),
+                // find out the latest snapshot by comparing the capturedAt
+                Collectors.maxBy((s1, s2) -> (int) Duration.between(s2.getCapturedAt(), s1.getCapturedAt()).getSeconds())));
+
+        // filter the values collection and keep the optionals where the max is found, and turns the object of the optionals into a list
+        return optionals.values().stream().filter(Optional::isPresent).map(Optional::get).collect(Collectors.toList());
     }
 
     public List<IgMedia> getPosts(Long igProfileId, StatGranularity granularity, OffsetDateTime since, OffsetDateTime until) {

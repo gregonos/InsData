@@ -101,22 +101,7 @@ public class StatController {
             throw new UnsupportedMetricException(illegalMetrics);
         }
 
-        Map<IgDataSource, List<? extends IgStat>> sourceMap = new EnumMap<>(IgDataSource.class);
-        for (IgDataSource source : requiredSources) {
-            Method sourceGetter = igProfileDataService.getClass().getMethod(
-                    "get" + source.getName(), Long.class, StatGranularity.class, OffsetDateTime.class, OffsetDateTime.class);
-
-            StatGranularity sourceGran = source.getGranularity();
-            if (null == sourceGran) {
-                sourceGran = gran;
-            }
-
-            @SuppressWarnings("unchecked")
-            List<? extends IgStat> sourceCollection =
-                    (List<? extends IgStat>) sourceGetter.invoke(igProfileDataService, profileId, sourceGran, since, until);
-
-            sourceMap.put(source, sourceCollection);
-        }
+        Map<IgDataSource, List<? extends IgStat>> sourceMap = extractIgDataSources(profileId, requiredSources, gran, since, until);
 
         IgProfile profile = igProfileService.getIgProfile(profileId);
 
@@ -156,5 +141,69 @@ public class StatController {
                 Collectors.toMap(
                         type -> type.name().toLowerCase(),
                         type -> igProfileAudienceAssembler.assemble(profile, type, igProfileDataService.getAudiences(profile, type))));
+    }
+
+    @RequestMapping(value = "/{profileId}/stats/ig/posts", method = RequestMethod.GET)
+    public IgProfileStatsDTO getIgProfilePostStats(@PathVariable("profileId") Long profileId,
+                                                   @RequestParam("metrics") String metricsStr,
+                                                   @RequestParam("since") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime since,
+                                                   @RequestParam("until") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime until) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+
+        String[] metricsInStr = metricsStr.split(",");
+        List<IgMetric> metrics = new ArrayList<>(metricsInStr.length);
+        List<String> illegalMetrics = new ArrayList<>();
+        Set<IgDataSource> requiredSources = new HashSet<>();
+        requiredSources.add(IgDataSource.POSTS);
+        for (String s : metricsInStr) {
+            IgMetric metric;
+
+            metric = IgMetric.forName(s.toUpperCase());
+            if (null == metric) {
+                illegalMetrics.add(s);
+                continue;
+            }
+
+            metrics.add(metric);
+
+            if (!metric.supports(StatGranularity.POST)) {
+                throw new UnsupportedGranularityException(metric, StatGranularity.POST);
+            }
+
+            requiredSources.addAll(metric.getSources(StatGranularity.POST));
+        }
+
+        if (illegalMetrics.size() > 0) {
+            throw new UnsupportedMetricException(illegalMetrics);
+        }
+
+        Map<IgDataSource, List<? extends IgStat>> sourceMap = extractIgDataSources(profileId, requiredSources, StatGranularity.POST, since, until);
+
+        IgProfile profile = igProfileService.getIgProfile(profileId);
+
+        return igProfileStatsAssembler.assemblePostStats(profile, metrics, StatGranularity.POST, sourceMap);
+
+    }
+
+    private Map<IgDataSource, List<? extends IgStat>> extractIgDataSources(
+            Long profileId, Set<IgDataSource> requiredSources, StatGranularity defaultGran, OffsetDateTime since, OffsetDateTime until)
+            throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+
+        Map<IgDataSource, List<? extends IgStat>> sourceMap = new EnumMap<>(IgDataSource.class);
+        for (IgDataSource source : requiredSources) {
+            Method sourceGetter = igProfileDataService.getClass().getMethod(
+                    "get" + source.getName(), Long.class, StatGranularity.class, OffsetDateTime.class, OffsetDateTime.class);
+
+            StatGranularity sourceGran = source.getGranularity();
+            if (null == sourceGran) {
+                sourceGran = defaultGran;
+            }
+
+            @SuppressWarnings("unchecked")
+            List<? extends IgStat> sourceCollection =
+                    (List<? extends IgStat>) sourceGetter.invoke(igProfileDataService, profileId, sourceGran, since, until);
+
+            sourceMap.put(source, sourceCollection);
+        }
+        return sourceMap;
     }
 }

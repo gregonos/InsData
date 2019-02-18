@@ -15,4 +15,9 @@ public class IndexController {
     public String analytics() {
         return "analytics";
     }
+
+    @RequestMapping("/BXFR")
+    public String bxfr() {
+        return "bxfr";
+    }
 }

@@ -14,7 +14,7 @@ public interface IgMediaRepository extends CrudRepository<IgMedia, String> {
     @Query("SELECT new IgMedia(m.id, m.createdAt) FROM IgMedia m WHERE m.igProfile = :igProfile")
     List<IgMedia> findIdByIgProfile(@Param("igProfile") IgProfile igProfile);
 
-    @Query("SELECT new IgMedia(m.id, m.createdAt) FROM IgMedia m WHERE m.igProfile.id = :igProfileId " +
+    @Query("SELECT new IgMedia(m.id, m.url, m.createdAt) FROM IgMedia m WHERE m.igProfile.id = :igProfileId " +
             "AND m.createdAt BETWEEN :since AND :until")
     List<IgMedia> findIdByIgProfileIdAndCreatedAtBetween(@Param("igProfileId") Long igProfileId,
                                                        @Param("since") OffsetDateTime since,
