@@ -10,6 +10,7 @@ import net.windia.insdata.service.restclient.IgRestClientService;
 import net.windia.insdata.util.DateTimeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
@@ -80,7 +81,7 @@ public class ScheduledTaskService {
     private IgRawMediaStatHandler rawMediaStatHandler = new IgRawMediaStatHandler();
 
 //    @Scheduled(initialDelay = 2000, fixedRate = 3600000)
-//    @Scheduled(cron = "0 15 * * * *")
+    @Scheduled(cron = "0 15 * * * *")
     public void retrieveProfile() {
 
         IgProfile myProfile = igProfileRepo.findById(1L).get();
@@ -163,12 +164,13 @@ public class ScheduledTaskService {
 
         log.debug("Starting to download historical online followers data...");
 
-        long since = 1525615200;
+        long since = 1611532800;
         Date now = new Date();
 
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
         while (since < now.getTime() / 1000) {
+//        while (since < 1611532800 + 86400 * 2) {
             log.debug("Retrieving online followers data based on time: " + formatter.format(new Date(since * 1000)));
             IgAPIClientProfileAudience igOnlineFollowersRaw = igRestClientService.retrieveProfileOnlineFollowers(myProfile, since, since + 86400);
             igOnlineFollowersService.saveOnlineFollowers(myProfile, igOnlineFollowersRaw);
@@ -177,7 +179,7 @@ public class ScheduledTaskService {
         }
     }
 
-//    @Scheduled(cron = "0 16 * * * *")
+    @Scheduled(cron = "0 16 * * * *")
 //    @Scheduled(initialDelay = 12000, fixedRate = 3600000)
     public void retrieveMediaStat() {
         IgProfile myProfile = igProfileRepo.findById(1L).get();

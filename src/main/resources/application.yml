@@ -5,11 +5,12 @@ spring:
     active: dev
   jpa:
     open-in-view: false
+    database-platform: org.hibernate.dialect.MySQLDialect
     hibernate:
       ddl-auto: validate
       use-new-id-generator-mappings: false
   datasource:
-    driverClassName: com.mysql.jdbc.Driver
+    driverClassName: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/insdata?useSSL=false&autoReconnect=true
     username: root
     password: Windia#2018

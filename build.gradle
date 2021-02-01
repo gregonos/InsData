@@ -1,12 +1,12 @@
 group 'net.windia.app'
-version '1.0.17-RELEASE'
+version '1.0.19-RELEASE'
 
 buildscript {
     repositories {
         mavenCentral()
     }
     dependencies {
-        classpath("org.springframework.boot:spring-boot-gradle-plugin:2.0.0.RELEASE")
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:2.1.18.RELEASE")
     }
 }
 
@@ -16,7 +16,7 @@ apply plugin: 'idea'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
 
-sourceCompatibility = 1.8
+sourceCompatibility = 1.11
 
 repositories {
     mavenCentral()
@@ -33,28 +33,37 @@ processResources {
 
 bootRun {
 //    jvmArgs = ["-Dhttp.proxyHost=192.168.1.116", "-Dhttp.proxyPort=1080", "-Dhttps.proxyHost=192.168.1.116", "-Dhttps.proxyPort=1080"]
-    jvmArgs = ["-Dhttp.proxyHost=127.0.0.1", "-Dhttp.proxyPort=1087", "-Dhttps.proxyHost=127.0.0.1", "-Dhttps.proxyPort=1087"]
+    jvmArgs = ["-Dhttp.proxyHost=127.0.0.1", "-Dhttp.proxyPort=28080", "-Dhttps.proxyHost=127.0.0.1", "-Dhttps.proxyPort=28080"]
 }
 
 dependencies {
 
-    def springBootVersion = "2.0.0.RELEASE"
+    def springBootVersion = "2.1.18.RELEASE"
 
+    compile "org.springframework.boot:spring-boot:${springBootVersion}"
+    compile "org.springframework.boot:spring-boot-starter:${springBootVersion}"
     compile "org.springframework.boot:spring-boot-starter-web:${springBootVersion}"
     compile "org.springframework.boot:spring-boot-starter-data-jpa:${springBootVersion}"
     compile 'org.springframework.data:spring-data-jpa'
 
     compile 'org.apache.commons:commons-lang3:3.4'
-    compile 'org.projectlombok:lombok:1.16.20'
-    compile 'org.slf4j:slf4j-api:1.7.25'
+    compile 'org.projectlombok:lombok:1.18.12'
+    compile 'org.slf4j:slf4j-api:1.7.28'
     compile 'ch.qos.logback:logback-classic:1.2.3'
 
     compile 'mysql:mysql-connector-java'
 
     compile 'com.google.guava:guava:24.0-jre'
 
+    compile 'javax.xml.bind:jaxb-api:2.3.0'
+    compile 'com.sun.xml.bind:jaxb-impl:2.3.0'
+    compile 'com.sun.xml.bind:jaxb-core:2.3.0'
+//    compile 'javax.activation:activation:1.2.0'
+
     providedRuntime "org.springframework.boot:spring-boot-starter-tomcat:${springBootVersion}"
     providedRuntime 'javax.servlet:javax.servlet-api:3.1.0'
+
+    annotationProcessor 'org.projectlombok:lombok:1.18.12'
 
     testCompile group: 'junit', name: 'junit', version: '4.11'
     testCompile group: 'junit', name: 'junit', version: '4.12'
